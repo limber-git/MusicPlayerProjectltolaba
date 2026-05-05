@@ -1,13 +1,11 @@
-﻿package com.limbe.hexamusicplayer
+package com.limbe.hexamusicplayer
 
 import com.limbe.hexamusicplayer.domain.model.AudioEffectsState
 import com.limbe.hexamusicplayer.domain.model.PlayerState
 import com.limbe.hexamusicplayer.domain.model.Track
 import com.limbe.hexamusicplayer.domain.port.AudioEffectsPort
 import com.limbe.hexamusicplayer.domain.port.AudioPlayerPort
-import com.limbe.hexamusicplayer.domain.port.LocalMusicRepository
 import com.limbe.hexamusicplayer.domain.usecase.AttachAudioEffectsUseCase
-import com.limbe.hexamusicplayer.domain.usecase.GetLocalTracksUseCase
 import com.limbe.hexamusicplayer.domain.usecase.ObserveAudioEffectsStateUseCase
 import com.limbe.hexamusicplayer.domain.usecase.ObservePlayerStateUseCase
 import com.limbe.hexamusicplayer.domain.usecase.PlayTrackUseCase
@@ -19,7 +17,7 @@ import com.limbe.hexamusicplayer.domain.usecase.SetPlaybackPitchUseCase
 import com.limbe.hexamusicplayer.domain.usecase.SetPlaybackSpeedUseCase
 import com.limbe.hexamusicplayer.domain.usecase.SetVirtualizerStrengthUseCase
 import com.limbe.hexamusicplayer.domain.usecase.TogglePlaybackUseCase
-import com.limbe.hexamusicplayer.ui.MusicPlayerViewModel
+import com.limbe.hexamusicplayer.ui.screens.player.PlayerViewModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -27,67 +25,20 @@ import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
-import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
 
 @OptIn(ExperimentalCoroutinesApi::class)
-class MusicPlayerViewModelTest {
+class PlayerViewModelTest {
 
     @get:Rule
     val mainDispatcherRule = MainDispatcherRule()
 
     @Test
-    fun `refresh tracks loads local songs on success`() = runTest {
-        val fakeRepository = FakeLocalMusicRepository(
-            tracks = listOf(
-                Track(
-                    id = 1L,
-                    title = "Track One",
-                    artist = "Artist A",
-                    durationMs = 120_000L,
-                    contentUri = "content://song/1"
-                )
-            )
-        )
-
-        val fakePlayer = FakeViewModelPlayerPort()
-        val fakeEffects = FakeAudioEffectsPort()
-        val viewModel = createViewModel(fakeRepository, fakePlayer, fakeEffects)
-
-        viewModel.refreshTracks()
-        advanceUntilIdle()
-
-        assertEquals(1, viewModel.uiState.value.tracks.size)
-        assertEquals("Track One", viewModel.uiState.value.tracks.first().title)
-        assertEquals(false, viewModel.uiState.value.isLoading)
-        assertEquals(null, viewModel.uiState.value.errorMessage)
-    }
-
-    @Test
-    fun `refresh tracks exposes error on failure`() = runTest {
-        val fakeRepository = FakeLocalMusicRepository(
-            error = IllegalStateException("Storage unavailable")
-        )
-
-        val fakePlayer = FakeViewModelPlayerPort()
-        val fakeEffects = FakeAudioEffectsPort()
-        val viewModel = createViewModel(fakeRepository, fakePlayer, fakeEffects)
-
-        viewModel.refreshTracks()
-        advanceUntilIdle()
-
-        assertTrue(viewModel.uiState.value.tracks.isEmpty())
-        assertEquals(false, viewModel.uiState.value.isLoading)
-        assertEquals("Storage unavailable", viewModel.uiState.value.errorMessage)
-    }
-
-    @Test
     fun `player session attachment propagates to effects`() = runTest {
-        val fakeRepository = FakeLocalMusicRepository()
         val fakePlayer = FakeViewModelPlayerPort()
         val fakeEffects = FakeAudioEffectsPort()
-        val viewModel = createViewModel(fakeRepository, fakePlayer, fakeEffects)
+        val viewModel = createViewModel(fakePlayer, fakeEffects)
 
         fakePlayer.emit(
             PlayerState(
@@ -105,12 +56,10 @@ class MusicPlayerViewModelTest {
     }
 
     private fun createViewModel(
-        repository: LocalMusicRepository,
         player: FakeViewModelPlayerPort,
         effects: FakeAudioEffectsPort
-    ): MusicPlayerViewModel {
-        return MusicPlayerViewModel(
-            getLocalTracksUseCase = GetLocalTracksUseCase(repository),
+    ): PlayerViewModel {
+        return PlayerViewModel(
             playTrackUseCase = PlayTrackUseCase(player),
             togglePlaybackUseCase = TogglePlaybackUseCase(player),
             seekToUseCase = SeekToUseCase(player),
@@ -124,16 +73,6 @@ class MusicPlayerViewModelTest {
             setLoudnessGainUseCase = SetLoudnessGainUseCase(effects),
             observeAudioEffectsStateUseCase = ObserveAudioEffectsStateUseCase(effects)
         )
-    }
-}
-
-private class FakeLocalMusicRepository(
-    private val tracks: List<Track> = emptyList(),
-    private val error: Throwable? = null
-) : LocalMusicRepository {
-    override suspend fun listLocalTracks(): List<Track> {
-        error?.let { throw it }
-        return tracks
     }
 }
 
