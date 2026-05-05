@@ -1,10 +1,9 @@
-﻿package com.limbe.hexamusicplayer.ui
+package com.limbe.hexamusicplayer.ui.screens.player
 
 import com.limbe.hexamusicplayer.domain.model.EqBand
 import com.limbe.hexamusicplayer.domain.model.Track
 
-data class MusicPlayerUiState(
-    val tracks: List<Track> = emptyList(),
+data class PlayerUiState(
     val currentTrack: Track? = null,
     val isPlaying: Boolean = false,
     val currentPositionMs: Long = 0,
@@ -15,7 +14,5 @@ data class MusicPlayerUiState(
     val eqBands: List<EqBand> = emptyList(),
     val bassStrength: Int = 0,
     val virtualizerStrength: Int = 0,
-    val loudnessGainMb: Int = 0,
-    val isLoading: Boolean = false,
-    val errorMessage: String? = null
+    val loudnessGainMb: Int = 0
 )

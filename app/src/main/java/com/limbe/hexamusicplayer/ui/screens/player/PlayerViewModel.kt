@@ -1,13 +1,19 @@
-﻿package com.limbe.hexamusicplayer.ui
+package com.limbe.hexamusicplayer.ui.screens.player
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.limbe.hexamusicplayer.domain.model.Track
 import com.limbe.hexamusicplayer.domain.usecase.AttachAudioEffectsUseCase
-import com.limbe.hexamusicplayer.domain.usecase.GetLocalTracksUseCase
 import com.limbe.hexamusicplayer.domain.usecase.ObserveAudioEffectsStateUseCase
 import com.limbe.hexamusicplayer.domain.usecase.ObservePlayerStateUseCase
+import com.limbe.hexamusicplayer.domain.usecase.ObserveUserPreferencesUseCase
 import com.limbe.hexamusicplayer.domain.usecase.PlayTrackUseCase
+import com.limbe.hexamusicplayer.domain.usecase.SaveBassStrengthUseCase
+import com.limbe.hexamusicplayer.domain.usecase.SaveEqBandLevelUseCase
+import com.limbe.hexamusicplayer.domain.usecase.SaveLoudnessGainUseCase
+import com.limbe.hexamusicplayer.domain.usecase.SavePlaybackPitchUseCase
+import com.limbe.hexamusicplayer.domain.usecase.SavePlaybackSpeedUseCase
+import com.limbe.hexamusicplayer.domain.usecase.SaveVirtualizerStrengthUseCase
 import com.limbe.hexamusicplayer.domain.usecase.SeekToUseCase
 import com.limbe.hexamusicplayer.domain.usecase.SetBassStrengthUseCase
 import com.limbe.hexamusicplayer.domain.usecase.SetEqBandLevelUseCase
@@ -19,11 +25,11 @@ import com.limbe.hexamusicplayer.domain.usecase.TogglePlaybackUseCase
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
-class MusicPlayerViewModel(
-    private val getLocalTracksUseCase: GetLocalTracksUseCase,
+class PlayerViewModel(
     private val playTrackUseCase: PlayTrackUseCase,
     private val togglePlaybackUseCase: TogglePlaybackUseCase,
     private val seekToUseCase: SeekToUseCase,
@@ -35,41 +41,35 @@ class MusicPlayerViewModel(
     private val setBassStrengthUseCase: SetBassStrengthUseCase,
     private val setVirtualizerStrengthUseCase: SetVirtualizerStrengthUseCase,
     private val setLoudnessGainUseCase: SetLoudnessGainUseCase,
-    private val observeAudioEffectsStateUseCase: ObserveAudioEffectsStateUseCase
+    private val observeAudioEffectsStateUseCase: ObserveAudioEffectsStateUseCase,
+    private val observeUserPreferencesUseCase: ObserveUserPreferencesUseCase,
+    private val savePlaybackSpeedUseCase: SavePlaybackSpeedUseCase,
+    private val savePlaybackPitchUseCase: SavePlaybackPitchUseCase,
+    private val saveBassStrengthUseCase: SaveBassStrengthUseCase,
+    private val saveVirtualizerStrengthUseCase: SaveVirtualizerStrengthUseCase,
+    private val saveLoudnessGainUseCase: SaveLoudnessGainUseCase,
+    private val saveEqBandLevelUseCase: SaveEqBandLevelUseCase
 ) : ViewModel() {
 
-    private val _uiState = MutableStateFlow(MusicPlayerUiState())
-    val uiState: StateFlow<MusicPlayerUiState> = _uiState.asStateFlow()
+    private val _uiState = MutableStateFlow(PlayerUiState())
+    val uiState: StateFlow<PlayerUiState> = _uiState.asStateFlow()
 
     private var lastAttachedSessionId: Int? = null
+    private var isInitialLoad = true
 
     init {
         observePlayerState()
         observeAudioEffectsState()
+        loadPersistedSettings()
     }
 
-    fun refreshTracks() {
+    private fun loadPersistedSettings() {
         viewModelScope.launch {
-            _uiState.update { it.copy(isLoading = true, errorMessage = null) }
-
-            runCatching { getLocalTracksUseCase() }
-                .onSuccess { tracks ->
-                    _uiState.update {
-                        it.copy(
-                            tracks = tracks,
-                            isLoading = false,
-                            errorMessage = null
-                        )
-                    }
-                }
-                .onFailure { throwable ->
-                    _uiState.update {
-                        it.copy(
-                            isLoading = false,
-                            errorMessage = throwable.message ?: "Error loading local music"
-                        )
-                    }
-                }
+            val prefs = observeUserPreferencesUseCase().first()
+            setPlaybackSpeedUseCase(prefs.playbackSpeed)
+            setPlaybackPitchUseCase(prefs.playbackPitch)
+            // EQ and effects will be applied when session is attached
+            isInitialLoad = false
         }
     }
 
@@ -87,26 +87,32 @@ class MusicPlayerViewModel(
 
     fun setSpeed(speed: Float) {
         setPlaybackSpeedUseCase(speed)
+        viewModelScope.launch { savePlaybackSpeedUseCase(speed) }
     }
 
     fun setPitch(pitch: Float) {
         setPlaybackPitchUseCase(pitch)
+        viewModelScope.launch { savePlaybackPitchUseCase(pitch) }
     }
 
     fun setEqBandLevel(index: Int, level: Int) {
         setEqBandLevelUseCase(index, level)
+        viewModelScope.launch { saveEqBandLevelUseCase(index, level) }
     }
 
     fun setBassStrength(strength: Int) {
         setBassStrengthUseCase(strength)
+        viewModelScope.launch { saveBassStrengthUseCase(strength) }
     }
 
     fun setVirtualizerStrength(strength: Int) {
         setVirtualizerStrengthUseCase(strength)
+        viewModelScope.launch { saveVirtualizerStrengthUseCase(strength) }
     }
 
     fun setLoudnessGain(gainMb: Int) {
         setLoudnessGainUseCase(gainMb)
+        viewModelScope.launch { saveLoudnessGainUseCase(gainMb) }
     }
 
     private fun observePlayerState() {
@@ -127,8 +133,19 @@ class MusicPlayerViewModel(
                 if (audioSessionId != null && audioSessionId > 0 && audioSessionId != lastAttachedSessionId) {
                     attachAudioEffectsUseCase(audioSessionId)
                     lastAttachedSessionId = audioSessionId
+                    applyPersistedEffects()
                 }
             }
+        }
+    }
+
+    private suspend fun applyPersistedEffects() {
+        val prefs = observeUserPreferencesUseCase().first()
+        setBassStrengthUseCase(prefs.bassStrength)
+        setVirtualizerStrengthUseCase(prefs.virtualizerStrength)
+        setLoudnessGainUseCase(prefs.loudnessGainMb)
+        prefs.eqBandLevels.forEach { (index, level) ->
+            setEqBandLevelUseCase(index, level)
         }
     }
 
@@ -147,6 +164,4 @@ class MusicPlayerViewModel(
             }
         }
     }
-
-    override fun onCleared() = super.onCleared()
 }

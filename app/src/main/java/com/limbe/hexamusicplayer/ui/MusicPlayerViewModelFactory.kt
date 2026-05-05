@@ -1,8 +1,10 @@
-﻿package com.limbe.hexamusicplayer.ui
+package com.limbe.hexamusicplayer.ui
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import com.limbe.hexamusicplayer.app.AppContainer
+import com.limbe.hexamusicplayer.ui.screens.library.LibraryViewModel
+import com.limbe.hexamusicplayer.ui.screens.player.PlayerViewModel
 
 class MusicPlayerViewModelFactory(
     private val container: AppContainer
@@ -10,23 +12,36 @@ class MusicPlayerViewModelFactory(
 
     @Suppress("UNCHECKED_CAST")
     override fun <T : ViewModel> create(modelClass: Class<T>): T {
-        if (modelClass.isAssignableFrom(MusicPlayerViewModel::class.java)) {
-            return MusicPlayerViewModel(
-                getLocalTracksUseCase = container.getLocalTracksUseCase,
-                playTrackUseCase = container.playTrackUseCase,
-                togglePlaybackUseCase = container.togglePlaybackUseCase,
-                seekToUseCase = container.seekToUseCase,
-                setPlaybackSpeedUseCase = container.setPlaybackSpeedUseCase,
-                setPlaybackPitchUseCase = container.setPlaybackPitchUseCase,
-                observePlayerStateUseCase = container.observePlayerStateUseCase,
-                attachAudioEffectsUseCase = container.attachAudioEffectsUseCase,
-                setEqBandLevelUseCase = container.setEqBandLevelUseCase,
-                setBassStrengthUseCase = container.setBassStrengthUseCase,
-                setVirtualizerStrengthUseCase = container.setVirtualizerStrengthUseCase,
-                setLoudnessGainUseCase = container.setLoudnessGainUseCase,
-                observeAudioEffectsStateUseCase = container.observeAudioEffectsStateUseCase
-            ) as T
+        return when {
+            modelClass.isAssignableFrom(LibraryViewModel::class.java) -> {
+                LibraryViewModel(
+                    getLocalTracksUseCase = container.getLocalTracksUseCase
+                ) as T
+            }
+            modelClass.isAssignableFrom(PlayerViewModel::class.java) -> {
+                PlayerViewModel(
+                    playTrackUseCase = container.playTrackUseCase,
+                    togglePlaybackUseCase = container.togglePlaybackUseCase,
+                    seekToUseCase = container.seekToUseCase,
+                    setPlaybackSpeedUseCase = container.setPlaybackSpeedUseCase,
+                    setPlaybackPitchUseCase = container.setPlaybackPitchUseCase,
+                    observePlayerStateUseCase = container.observePlayerStateUseCase,
+                    attachAudioEffectsUseCase = container.attachAudioEffectsUseCase,
+                    setEqBandLevelUseCase = container.setEqBandLevelUseCase,
+                    setBassStrengthUseCase = container.setBassStrengthUseCase,
+                    setVirtualizerStrengthUseCase = container.setVirtualizerStrengthUseCase,
+                    setLoudnessGainUseCase = container.setLoudnessGainUseCase,
+                    observeAudioEffectsStateUseCase = container.observeAudioEffectsStateUseCase,
+                    observeUserPreferencesUseCase = container.observeUserPreferencesUseCase,
+                    savePlaybackSpeedUseCase = container.savePlaybackSpeedUseCase,
+                    savePlaybackPitchUseCase = container.savePlaybackPitchUseCase,
+                    saveBassStrengthUseCase = container.saveBassStrengthUseCase,
+                    saveVirtualizerStrengthUseCase = container.saveVirtualizerStrengthUseCase,
+                    saveLoudnessGainUseCase = container.saveLoudnessGainUseCase,
+                    saveEqBandLevelUseCase = container.saveEqBandLevelUseCase
+                ) as T
+            }
+            else -> throw IllegalArgumentException("Unknown ViewModel class: ${modelClass.name}")
         }
-        throw IllegalArgumentException("Unknown ViewModel class: ${modelClass.name}")
     }
 }
