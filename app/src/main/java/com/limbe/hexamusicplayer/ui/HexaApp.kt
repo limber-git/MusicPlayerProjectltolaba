@@ -1,18 +1,15 @@
 package com.limbe.hexamusicplayer.ui
 
-import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Brush
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -27,6 +24,10 @@ import com.limbe.hexamusicplayer.ui.screens.player.PlayerScreen
 import com.limbe.hexamusicplayer.ui.screens.player.PlayerViewModel
 import com.limbe.hexamusicplayer.ui.screens.studio.StudioScreen
 import com.limbe.hexamusicplayer.ui.screens.explorer.ExplorerScreen
+import com.limbe.hexamusicplayer.ui.screens.settings.SettingsScreen
+
+import androidx.compose.animation.*
+import androidx.compose.animation.core.tween
 
 @Composable
 fun HexaApp(
@@ -46,24 +47,12 @@ fun HexaApp(
         }
     }
 
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(
-                Brush.verticalGradient(
-                    colors = listOf(
-                        Color(0xFF091124),
-                        Color(0xFF0D1D3B),
-                        Color(0xFF121A2F)
-                    )
-                )
-            )
-    ) {
-        Scaffold(
-            containerColor = Color.Transparent,
-            bottomBar = {
+    Scaffold(
+        containerColor = MaterialTheme.colorScheme.background,
+        bottomBar = {
+            if (currentRoute != "player" && currentRoute != "settings") {
                 Column {
-                    if (playerUiState.currentTrack != null && currentRoute != "player") {
+                    if (playerUiState.currentTrack != null) {
                         MiniPlayer(
                             uiState = playerUiState,
                             onPlayPause = playerViewModel::togglePlayback,
@@ -84,31 +73,56 @@ fun HexaApp(
                     )
                 }
             }
-        ) { paddingValues ->
-            NavHost(
-                navController = navController,
-                startDestination = "library",
-                modifier = Modifier.padding(bottom = paddingValues.calculateBottomPadding())
+        }
+    ) { paddingValues ->
+        NavHost(
+            navController = navController,
+            startDestination = "library",
+            modifier = Modifier.padding(bottom = if (currentRoute == "player" || currentRoute == "settings") 0.dp else paddingValues.calculateBottomPadding()),
+            enterTransition = { fadeIn(animationSpec = tween(300)) + slideIntoContainer(AnimatedContentTransitionScope.SlideDirection.Left, tween(300)) },
+            exitTransition = { fadeOut(animationSpec = tween(300)) + slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.Left, tween(300)) },
+            popEnterTransition = { fadeIn(animationSpec = tween(300)) + slideIntoContainer(AnimatedContentTransitionScope.SlideDirection.Right, tween(300)) },
+            popExitTransition = { fadeOut(animationSpec = tween(300)) + slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.Right, tween(300)) }
+        ) {
+            composable("library") {
+                LibraryScreen(
+                    viewModel = libraryViewModel,
+                    currentTrackId = playerUiState.currentTrack?.id,
+                    isPlaying = playerUiState.isPlaying,
+                    onTrackClick = { track, queue ->
+                        playerViewModel.playTrack(track, queue)
+                    },
+                    onSettingsClick = { navController.navigate("settings") }
+                )
+            }
+            composable("explorer") {
+                ExplorerScreen(
+                    viewModel = libraryViewModel,
+                    onAlbumClick = { track, queue ->
+                        playerViewModel.playTrack(track, queue)
+                    }
+                )
+            }
+            composable("studio") {
+                StudioScreen(viewModel = playerViewModel)
+            }
+            composable(
+                route = "player",
+                enterTransition = { slideIntoContainer(AnimatedContentTransitionScope.SlideDirection.Up, tween(400)) },
+                exitTransition = { slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.Down, tween(400)) },
+                popEnterTransition = { fadeIn(animationSpec = tween(300)) },
+                popExitTransition = { slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.Down, tween(400)) }
             ) {
-                composable("library") {
-                    LibraryScreen(
-                        viewModel = libraryViewModel,
-                        currentTrackId = playerUiState.currentTrack?.id,
-                        isPlaying = playerUiState.isPlaying,
-                        onTrackClick = { track ->
-                            playerViewModel.playTrack(track)
-                        }
-                    )
-                }
-                composable("explorer") {
-                    ExplorerScreen()
-                }
-                composable("studio") {
-                    StudioScreen(viewModel = playerViewModel)
-                }
-                composable("player") {
-                    PlayerScreen(viewModel = playerViewModel)
-                }
+                PlayerScreen(
+                    viewModel = playerViewModel,
+                    onBack = { navController.popBackStack() }
+                )
+            }
+            composable("settings") {
+                SettingsScreen(
+                    playerViewModel = playerViewModel,
+                    onBack = { navController.popBackStack() }
+                )
             }
         }
     }

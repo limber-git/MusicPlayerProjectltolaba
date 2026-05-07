@@ -1,26 +1,26 @@
-# Release Checklist
+# Guía de Lanzamiento (Release)
 
-## 1) Versionado
+Este documento detalla los pasos necesarios para generar y validar una versión de producción de HexaMusicPlayer.
 
-Definir antes del build:
+## 1. Configuración de Versión
 
-- `APP_VERSION_CODE` (entero incremental)
-- `APP_VERSION_NAME` (ej. `1.2.0`)
+Antes de compilar, asegúrate de actualizar los siguientes valores en `app/build.gradle.kts` o mediante propiedades de Gradle:
 
-## 2) Keystore y firma
+- `APP_VERSION_CODE`: Un entero incremental.
+- `APP_VERSION_NAME`: El nombre semántico de la versión (ej. `1.0.0`).
 
-Configurar:
+## 2. Firma de la Aplicación
 
-- `RELEASE_STORE_FILE`
-- `RELEASE_STORE_PASSWORD`
-- `RELEASE_KEY_ALIAS`
-- `RELEASE_KEY_PASSWORD`
+Para compilaciones de producción, es necesario configurar las claves de firma mediante variables de entorno o secretos en CI/CD:
 
-En CI se usa `RELEASE_STORE_FILE_BASE64` + secretos de contrase?a/alias.
+- `RELEASE_STORE_FILE`: Ruta al archivo keystore.
+- `RELEASE_STORE_PASSWORD`: Contraseña del almacén de claves.
+- `RELEASE_KEY_ALIAS`: Alias de la clave.
+- `RELEASE_KEY_PASSWORD`: Contraseña de la clave.
 
-## 3) Quality gates
+## 3. Control de Calidad
 
-Ejecutar:
+Ejecuta la suite completa de verificaciones antes de generar el artefacto:
 
 ```bash
 ./gradlew lint
@@ -28,21 +28,12 @@ Ejecutar:
 ./gradlew assembleProdRelease
 ```
 
-## 4) Artefacto
+## 4. Validación en Dispositivo
 
-APK release:
+Una vez generado el APK en `app/build/outputs/apk/prod/release/`, se debe verificar manualmente:
 
-- `app/build/outputs/apk/prod/release/app-prod-release.apk`
-
-## 5) Firma y publicaci?n
-
-- Confirmar que `assembleProdRelease` use keystore real (no debug).
-- Subir a canal interno / Play Console seg?n estrategia del equipo.
-
-## 6) Verificaci?n m?nima en dispositivo
-
-- Reproducir pista local.
-- Bloquear pantalla y validar controles multimedia.
-- Cambiar velocidad/tonalidad.
-- Ajustar ecualizador y confirmar efecto audible.
-- Cerrar app y validar reproducci?n en segundo plano.
+1. **Biblioteca:** Correcto escaneo de pistas locales.
+2. **Reproducción:** Funcionamiento estable en primer y segundo plano.
+3. **Controles:** Validación de la notificación multimedia y controles de pantalla de bloqueo.
+4. **Audio Studio:** Confirmar que el ecualizador y los efectos de audio se aplican correctamente al motor.
+5. **Persistencia:** Validar que los favoritos y ajustes se mantienen tras reiniciar la aplicación.

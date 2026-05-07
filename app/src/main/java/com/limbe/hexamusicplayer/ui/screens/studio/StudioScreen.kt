@@ -1,50 +1,26 @@
 package com.limbe.hexamusicplayer.ui.screens.studio
 
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.ExperimentalLayoutApi
-import androidx.compose.foundation.layout.FlowRow
-import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ExpandLess
-import androidx.compose.material.icons.filled.ExpandMore
-import androidx.compose.material.icons.filled.GraphicEq
-import androidx.compose.material.icons.filled.Speed
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.FilledTonalIconButton
-import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.SuggestionChip
-import androidx.compose.material3.SuggestionChipDefaults
-import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.TopAppBarDefaults
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.runtime.setValue
+import androidx.compose.material.icons.automirrored.filled.VolumeUp
+import androidx.compose.material.icons.filled.*
+import androidx.compose.material3.*
+import androidx.compose.material3.TabRowDefaults.tabIndicatorOffset
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.limbe.hexamusicplayer.ui.components.LabeledSlider
+import com.limbe.hexamusicplayer.ui.components.StudioFader
 import com.limbe.hexamusicplayer.ui.screens.player.PlayerUiState
 import com.limbe.hexamusicplayer.ui.screens.player.PlayerViewModel
 import java.util.Locale
@@ -55,238 +31,234 @@ fun StudioScreen(
     viewModel: PlayerViewModel
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    var selectedTab by remember { mutableIntStateOf(1) } // Default to EQ
 
     Scaffold(
-        containerColor = Color.Transparent,
+        modifier = Modifier.statusBarsPadding(),
+        containerColor = MaterialTheme.colorScheme.background,
         topBar = {
-            TopAppBar(
-                colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.Transparent),
-                title = {
-                    Text(
-                        text = "AUDIO STUDIO",
-                        style = MaterialTheme.typography.headlineMedium,
-                        color = MaterialTheme.colorScheme.onBackground
+            Column {
+                CenterAlignedTopAppBar(
+                    colors = TopAppBarDefaults.centerAlignedTopAppBarColors(containerColor = Color.Transparent),
+                    title = {
+                        Text(
+                            text = "Audio Studio",
+                            style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold),
+                            color = MaterialTheme.colorScheme.onBackground
+                        )
+                    }
+                )
+                
+                TabRow(
+                    selectedTabIndex = selectedTab,
+                    containerColor = Color.Transparent,
+                    contentColor = MaterialTheme.colorScheme.primary,
+                    indicator = { tabPositions ->
+                        if (selectedTab < tabPositions.size) {
+                            TabRowDefaults.SecondaryIndicator(
+                                modifier = Modifier.tabIndicatorOffset(tabPositions[selectedTab]),
+                                color = MaterialTheme.colorScheme.primary
+                            )
+                        }
+                    },
+                    divider = {}
+                ) {
+                    Tab(
+                        selected = selectedTab == 0,
+                        onClick = { selectedTab = 0 },
+                        text = { Text("Motor", fontSize = 12.sp) },
+                        icon = { Icon(Icons.Default.Speed, contentDescription = null, modifier = Modifier.size(20.dp)) }
+                    )
+                    Tab(
+                        selected = selectedTab == 1,
+                        onClick = { selectedTab = 1 },
+                        text = { Text("Equalizador", fontSize = 12.sp) },
+                        icon = { Icon(Icons.Default.GraphicEq, contentDescription = null, modifier = Modifier.size(20.dp)) }
+                    )
+                    Tab(
+                        selected = selectedTab == 2,
+                        onClick = { selectedTab = 2 },
+                        text = { Text("Efectos", fontSize = 12.sp) },
+                        icon = { Icon(Icons.Default.Waves, contentDescription = null, modifier = Modifier.size(20.dp)) }
                     )
                 }
-            )
+            }
         }
     ) { paddingValues ->
-        LazyColumn(
+        Box(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(paddingValues)
-                .padding(horizontal = 16.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp),
-            contentPadding = PaddingValues(vertical = 16.dp)
         ) {
-            item {
-                ControlStudioCard(
-                    uiState = uiState,
-                    onSetSpeed = viewModel::setSpeed,
-                    onSetPitch = viewModel::setPitch
-                )
-            }
-
-            item {
-                EqualizerCard(
-                    uiState = uiState,
-                    onBandLevelChange = viewModel::setEqBandLevel,
-                    onBassStrengthChange = viewModel::setBassStrength,
-                    onVirtualizerStrengthChange = viewModel::setVirtualizerStrength,
-                    onLoudnessGainChange = viewModel::setLoudnessGain
-                )
-            }
-
-            item {
-                Box(modifier = Modifier.height(100.dp))
+            when (selectedTab) {
+                0 -> EngineTab(uiState, viewModel)
+                1 -> EqualizerTab(uiState, viewModel)
+                2 -> EffectsTab(uiState, viewModel)
             }
         }
     }
 }
 
 @Composable
-private fun ControlStudioCard(
-    uiState: PlayerUiState,
-    onSetSpeed: (Float) -> Unit,
-    onSetPitch: (Float) -> Unit
-) {
-    Card(
-        shape = RoundedCornerShape(24.dp),
-        colors = CardDefaults.cardColors(containerColor = Color(0xC425365E))
+private fun EngineTab(uiState: PlayerUiState, viewModel: PlayerViewModel) {
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .verticalScroll(rememberScrollState())
+            .padding(24.dp),
+        verticalArrangement = Arrangement.spacedBy(32.dp)
     ) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp)
-        ) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Icon(
-                    imageVector = Icons.Default.Speed,
-                    contentDescription = null,
-                    tint = MaterialTheme.colorScheme.secondary
-                )
-                Text(
-                    text = "Motor de Audio",
-                    style = MaterialTheme.typography.titleMedium,
-                    modifier = Modifier.padding(start = 8.dp)
-                )
-            }
-
-            LabeledSlider(
-                label = "Velocidad",
-                value = uiState.speed,
-                valueRange = 0.5f..2.0f,
-                valueText = String.format(Locale.US, "%.2fx", uiState.speed),
-                onValueChange = onSetSpeed
-            )
-
-            PresetChips(
-                values = listOf(0.75f, 1f, 1.25f, 1.5f),
-                currentValue = uiState.speed,
-                label = "Presets de Velocidad",
-                onPick = onSetSpeed
-            )
-
-            LabeledSlider(
-                label = "Tonalidad (Pitch)",
-                value = uiState.pitch,
-                valueRange = 0.5f..2.0f,
-                valueText = String.format(Locale.US, "%.2fx", uiState.pitch),
-                onValueChange = onSetPitch
-            )
-        }
-    }
-}
-
-@Composable
-private fun EqualizerCard(
-    uiState: PlayerUiState,
-    onBandLevelChange: (Int, Int) -> Unit,
-    onBassStrengthChange: (Int) -> Unit,
-    onVirtualizerStrengthChange: (Int) -> Unit,
-    onLoudnessGainChange: (Int) -> Unit
-) {
-    var expanded by rememberSaveable { mutableStateOf(true) }
-
-    Card(
-        shape = RoundedCornerShape(24.dp),
-        colors = CardDefaults.cardColors(containerColor = Color(0xC22A1F45))
-    ) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(10.dp)
-        ) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Icon(
-                    imageVector = Icons.Default.GraphicEq,
-                    contentDescription = null,
-                    tint = MaterialTheme.colorScheme.tertiary
-                )
-                Text(
-                    text = "Ecualizador de 10 Bandas",
-                    style = MaterialTheme.typography.titleMedium,
-                    modifier = Modifier
-                        .weight(1f)
-                        .padding(start = 8.dp)
-                )
-                FilledTonalIconButton(onClick = { expanded = !expanded }) {
-                    Icon(
-                        imageVector = if (expanded) Icons.Default.ExpandLess else Icons.Default.ExpandMore,
-                        contentDescription = null
-                    )
-                }
-            }
-
-            AnimatedVisibility(
-                visible = expanded,
-                enter = fadeIn(),
-                exit = fadeOut()
-            ) {
-                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    if (uiState.attachedSessionId == null || uiState.eqBands.isEmpty()) {
-                        Text(
-                            text = "Reproduce música para activar el procesado avanzado.",
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    } else {
-                        uiState.eqBands.forEach { band ->
-                            val freqKhz = band.centerFreqHz / 1000f
-                            LabeledSlider(
-                                label = String.format(Locale.US, "Banda %.1f kHz", freqKhz),
-                                value = band.level.toFloat(),
-                                valueRange = band.minLevel.toFloat()..band.maxLevel.toFloat(),
-                                valueText = "${band.level} mB",
-                                onValueChange = { onBandLevelChange(band.index, it.toInt()) }
-                            )
-                        }
-
-                        LabeledSlider(
-                            label = "Refuerzo de Graves (Bass)",
-                            value = uiState.bassStrength.toFloat(),
-                            valueRange = 0f..1000f,
-                            valueText = "${uiState.bassStrength}",
-                            onValueChange = { onBassStrengthChange(it.toInt()) }
-                        )
-
-                        LabeledSlider(
-                            label = "Virtualizador 3D",
-                            value = uiState.virtualizerStrength.toFloat(),
-                            valueRange = 0f..1000f,
-                            valueText = "${uiState.virtualizerStrength}",
-                            onValueChange = { onVirtualizerStrengthChange(it.toInt()) }
-                        )
-
-                        LabeledSlider(
-                            label = "Ganancia de Salida (Loudness)",
-                            value = uiState.loudnessGainMb.toFloat(),
-                            valueRange = -1500f..3000f,
-                            valueText = "${uiState.loudnessGainMb} mB",
-                            onValueChange = { onLoudnessGainChange(it.toInt()) }
-                        )
-                    }
-                }
-            }
-        }
-    }
-}
-
-@OptIn(ExperimentalLayoutApi::class)
-@Composable
-private fun PresetChips(
-    values: List<Float>,
-    currentValue: Float,
-    label: String,
-    onPick: (Float) -> Unit
-) {
-    Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
-        Text(
-            text = label,
-            style = MaterialTheme.typography.labelLarge,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
+        InfoCard(text = "Controla la velocidad y el tono de la reproducción en tiempo real sin perder calidad.")
+        
+        LabeledSlider(
+            label = "Velocidad de Reproducción",
+            value = uiState.speed,
+            valueRange = 0.5f..2.0f,
+            valueText = String.format(Locale.US, "%.2fx", uiState.speed),
+            onValueChange = viewModel::setSpeed
         )
-        FlowRow(
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp)
-        ) {
-            values.forEach { value ->
-                val selected = kotlin.math.abs(currentValue - value) < 0.02f
-                SuggestionChip(
-                    onClick = { onPick(value) },
-                    label = { Text(String.format(Locale.US, "%.2fx", value)) },
-                    colors = SuggestionChipDefaults.suggestionChipColors(
-                        containerColor = if (selected) {
-                            MaterialTheme.colorScheme.primary.copy(alpha = 0.25f)
-                        } else {
-                            MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.65f)
-                        },
-                        labelColor = MaterialTheme.colorScheme.onSurface
+
+        LabeledSlider(
+            label = "Tonalidad (Pitch)",
+            value = uiState.pitch,
+            valueRange = 0.5f..2.0f,
+            valueText = String.format(Locale.US, "%.2fx", uiState.pitch),
+            onValueChange = viewModel::setPitch
+        )
+    }
+}
+
+@Composable
+private fun EqualizerTab(uiState: PlayerUiState, viewModel: PlayerViewModel) {
+    if (uiState.attachedSessionId == null || uiState.eqBands.isEmpty()) {
+        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+            Text(
+                text = "Reproduce música para activar el EQ Pro",
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        }
+    } else {
+        Column(modifier = Modifier.fillMaxSize()) {
+            Text(
+                text = "Console EQ - 10 Bands",
+                style = MaterialTheme.typography.labelSmall.copy(letterSpacing = 2.sp),
+                modifier = Modifier.padding(16.dp).align(Alignment.CenterHorizontally),
+                color = MaterialTheme.colorScheme.primary
+            )
+            
+            LazyRow(
+                modifier = Modifier.fillMaxSize(),
+                contentPadding = PaddingValues(horizontal = 24.dp, vertical = 32.dp),
+                horizontalArrangement = Arrangement.spacedBy(16.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                items(uiState.eqBands) { band ->
+                    val freqKhz = band.centerFreqHz / 1000f
+                    val label = if (freqKhz >= 1f) String.format(Locale.US, "%.1fk", freqKhz) else "${band.centerFreqHz}"
+                    
+                    StudioFader(
+                        value = band.level.toFloat(),
+                        valueRange = band.minLevel.toFloat()..band.maxLevel.toFloat(),
+                        onValueChange = { viewModel.setEqBandLevel(band.index, it.toInt()) },
+                        label = label,
+                        valueText = "${band.level / 100}dB"
                     )
-                )
+                }
             }
+        }
+    }
+}
+
+@Composable
+private fun EffectsTab(uiState: PlayerUiState, viewModel: PlayerViewModel) {
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .verticalScroll(rememberScrollState())
+            .padding(24.dp),
+        verticalArrangement = Arrangement.spacedBy(24.dp)
+    ) {
+        if (uiState.attachedSessionId == null) {
+            InfoCard(text = "Los efectos de post-procesado requieren que una pista esté sonando.")
+        }
+
+        EffectControlCard(
+            title = "Bass Boost",
+            subtitle = "Refuerza las frecuencias bajas",
+            value = uiState.bassStrength.toFloat(),
+            valueRange = 0f..1000f,
+            valueText = "${uiState.bassStrength / 10}%",
+            onValueChange = { viewModel.setBassStrength(it.toInt()) },
+            icon = Icons.Default.Audiotrack
+        )
+
+        EffectControlCard(
+            title = "Virtualizador 3D",
+            subtitle = "Simulación de audio espacial",
+            value = uiState.virtualizerStrength.toFloat(),
+            valueRange = 0f..1000f,
+            valueText = "${uiState.virtualizerStrength / 10}%",
+            onValueChange = { viewModel.setVirtualizerStrength(it.toInt()) },
+            icon = Icons.Default.SurroundSound
+        )
+
+        EffectControlCard(
+            title = "Loudness Enhancer",
+            subtitle = "Ganancia de salida maestra",
+            value = uiState.loudnessGainMb.toFloat(),
+            valueRange = -1500f..3000f,
+            valueText = "${uiState.loudnessGainMb / 100} dB",
+            onValueChange = { viewModel.setLoudnessGain(it.toInt()) },
+            icon = Icons.AutoMirrored.Filled.VolumeUp
+        )
+    }
+}
+
+@Composable
+private fun EffectControlCard(
+    title: String,
+    subtitle: String,
+    value: Float,
+    valueRange: ClosedFloatingPointRange<Float>,
+    valueText: String,
+    onValueChange: (Float) -> Unit,
+    icon: androidx.compose.ui.graphics.vector.ImageVector
+) {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f)),
+        shape = RoundedCornerShape(24.dp)
+    ) {
+        Column(modifier = Modifier.padding(20.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
+            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                Icon(icon, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
+                Column {
+                    Text(text = title, style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold))
+                    Text(text = subtitle, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                }
+            }
+            LabeledSlider(
+                label = "",
+                value = value,
+                valueRange = valueRange,
+                valueText = valueText,
+                onValueChange = onValueChange
+            )
+        }
+    }
+}
+
+@Composable
+private fun InfoCard(text: String) {
+    Surface(
+        modifier = Modifier.fillMaxWidth(),
+        color = MaterialTheme.colorScheme.primary.copy(alpha = 0.1f),
+        shape = RoundedCornerShape(16.dp)
+    ) {
+        Row(modifier = Modifier.padding(16.dp), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+            Icon(Icons.Default.Info, contentDescription = null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(20.dp))
+            Text(text = text, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurface)
         }
     }
 }

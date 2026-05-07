@@ -2,26 +2,9 @@ package com.limbe.hexamusicplayer.ui.screens.player
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.limbe.hexamusicplayer.domain.model.RepeatMode
 import com.limbe.hexamusicplayer.domain.model.Track
-import com.limbe.hexamusicplayer.domain.usecase.AttachAudioEffectsUseCase
-import com.limbe.hexamusicplayer.domain.usecase.ObserveAudioEffectsStateUseCase
-import com.limbe.hexamusicplayer.domain.usecase.ObservePlayerStateUseCase
-import com.limbe.hexamusicplayer.domain.usecase.ObserveUserPreferencesUseCase
-import com.limbe.hexamusicplayer.domain.usecase.PlayTrackUseCase
-import com.limbe.hexamusicplayer.domain.usecase.SaveBassStrengthUseCase
-import com.limbe.hexamusicplayer.domain.usecase.SaveEqBandLevelUseCase
-import com.limbe.hexamusicplayer.domain.usecase.SaveLoudnessGainUseCase
-import com.limbe.hexamusicplayer.domain.usecase.SavePlaybackPitchUseCase
-import com.limbe.hexamusicplayer.domain.usecase.SavePlaybackSpeedUseCase
-import com.limbe.hexamusicplayer.domain.usecase.SaveVirtualizerStrengthUseCase
-import com.limbe.hexamusicplayer.domain.usecase.SeekToUseCase
-import com.limbe.hexamusicplayer.domain.usecase.SetBassStrengthUseCase
-import com.limbe.hexamusicplayer.domain.usecase.SetEqBandLevelUseCase
-import com.limbe.hexamusicplayer.domain.usecase.SetLoudnessGainUseCase
-import com.limbe.hexamusicplayer.domain.usecase.SetPlaybackPitchUseCase
-import com.limbe.hexamusicplayer.domain.usecase.SetPlaybackSpeedUseCase
-import com.limbe.hexamusicplayer.domain.usecase.SetVirtualizerStrengthUseCase
-import com.limbe.hexamusicplayer.domain.usecase.TogglePlaybackUseCase
+import com.limbe.hexamusicplayer.domain.usecase.*
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -48,18 +31,23 @@ class PlayerViewModel(
     private val saveBassStrengthUseCase: SaveBassStrengthUseCase,
     private val saveVirtualizerStrengthUseCase: SaveVirtualizerStrengthUseCase,
     private val saveLoudnessGainUseCase: SaveLoudnessGainUseCase,
-    private val saveEqBandLevelUseCase: SaveEqBandLevelUseCase
+    private val saveEqBandLevelUseCase: SaveEqBandLevelUseCase,
+    private val skipToNextUseCase: SkipToNextUseCase,
+    private val skipToPreviousUseCase: SkipToPreviousUseCase,
+    private val toggleShuffleUseCase: ToggleShuffleUseCase,
+    private val setRepeatModeUseCase: SetRepeatModeUseCase,
+    private val toggleFavoriteTrackUseCase: ToggleFavoriteTrackUseCase
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(PlayerUiState())
     val uiState: StateFlow<PlayerUiState> = _uiState.asStateFlow()
 
     private var lastAttachedSessionId: Int? = null
-    private var isInitialLoad = true
 
     init {
         observePlayerState()
         observeAudioEffectsState()
+        observeUserPreferences()
         loadPersistedSettings()
     }
 
@@ -68,13 +56,24 @@ class PlayerViewModel(
             val prefs = observeUserPreferencesUseCase().first()
             setPlaybackSpeedUseCase(prefs.playbackSpeed)
             setPlaybackPitchUseCase(prefs.playbackPitch)
-            // EQ and effects will be applied when session is attached
-            isInitialLoad = false
         }
     }
 
-    fun playTrack(track: Track) {
-        playTrackUseCase(track)
+    private fun observeUserPreferences() {
+        viewModelScope.launch {
+            observeUserPreferencesUseCase().collect { prefs ->
+                _uiState.update { state ->
+                    val currentTrackId = state.currentTrack?.id
+                    state.copy(
+                        isFavorite = currentTrackId != null && prefs.favoriteTrackIds.contains(currentTrackId)
+                    )
+                }
+            }
+        }
+    }
+
+    fun playTrack(track: Track, queue: List<Track> = emptyList()) {
+        playTrackUseCase(track, queue)
     }
 
     fun togglePlayback() {
@@ -83,6 +82,34 @@ class PlayerViewModel(
 
     fun seekTo(positionMs: Long) {
         seekToUseCase(positionMs)
+    }
+
+    fun skipToNext() {
+        skipToNextUseCase()
+    }
+
+    fun skipToPrevious() {
+        skipToPreviousUseCase()
+    }
+
+    fun toggleShuffle() {
+        toggleShuffleUseCase(!_uiState.value.shuffleModeEnabled)
+    }
+
+    fun toggleRepeat() {
+        val nextMode = when (_uiState.value.repeatMode) {
+            RepeatMode.OFF -> RepeatMode.ALL
+            RepeatMode.ALL -> RepeatMode.ONE
+            RepeatMode.ONE -> RepeatMode.OFF
+        }
+        setRepeatModeUseCase(nextMode)
+    }
+
+    fun toggleFavorite() {
+        val trackId = _uiState.value.currentTrack?.id ?: return
+        viewModelScope.launch {
+            toggleFavoriteTrackUseCase(trackId)
+        }
     }
 
     fun setSpeed(speed: Float) {
@@ -118,6 +145,7 @@ class PlayerViewModel(
     private fun observePlayerState() {
         viewModelScope.launch {
             observePlayerStateUseCase().collect { playerState ->
+                val prefs = observeUserPreferencesUseCase().first()
                 _uiState.update {
                     it.copy(
                         currentTrack = playerState.currentTrack,
@@ -125,7 +153,10 @@ class PlayerViewModel(
                         currentPositionMs = playerState.positionMs,
                         durationMs = playerState.durationMs,
                         speed = playerState.speed,
-                        pitch = playerState.pitch
+                        pitch = playerState.pitch,
+                        shuffleModeEnabled = playerState.shuffleModeEnabled,
+                        repeatMode = playerState.repeatMode,
+                        isFavorite = playerState.currentTrack?.id?.let { id -> prefs.favoriteTrackIds.contains(id) } ?: false
                     )
                 }
 

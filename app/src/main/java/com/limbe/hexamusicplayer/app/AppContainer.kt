@@ -1,30 +1,10 @@
-﻿package com.limbe.hexamusicplayer.app
+package com.limbe.hexamusicplayer.app
 
 import android.content.Context
 import androidx.media3.common.AudioAttributes
 import androidx.media3.common.C
 import androidx.media3.exoplayer.ExoPlayer
-import com.limbe.hexamusicplayer.domain.usecase.AttachAudioEffectsUseCase
-import com.limbe.hexamusicplayer.domain.usecase.GetLocalTracksUseCase
-import com.limbe.hexamusicplayer.domain.usecase.ObserveAudioEffectsStateUseCase
-import com.limbe.hexamusicplayer.domain.usecase.ObservePlayerStateUseCase
-import com.limbe.hexamusicplayer.domain.usecase.PlayTrackUseCase
-import com.limbe.hexamusicplayer.domain.usecase.ReleaseAudioEnginesUseCase
-import com.limbe.hexamusicplayer.domain.usecase.SeekToUseCase
-import com.limbe.hexamusicplayer.domain.usecase.SetBassStrengthUseCase
-import com.limbe.hexamusicplayer.domain.usecase.SetEqBandLevelUseCase
-import com.limbe.hexamusicplayer.domain.usecase.SetLoudnessGainUseCase
-import com.limbe.hexamusicplayer.domain.usecase.SetPlaybackPitchUseCase
-import com.limbe.hexamusicplayer.domain.usecase.SetPlaybackSpeedUseCase
-import com.limbe.hexamusicplayer.domain.usecase.SetVirtualizerStrengthUseCase
-import com.limbe.hexamusicplayer.domain.usecase.TogglePlaybackUseCase
-import com.limbe.hexamusicplayer.domain.usecase.ObserveUserPreferencesUseCase
-import com.limbe.hexamusicplayer.domain.usecase.SavePlaybackSpeedUseCase
-import com.limbe.hexamusicplayer.domain.usecase.SavePlaybackPitchUseCase
-import com.limbe.hexamusicplayer.domain.usecase.SaveBassStrengthUseCase
-import com.limbe.hexamusicplayer.domain.usecase.SaveVirtualizerStrengthUseCase
-import com.limbe.hexamusicplayer.domain.usecase.SaveLoudnessGainUseCase
-import com.limbe.hexamusicplayer.domain.usecase.SaveEqBandLevelUseCase
+import com.limbe.hexamusicplayer.domain.usecase.*
 import com.limbe.hexamusicplayer.infrastructure.effects.AndroidAudioEffectsAdapter
 import com.limbe.hexamusicplayer.infrastructure.mediastore.MediaStoreLocalMusicRepository
 import com.limbe.hexamusicplayer.infrastructure.player.ExoPlayerAudioPlayerAdapter
@@ -57,6 +37,10 @@ class AppContainer(
     val seekToUseCase = SeekToUseCase(audioPlayer)
     val setPlaybackSpeedUseCase = SetPlaybackSpeedUseCase(audioPlayer)
     val setPlaybackPitchUseCase = SetPlaybackPitchUseCase(audioPlayer)
+    val skipToNextUseCase = SkipToNextUseCase(audioPlayer)
+    val skipToPreviousUseCase = SkipToPreviousUseCase(audioPlayer)
+    val toggleShuffleUseCase = ToggleShuffleUseCase(audioPlayer)
+    val setRepeatModeUseCase = SetRepeatModeUseCase(audioPlayer)
     val observePlayerStateUseCase = ObservePlayerStateUseCase(audioPlayer)
 
     val attachAudioEffectsUseCase = AttachAudioEffectsUseCase(audioEffects)
@@ -73,6 +57,8 @@ class AppContainer(
     val saveVirtualizerStrengthUseCase = SaveVirtualizerStrengthUseCase(userPreferences)
     val saveLoudnessGainUseCase = SaveLoudnessGainUseCase(userPreferences)
     val saveEqBandLevelUseCase = SaveEqBandLevelUseCase(userPreferences)
+    val toggleFavoriteTrackUseCase = ToggleFavoriteTrackUseCase(userPreferences)
+    val setDarkModeUseCase = SetDarkModeUseCase(userPreferences)
 
     val releaseAudioEnginesUseCase = ReleaseAudioEnginesUseCase(audioPlayer, audioEffects)
 

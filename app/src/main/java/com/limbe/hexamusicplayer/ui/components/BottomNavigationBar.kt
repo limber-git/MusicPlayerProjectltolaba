@@ -6,12 +6,14 @@ import androidx.compose.material.icons.filled.GraphicEq
 import androidx.compose.material.icons.filled.LibraryMusic
 import androidx.compose.material.icons.filled.MusicNote
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.NavigationBarItemDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.unit.dp
 
 @Composable
 fun HexaBottomNavigationBar(
@@ -19,8 +21,9 @@ fun HexaBottomNavigationBar(
     onNavigate: (String) -> Unit
 ) {
     NavigationBar(
-        containerColor = Color(0xFF0B1428),
-        contentColor = Color.White
+        containerColor = MaterialTheme.colorScheme.background.copy(alpha = 0.95f),
+        contentColor = MaterialTheme.colorScheme.onBackground,
+        tonalElevation = 0.dp
     ) {
         NavigationBarItem(
             selected = currentRoute == "library",
@@ -28,11 +31,11 @@ fun HexaBottomNavigationBar(
             icon = { Icon(Icons.Default.LibraryMusic, contentDescription = null) },
             label = { Text("Música") },
             colors = NavigationBarItemDefaults.colors(
-                selectedIconColor = Color(0xFF5CF2D7),
-                selectedTextColor = Color(0xFF5CF2D7),
-                unselectedIconColor = Color.Gray,
-                unselectedTextColor = Color.Gray,
-                indicatorColor = Color(0xFF15233F)
+                selectedIconColor = MaterialTheme.colorScheme.primary,
+                selectedTextColor = MaterialTheme.colorScheme.primary,
+                unselectedIconColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                unselectedTextColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                indicatorColor = Color.Transparent
             )
         )
         NavigationBarItem(
@@ -41,11 +44,11 @@ fun HexaBottomNavigationBar(
             icon = { Icon(Icons.Default.Folder, contentDescription = null) },
             label = { Text("Carpetas") },
             colors = NavigationBarItemDefaults.colors(
-                selectedIconColor = Color(0xFF74F9D9),
-                selectedTextColor = Color(0xFF74F9D9),
-                unselectedIconColor = Color.Gray,
-                unselectedTextColor = Color.Gray,
-                indicatorColor = Color(0xFF15233F)
+                selectedIconColor = MaterialTheme.colorScheme.primary,
+                selectedTextColor = MaterialTheme.colorScheme.primary,
+                unselectedIconColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                unselectedTextColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                indicatorColor = Color.Transparent
             )
         )
         NavigationBarItem(
@@ -54,11 +57,11 @@ fun HexaBottomNavigationBar(
             icon = { Icon(Icons.Default.GraphicEq, contentDescription = null) },
             label = { Text("Studio") },
             colors = NavigationBarItemDefaults.colors(
-                selectedIconColor = Color(0xFFFF9B6A),
-                selectedTextColor = Color(0xFFFF9B6A),
-                unselectedIconColor = Color.Gray,
-                unselectedTextColor = Color.Gray,
-                indicatorColor = Color(0xFF15233F)
+                selectedIconColor = MaterialTheme.colorScheme.primary,
+                selectedTextColor = MaterialTheme.colorScheme.primary,
+                unselectedIconColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                unselectedTextColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                indicatorColor = Color.Transparent
             )
         )
         NavigationBarItem(
@@ -67,11 +70,11 @@ fun HexaBottomNavigationBar(
             icon = { Icon(Icons.Default.MusicNote, contentDescription = null) },
             label = { Text("Sonando") },
             colors = NavigationBarItemDefaults.colors(
-                selectedIconColor = Color(0xFFFF7D70),
-                selectedTextColor = Color(0xFFFF7D70),
-                unselectedIconColor = Color.Gray,
-                unselectedTextColor = Color.Gray,
-                indicatorColor = Color(0xFF15233F)
+                selectedIconColor = MaterialTheme.colorScheme.primary,
+                selectedTextColor = MaterialTheme.colorScheme.primary,
+                unselectedIconColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                unselectedTextColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                indicatorColor = Color.Transparent
             )
         )
     }

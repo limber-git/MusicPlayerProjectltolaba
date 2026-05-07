@@ -1,4 +1,4 @@
-﻿package com.limbe.hexamusicplayer.infrastructure.player
+package com.limbe.hexamusicplayer.infrastructure.player
 
 import android.net.Uri
 import android.os.Handler
@@ -11,6 +11,7 @@ import androidx.media3.common.Player
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.exoplayer.ExoPlayer
 import com.limbe.hexamusicplayer.domain.model.PlayerState
+import com.limbe.hexamusicplayer.domain.model.RepeatMode
 import com.limbe.hexamusicplayer.domain.model.Track
 import com.limbe.hexamusicplayer.domain.port.AudioPlayerPort
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -24,6 +25,7 @@ class ExoPlayerAudioPlayerAdapter(
 ) : AudioPlayerPort {
 
     private val mainHandler = Handler(Looper.getMainLooper())
+    private var currentQueue: List<Track> = emptyList()
 
     private val _state = MutableStateFlow(PlayerState())
     override val state: StateFlow<PlayerState> = _state.asStateFlow()
@@ -50,7 +52,20 @@ class ExoPlayerAudioPlayerAdapter(
                     publishState()
                 }
 
+                override fun onShuffleModeEnabledChanged(shuffleModeEnabled: Boolean) {
+                    publishState()
+                }
+
+                override fun onRepeatModeChanged(repeatMode: Int) {
+                    publishState()
+                }
+
                 override fun onMediaItemTransition(mediaItem: MediaItem?, reason: Int) {
+                    val currentId = mediaItem?.mediaId?.toLongOrNull()
+                    val currentTrack = currentQueue.find { it.id == currentId }
+                    if (currentTrack != null) {
+                        _state.update { it.copy(currentTrack = currentTrack) }
+                    }
                     publishState()
                 }
 
@@ -62,18 +77,25 @@ class ExoPlayerAudioPlayerAdapter(
         mainHandler.post(progressLoop)
     }
 
-    override fun play(track: Track) {
-        val mediaItem = MediaItem.Builder()
-            .setUri(Uri.parse(track.contentUri))
-            .setMediaId(track.id.toString())
-            .setMediaMetadata(
-                MediaMetadata.Builder()
-                    .setTitle(track.title)
-                    .setArtist(track.artist)
-                    .build()
-            )
-            .build()
-        exoPlayer.setMediaItem(mediaItem)
+    override fun play(track: Track, queue: List<Track>) {
+        currentQueue = queue.ifEmpty { listOf(track) }
+        
+        val mediaItems = currentQueue.map { t ->
+            MediaItem.Builder()
+                .setUri(Uri.parse(t.contentUri))
+                .setMediaId(t.id.toString())
+                .setMediaMetadata(
+                    MediaMetadata.Builder()
+                        .setTitle(t.title)
+                        .setArtist(t.artist)
+                        .build()
+                )
+                .build()
+        }
+
+        val startIndex = currentQueue.indexOfFirst { it.id == track.id }.coerceAtLeast(0)
+        
+        exoPlayer.setMediaItems(mediaItems, startIndex, 0L)
         exoPlayer.prepare()
         exoPlayer.playWhenReady = true
 
@@ -109,6 +131,32 @@ class ExoPlayerAudioPlayerAdapter(
         publishState()
     }
 
+    override fun skipToNext() {
+        if (exoPlayer.hasNextMediaItem()) {
+            exoPlayer.seekToNext()
+        }
+    }
+
+    override fun skipToPrevious() {
+        if (exoPlayer.hasPreviousMediaItem()) {
+            exoPlayer.seekToPrevious()
+        }
+    }
+
+    override fun setShuffleMode(enabled: Boolean) {
+        exoPlayer.shuffleModeEnabled = enabled
+        publishState()
+    }
+
+    override fun setRepeatMode(mode: RepeatMode) {
+        exoPlayer.repeatMode = when (mode) {
+            RepeatMode.OFF -> Player.REPEAT_MODE_OFF
+            RepeatMode.ONE -> Player.REPEAT_MODE_ONE
+            RepeatMode.ALL -> Player.REPEAT_MODE_ALL
+        }
+        publishState()
+    }
+
     override fun release() {
         mainHandler.removeCallbacks(progressLoop)
         exoPlayer.release()
@@ -126,7 +174,14 @@ class ExoPlayerAudioPlayerAdapter(
                 durationMs = duration.coerceAtLeast(0L),
                 speed = exoPlayer.playbackParameters.speed,
                 pitch = exoPlayer.playbackParameters.pitch,
-                audioSessionId = normalizedSession
+                audioSessionId = normalizedSession,
+                shuffleModeEnabled = exoPlayer.shuffleModeEnabled,
+                repeatMode = when (exoPlayer.repeatMode) {
+                    Player.REPEAT_MODE_OFF -> RepeatMode.OFF
+                    Player.REPEAT_MODE_ONE -> RepeatMode.ONE
+                    Player.REPEAT_MODE_ALL -> RepeatMode.ALL
+                    else -> RepeatMode.OFF
+                }
             )
         }
     }

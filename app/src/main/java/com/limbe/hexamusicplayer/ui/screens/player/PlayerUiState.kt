@@ -1,6 +1,7 @@
 package com.limbe.hexamusicplayer.ui.screens.player
 
 import com.limbe.hexamusicplayer.domain.model.EqBand
+import com.limbe.hexamusicplayer.domain.model.RepeatMode
 import com.limbe.hexamusicplayer.domain.model.Track
 
 data class PlayerUiState(
@@ -14,5 +15,8 @@ data class PlayerUiState(
     val eqBands: List<EqBand> = emptyList(),
     val bassStrength: Int = 0,
     val virtualizerStrength: Int = 0,
-    val loudnessGainMb: Int = 0
+    val loudnessGainMb: Int = 0,
+    val shuffleModeEnabled: Boolean = false,
+    val repeatMode: RepeatMode = RepeatMode.OFF,
+    val isFavorite: Boolean = false
 )

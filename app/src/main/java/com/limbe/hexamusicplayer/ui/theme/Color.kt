@@ -1,14 +1,35 @@
-﻿package com.limbe.hexamusicplayer.ui.theme
+package com.limbe.hexamusicplayer.ui.theme
 
 import androidx.compose.ui.graphics.Color
 
-val NightInk = Color(0xFF060B17)
-val StormBlue = Color(0xFF0F1F3E)
-val RoyalBlue = Color(0xFF1E3D79)
-val NeonMint = Color(0xFF7AF7D3)
-val SolarAmber = Color(0xFFF4B860)
-val CoralPulse = Color(0xFFFF7A6B)
-val Ice = Color(0xFFEAF3FF)
-val Steel = Color(0xFF9AA7BF)
-val CloudWhite = Color(0xFFF8FBFF)
-val InkBlack = Color(0xFF121212)
+// --- Base Colors ---
+val PureBlack = Color(0xFF000000)
+val PureWhite = Color(0xFFFFFFFF)
+
+// --- Dark Mode Palette (Professional) ---
+val DarkBackground = Color(0xFF000000)
+val DarkSurface = Color(0xFF121212)
+val DarkElevatedSurface = Color(0xFF1C1C1E)
+val DarkBorder = Color(0xFF2C2C2E)
+
+// --- Light Mode Palette (Professional) ---
+val LightBackground = Color(0xFFF2F2F7)
+val LightSurface = Color(0xFFFFFFFF)
+val LightElevatedSurface = Color(0xFFE5E5EA)
+val LightBorder = Color(0xFFD1D1D6)
+
+// --- Brand & Accent Colors ---
+val AccentBlue = Color(0xFF007AFF) // iOS Royal Blue
+val AccentCoral = Color(0xFFFF2D55) // iOS Pink/Red
+val AccentMint = Color(0xFF34C759) // iOS Green
+val AccentAmber = Color(0xFFFF9500) // iOS Orange
+
+// --- Text Colors ---
+val TextPrimaryDark = Color(0xFFFFFFFF)
+val TextSecondaryDark = Color(0xFF8E8E93)
+val TextPrimaryLight = Color(0xFF000000)
+val TextSecondaryLight = Color(0xFF3C3C43)
+
+// --- Glass Effects ---
+val GlassWhite = Color(0x1AFFFFFF)
+val GlassBlack = Color(0x1A000000)
