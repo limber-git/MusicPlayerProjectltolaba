@@ -247,19 +247,7 @@ class PlayerViewModel(
                     lastKnownPlayerSessionId?.takeIf { it > 0 }?.let { attachAudioEffectsIfAllowed(it) }
                 }
 
-                _uiState.update { state ->
-                    val currentTrackId = state.currentTrack?.id
-                    state.copy(
-                        isFavorite = currentTrackId != null && prefs.favoriteTrackIds.contains(currentTrackId),
-                        favoriteCount = prefs.favoriteTrackIds.size,
-                        recentTrackIds = prefs.recentTrackIds,
-                        darkModeMode = prefs.darkModeMode,
-                        audioEffectsEnabled = prefs.audioEffectsEnabled,
-                        appLanguage = prefs.appLanguage,
-                        manualLibraryFolderUri = prefs.manualLibraryFolderUri,
-                        manualLibraryFolderLabel = prefs.manualLibraryFolderLabel
-                    )
-                }
+                _uiState.update { state -> state.withPreferences(prefs) }
             }
         }
     }
@@ -267,23 +255,7 @@ class PlayerViewModel(
     private fun observePlayerState() {
         viewModelScope.launch {
             observePlayerStateUseCase().collect { playerState ->
-                _uiState.update {
-                    it.copy(
-                        currentTrack = playerState.currentTrack,
-                        queue = playerState.queue,
-                        isPlaying = playerState.isPlaying,
-                        currentPositionMs = playerState.positionMs,
-                        durationMs = playerState.durationMs,
-                        speed = playerState.speed,
-                        pitch = playerState.pitch,
-                        shuffleModeEnabled = playerState.shuffleModeEnabled,
-                        repeatMode = playerState.repeatMode,
-                        playerErrorMessage = playerState.errorMessage,
-                        isFavorite = playerState.currentTrack?.id?.let { id ->
-                            currentPreferences.favoriteTrackIds.contains(id)
-                        } ?: false
-                    )
-                }
+                _uiState.update { it.withPlayerState(playerState, currentPreferences) }
 
                 playerState.currentTrack?.id?.let(::recordRecentTrack)
 
@@ -319,16 +291,7 @@ class PlayerViewModel(
     private fun observeAudioEffectsState() {
         viewModelScope.launch {
             observeAudioEffectsStateUseCase().collect { effectsState ->
-                _uiState.update {
-                    it.copy(
-                        attachedSessionId = effectsState.attachedSessionId,
-                        eqBands = effectsState.bands,
-                        bassStrength = effectsState.bassStrength,
-                        virtualizerStrength = effectsState.virtualizerStrength,
-                        loudnessGainMb = effectsState.loudnessGainMb,
-                        effectsAvailable = effectsState.effectsAvailable
-                    )
-                }
+                _uiState.update { it.withAudioEffects(effectsState) }
             }
         }
     }

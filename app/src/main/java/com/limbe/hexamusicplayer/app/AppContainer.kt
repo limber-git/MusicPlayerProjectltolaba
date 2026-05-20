@@ -32,6 +32,7 @@ class AppContainer(
     val playbackSessionManager = PlaybackSessionManager(context, exoPlayer)
 
     val getLocalTracksUseCase = GetLocalTracksUseCase(musicRepository)
+    val buildVisibleLibraryUseCase = BuildVisibleLibraryUseCase()
     val playTrackUseCase = PlayTrackUseCase(audioPlayer)
     val togglePlaybackUseCase = TogglePlaybackUseCase(audioPlayer)
     val seekToUseCase = SeekToUseCase(audioPlayer)

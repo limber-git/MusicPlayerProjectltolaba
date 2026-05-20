@@ -4,6 +4,7 @@ import com.limbe.hexamusicplayer.domain.model.Track
 import com.limbe.hexamusicplayer.domain.model.AppLanguage
 import com.limbe.hexamusicplayer.domain.model.DarkModeMode
 import com.limbe.hexamusicplayer.domain.model.UserPreferences
+import com.limbe.hexamusicplayer.domain.usecase.BuildVisibleLibraryUseCase
 import com.limbe.hexamusicplayer.domain.port.LocalMusicRepository
 import com.limbe.hexamusicplayer.domain.port.UserPreferencesPort
 import com.limbe.hexamusicplayer.domain.usecase.GetLocalTracksUseCase
@@ -45,7 +46,8 @@ class LibraryViewModelTest {
 
         val viewModel = LibraryViewModel(
             GetLocalTracksUseCase(fakeRepository),
-            ObserveUserPreferencesUseCase(preferences)
+            ObserveUserPreferencesUseCase(preferences),
+            BuildVisibleLibraryUseCase()
         )
 
         viewModel.refreshTracks()
@@ -66,7 +68,8 @@ class LibraryViewModelTest {
 
         val viewModel = LibraryViewModel(
             GetLocalTracksUseCase(fakeRepository),
-            ObserveUserPreferencesUseCase(preferences)
+            ObserveUserPreferencesUseCase(preferences),
+            BuildVisibleLibraryUseCase()
         )
 
         viewModel.refreshTracks()
@@ -108,7 +111,8 @@ class LibraryViewModelTest {
         val preferences = FakeLibraryPreferencesPort()
         val viewModel = LibraryViewModel(
             GetLocalTracksUseCase(fakeRepository),
-            ObserveUserPreferencesUseCase(preferences)
+            ObserveUserPreferencesUseCase(preferences),
+            BuildVisibleLibraryUseCase()
         )
 
         viewModel.refreshTracks()

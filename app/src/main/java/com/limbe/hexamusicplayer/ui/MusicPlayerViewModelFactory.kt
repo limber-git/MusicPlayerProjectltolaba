@@ -16,7 +16,8 @@ class MusicPlayerViewModelFactory(
             modelClass.isAssignableFrom(LibraryViewModel::class.java) -> {
                 LibraryViewModel(
                     getLocalTracksUseCase = container.getLocalTracksUseCase,
-                    observeUserPreferencesUseCase = container.observeUserPreferencesUseCase
+                    observeUserPreferencesUseCase = container.observeUserPreferencesUseCase,
+                    buildVisibleLibraryUseCase = container.buildVisibleLibraryUseCase
                 ) as T
             }
             modelClass.isAssignableFrom(PlayerViewModel::class.java) -> {
