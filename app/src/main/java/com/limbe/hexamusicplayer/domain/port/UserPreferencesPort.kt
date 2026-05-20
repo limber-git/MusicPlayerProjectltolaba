@@ -1,5 +1,7 @@
 package com.limbe.hexamusicplayer.domain.port
 
+import com.limbe.hexamusicplayer.domain.model.AppLanguage
+import com.limbe.hexamusicplayer.domain.model.DarkModeMode
 import com.limbe.hexamusicplayer.domain.model.UserPreferences
 import kotlinx.coroutines.flow.Flow
 
@@ -13,6 +15,8 @@ interface UserPreferencesPort {
     suspend fun setEqBandLevel(index: Int, level: Int)
     suspend fun toggleFavoriteTrack(trackId: Long)
     suspend fun recordRecentTrack(trackId: Long)
-    suspend fun setDarkModeMode(mode: com.limbe.hexamusicplayer.domain.model.DarkModeMode)
+    suspend fun setDarkModeMode(mode: DarkModeMode)
     suspend fun setAudioEffectsEnabled(enabled: Boolean)
+    suspend fun setAppLanguage(language: AppLanguage)
+    suspend fun setManualLibraryFolder(uri: String?, label: String?)
 }

@@ -1,5 +1,9 @@
 package com.limbe.hexamusicplayer.ui.screens.settings
 
+import android.content.Intent
+import android.net.Uri
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -13,8 +17,10 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material.icons.filled.FolderOpen
 import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.Info
+import androidx.compose.material.icons.filled.Language
 import androidx.compose.material.icons.filled.Palette
 import androidx.compose.material.icons.filled.Security
 import androidx.compose.material.icons.filled.Style
@@ -40,12 +46,14 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.limbe.hexamusicplayer.BuildConfig
 import com.limbe.hexamusicplayer.R
+import com.limbe.hexamusicplayer.domain.model.AppLanguage
 import com.limbe.hexamusicplayer.domain.model.DarkModeMode
 import com.limbe.hexamusicplayer.ui.screens.player.PlayerViewModel
 
@@ -56,7 +64,25 @@ fun SettingsScreen(
     onBack: () -> Unit
 ) {
     val uiState by playerViewModel.uiState.collectAsStateWithLifecycle()
+    val context = LocalContext.current
     var showThemeDialog by remember { mutableStateOf(false) }
+    var showLanguageDialog by remember { mutableStateOf(false) }
+
+    val folderPickerLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.OpenDocumentTree()
+    ) { treeUri ->
+        treeUri ?: return@rememberLauncherForActivityResult
+        runCatching {
+            context.contentResolver.takePersistableUriPermission(
+                treeUri,
+                Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION
+            )
+        }
+        playerViewModel.setManualLibraryFolder(
+            uri = treeUri.toString(),
+            label = formatFolderLabel(treeUri)
+        )
+    }
 
     if (showThemeDialog) {
         ThemeModeDialog(
@@ -65,6 +91,17 @@ fun SettingsScreen(
             onModeSelected = { mode ->
                 playerViewModel.setDarkModeMode(mode)
                 showThemeDialog = false
+            }
+        )
+    }
+
+    if (showLanguageDialog) {
+        LanguageDialog(
+            selectedLanguage = uiState.appLanguage,
+            onDismiss = { showLanguageDialog = false },
+            onLanguageSelected = { language ->
+                playerViewModel.setAppLanguage(language)
+                showLanguageDialog = false
             }
         )
     }
@@ -107,6 +144,14 @@ fun SettingsScreen(
                     onClick = { showThemeDialog = true }
                 )
             }
+            item {
+                SettingsClickableItem(
+                    title = stringResource(R.string.settings_language_title),
+                    subtitle = appLanguageLabel(uiState.appLanguage),
+                    icon = Icons.Default.Language,
+                    onClick = { showLanguageDialog = true }
+                )
+            }
 
             item { SettingsSectionTitle(stringResource(R.string.settings_section_audio)) }
             item {
@@ -141,6 +186,43 @@ fun SettingsScreen(
             }
 
             item { SettingsSectionTitle(stringResource(R.string.settings_section_library)) }
+            item {
+                SettingsInfoItem(
+                    title = stringResource(R.string.settings_music_source_title),
+                    subtitle = uiState.manualLibraryFolderLabel?.let {
+                        stringResource(R.string.settings_music_source_subtitle_folder, it)
+                    } ?: stringResource(R.string.settings_music_source_subtitle_device),
+                    icon = Icons.Default.FolderOpen
+                )
+            }
+            item {
+                SettingsClickableItem(
+                    title = stringResource(R.string.settings_select_folder_title),
+                    subtitle = stringResource(R.string.settings_select_folder_subtitle),
+                    icon = Icons.Default.FolderOpen,
+                    onClick = { folderPickerLauncher.launch(null) }
+                )
+            }
+            if (uiState.manualLibraryFolderUri != null) {
+                item {
+                    SettingsClickableItem(
+                        title = stringResource(R.string.settings_clear_folder_title),
+                        subtitle = stringResource(R.string.settings_clear_folder_subtitle),
+                        icon = Icons.Default.FolderOpen,
+                        onClick = {
+                            uiState.manualLibraryFolderUri?.let { rawUri ->
+                                runCatching {
+                                    context.contentResolver.releasePersistableUriPermission(
+                                        Uri.parse(rawUri),
+                                        Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION
+                                    )
+                                }
+                            }
+                            playerViewModel.setManualLibraryFolder(null, null)
+                        }
+                    )
+                }
+            }
             item {
                 SettingsInfoItem(
                     title = stringResource(R.string.settings_favorites_title),
@@ -197,6 +279,50 @@ private fun ThemeModeDialog(
                             RadioButton(
                                 selected = selectedMode == mode,
                                 onClick = { onModeSelected(mode) }
+                            )
+                            Text(text = label)
+                        }
+                    }
+                }
+            }
+        },
+        confirmButton = {
+            TextButton(onClick = onDismiss) {
+                Text(stringResource(R.string.action_done))
+            }
+        }
+    )
+}
+
+@Composable
+private fun LanguageDialog(
+    selectedLanguage: AppLanguage,
+    onDismiss: () -> Unit,
+    onLanguageSelected: (AppLanguage) -> Unit
+) {
+    val options = listOf(
+        AppLanguage.SYSTEM to stringResource(R.string.language_mode_system),
+        AppLanguage.SPANISH to stringResource(R.string.language_mode_spanish),
+        AppLanguage.ENGLISH to stringResource(R.string.language_mode_english)
+    )
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(stringResource(R.string.settings_language_dialog_title)) },
+        text = {
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                options.forEach { (language, label) ->
+                    Surface(
+                        onClick = { onLanguageSelected(language) },
+                        color = Color.Transparent
+                    ) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            RadioButton(
+                                selected = selectedLanguage == language,
+                                onClick = { onLanguageSelected(language) }
                             )
                             Text(text = label)
                         }
@@ -306,4 +432,18 @@ private fun themeModeLabel(mode: DarkModeMode): String {
         DarkModeMode.LIGHT -> stringResource(R.string.theme_mode_light)
         DarkModeMode.DARK -> stringResource(R.string.theme_mode_dark)
     }
+}
+
+@Composable
+private fun appLanguageLabel(language: AppLanguage): String {
+    return when (language) {
+        AppLanguage.SYSTEM -> stringResource(R.string.language_mode_system)
+        AppLanguage.SPANISH -> stringResource(R.string.language_mode_spanish)
+        AppLanguage.ENGLISH -> stringResource(R.string.language_mode_english)
+    }
+}
+
+private fun formatFolderLabel(uri: Uri): String {
+    val rawValue = uri.lastPathSegment.orEmpty()
+    return rawValue.substringAfterLast(":").ifBlank { rawValue }.replace('/', ' ')
 }

@@ -4,7 +4,10 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.appcompat.app.AppCompatDelegate
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.core.os.LocaleListCompat
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.limbe.hexamusicplayer.app.MusicApplication
@@ -24,6 +27,12 @@ class MainActivity : ComponentActivity() {
             val libraryViewModel: LibraryViewModel = viewModel(factory = factory)
             val playerViewModel: PlayerViewModel = viewModel(factory = factory)
             val playerUiState by playerViewModel.uiState.collectAsStateWithLifecycle()
+
+            LaunchedEffect(playerUiState.appLanguage) {
+                AppCompatDelegate.setApplicationLocales(
+                    LocaleListCompat.forLanguageTags(playerUiState.appLanguage.languageTag)
+                )
+            }
 
             HexaMusicTheme(darkModeMode = playerUiState.darkModeMode) {
                 HexaApp(

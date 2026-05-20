@@ -18,6 +18,7 @@ import androidx.compose.material.icons.automirrored.filled.VolumeUp
 import androidx.compose.material.icons.filled.Audiotrack
 import androidx.compose.material.icons.filled.GraphicEq
 import androidx.compose.material.icons.filled.Info
+import androidx.compose.material.icons.filled.MenuBook
 import androidx.compose.material.icons.filled.Speed
 import androidx.compose.material.icons.filled.SurroundSound
 import androidx.compose.material.icons.filled.Waves
@@ -114,6 +115,12 @@ fun StudioScreen(
                         text = { Text(stringResource(R.string.studio_tab_effects), fontSize = 12.sp) },
                         icon = { Icon(Icons.Default.Waves, contentDescription = null, modifier = Modifier.size(20.dp)) }
                     )
+                    Tab(
+                        selected = selectedTab == 3,
+                        onClick = { selectedTab = 3 },
+                        text = { Text(stringResource(R.string.studio_tab_lyrics), fontSize = 12.sp) },
+                        icon = { Icon(Icons.Default.MenuBook, contentDescription = null, modifier = Modifier.size(20.dp)) }
+                    )
                 }
             }
         }
@@ -127,6 +134,7 @@ fun StudioScreen(
                 0 -> EngineTab(uiState, viewModel)
                 1 -> EqualizerTab(uiState, viewModel)
                 2 -> EffectsTab(uiState, viewModel)
+                3 -> LyricsTab(uiState)
             }
         }
     }
@@ -268,6 +276,42 @@ private fun EffectsTab(uiState: PlayerUiState, viewModel: PlayerViewModel) {
             icon = Icons.AutoMirrored.Filled.VolumeUp,
             enabled = uiState.audioEffectsEnabled && uiState.effectsAvailable
         )
+    }
+}
+
+@Composable
+private fun LyricsTab(uiState: PlayerUiState) {
+    androidx.compose.foundation.layout.Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .verticalScroll(rememberScrollState())
+            .padding(24.dp),
+        verticalArrangement = Arrangement.spacedBy(24.dp)
+    ) {
+        InfoCard(text = stringResource(R.string.studio_lyrics_info))
+        Card(
+            modifier = Modifier.fillMaxWidth(),
+            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f))
+        ) {
+            androidx.compose.foundation.layout.Column(
+                modifier = Modifier.padding(20.dp),
+                verticalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                Text(
+                    text = stringResource(R.string.studio_lyrics_title),
+                    style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold)
+                )
+                Text(
+                    text = if (uiState.currentTrack != null) {
+                        stringResource(R.string.studio_lyrics_body_active, uiState.currentTrack.title)
+                    } else {
+                        stringResource(R.string.studio_lyrics_body_idle)
+                    },
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+        }
     }
 }
 

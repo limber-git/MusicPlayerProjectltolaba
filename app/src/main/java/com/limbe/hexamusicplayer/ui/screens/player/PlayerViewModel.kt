@@ -2,6 +2,7 @@ package com.limbe.hexamusicplayer.ui.screens.player
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.limbe.hexamusicplayer.domain.model.AppLanguage
 import com.limbe.hexamusicplayer.domain.model.DarkModeMode
 import com.limbe.hexamusicplayer.domain.model.RepeatMode
 import com.limbe.hexamusicplayer.domain.model.Track
@@ -21,6 +22,7 @@ import com.limbe.hexamusicplayer.domain.usecase.SavePlaybackSpeedUseCase
 import com.limbe.hexamusicplayer.domain.usecase.SaveVirtualizerStrengthUseCase
 import com.limbe.hexamusicplayer.domain.usecase.SeekToUseCase
 import com.limbe.hexamusicplayer.domain.usecase.SetAudioEffectsEnabledUseCase
+import com.limbe.hexamusicplayer.domain.usecase.SetAppLanguageUseCase
 import com.limbe.hexamusicplayer.domain.usecase.SetBassStrengthUseCase
 import com.limbe.hexamusicplayer.domain.usecase.SetDarkModeUseCase
 import com.limbe.hexamusicplayer.domain.usecase.SetEqBandLevelUseCase
@@ -34,6 +36,7 @@ import com.limbe.hexamusicplayer.domain.usecase.SkipToPreviousUseCase
 import com.limbe.hexamusicplayer.domain.usecase.ToggleFavoriteTrackUseCase
 import com.limbe.hexamusicplayer.domain.usecase.TogglePlaybackUseCase
 import com.limbe.hexamusicplayer.domain.usecase.ToggleShuffleUseCase
+import com.limbe.hexamusicplayer.domain.usecase.SetManualLibraryFolderUseCase
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -68,7 +71,9 @@ class PlayerViewModel(
     private val toggleFavoriteTrackUseCase: ToggleFavoriteTrackUseCase,
     private val recordRecentTrackUseCase: RecordRecentTrackUseCase,
     private val setDarkModeUseCase: SetDarkModeUseCase,
-    private val setAudioEffectsEnabledUseCase: SetAudioEffectsEnabledUseCase
+    private val setAudioEffectsEnabledUseCase: SetAudioEffectsEnabledUseCase,
+    private val setAppLanguageUseCase: SetAppLanguageUseCase,
+    private val setManualLibraryFolderUseCase: SetManualLibraryFolderUseCase
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(PlayerUiState())
@@ -131,6 +136,19 @@ class PlayerViewModel(
         if (_uiState.value.darkModeMode == mode) return
         viewModelScope.launch {
             setDarkModeUseCase(mode)
+        }
+    }
+
+    fun setAppLanguage(language: AppLanguage) {
+        if (_uiState.value.appLanguage == language) return
+        viewModelScope.launch {
+            setAppLanguageUseCase(language)
+        }
+    }
+
+    fun setManualLibraryFolder(uri: String?, label: String?) {
+        viewModelScope.launch {
+            setManualLibraryFolderUseCase(uri, label)
         }
     }
 
@@ -236,7 +254,10 @@ class PlayerViewModel(
                         favoriteCount = prefs.favoriteTrackIds.size,
                         recentTrackIds = prefs.recentTrackIds,
                         darkModeMode = prefs.darkModeMode,
-                        audioEffectsEnabled = prefs.audioEffectsEnabled
+                        audioEffectsEnabled = prefs.audioEffectsEnabled,
+                        appLanguage = prefs.appLanguage,
+                        manualLibraryFolderUri = prefs.manualLibraryFolderUri,
+                        manualLibraryFolderLabel = prefs.manualLibraryFolderLabel
                     )
                 }
             }
@@ -249,6 +270,7 @@ class PlayerViewModel(
                 _uiState.update {
                     it.copy(
                         currentTrack = playerState.currentTrack,
+                        queue = playerState.queue,
                         isPlaying = playerState.isPlaying,
                         currentPositionMs = playerState.positionMs,
                         durationMs = playerState.durationMs,

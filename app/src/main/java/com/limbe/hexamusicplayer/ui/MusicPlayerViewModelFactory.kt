@@ -48,7 +48,9 @@ class MusicPlayerViewModelFactory(
                     toggleFavoriteTrackUseCase = container.toggleFavoriteTrackUseCase,
                     recordRecentTrackUseCase = container.recordRecentTrackUseCase,
                     setDarkModeUseCase = container.setDarkModeUseCase,
-                    setAudioEffectsEnabledUseCase = container.setAudioEffectsEnabledUseCase
+                    setAudioEffectsEnabledUseCase = container.setAudioEffectsEnabledUseCase,
+                    setAppLanguageUseCase = container.setAppLanguageUseCase,
+                    setManualLibraryFolderUseCase = container.setManualLibraryFolderUseCase
                 ) as T
             }
             else -> throw IllegalArgumentException("Unknown ViewModel class: ${modelClass.name}")

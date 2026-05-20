@@ -1,5 +1,6 @@
 package com.limbe.hexamusicplayer.domain.usecase
 
+import com.limbe.hexamusicplayer.domain.model.AppLanguage
 import com.limbe.hexamusicplayer.domain.port.UserPreferencesPort
 
 class SavePlaybackSpeedUseCase(private val port: UserPreferencesPort) {
@@ -32,4 +33,12 @@ class RecordRecentTrackUseCase(private val port: UserPreferencesPort) {
 
 class SetAudioEffectsEnabledUseCase(private val port: UserPreferencesPort) {
     suspend operator fun invoke(enabled: Boolean) = port.setAudioEffectsEnabled(enabled)
+}
+
+class SetAppLanguageUseCase(private val port: UserPreferencesPort) {
+    suspend operator fun invoke(language: AppLanguage) = port.setAppLanguage(language)
+}
+
+class SetManualLibraryFolderUseCase(private val port: UserPreferencesPort) {
+    suspend operator fun invoke(uri: String?, label: String?) = port.setManualLibraryFolder(uri, label)
 }

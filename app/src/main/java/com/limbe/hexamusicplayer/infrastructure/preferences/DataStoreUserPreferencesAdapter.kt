@@ -8,6 +8,7 @@ import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.core.stringSetPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
+import com.limbe.hexamusicplayer.domain.model.AppLanguage
 import com.limbe.hexamusicplayer.domain.model.DarkModeMode
 import com.limbe.hexamusicplayer.domain.model.UserPreferences
 import com.limbe.hexamusicplayer.domain.port.UserPreferencesPort
@@ -29,6 +30,9 @@ class DataStoreUserPreferencesAdapter(private val context: Context) : UserPrefer
         val RECENT_TRACKS = stringPreferencesKey("recent_tracks")
         val DARK_MODE = stringPreferencesKey("dark_mode")
         val AUDIO_EFFECTS_ENABLED = booleanPreferencesKey("audio_effects_enabled")
+        val APP_LANGUAGE = stringPreferencesKey("app_language")
+        val MANUAL_LIBRARY_FOLDER_URI = stringPreferencesKey("manual_library_folder_uri")
+        val MANUAL_LIBRARY_FOLDER_LABEL = stringPreferencesKey("manual_library_folder_label")
     }
 
     override val preferences: Flow<UserPreferences> = context.dataStore.data.map { prefs ->
@@ -42,7 +46,10 @@ class DataStoreUserPreferencesAdapter(private val context: Context) : UserPrefer
             favoriteTrackIds = prefs[Keys.FAVORITE_TRACKS]?.mapNotNull { it.toLongOrNull() }?.toSet() ?: emptySet(),
             recentTrackIds = parseTrackIds(prefs[Keys.RECENT_TRACKS] ?: ""),
             darkModeMode = DarkModeMode.valueOf(prefs[Keys.DARK_MODE] ?: DarkModeMode.SYSTEM.name),
-            audioEffectsEnabled = prefs[Keys.AUDIO_EFFECTS_ENABLED] ?: true
+            audioEffectsEnabled = prefs[Keys.AUDIO_EFFECTS_ENABLED] ?: true,
+            appLanguage = AppLanguage.valueOf(prefs[Keys.APP_LANGUAGE] ?: AppLanguage.SYSTEM.name),
+            manualLibraryFolderUri = prefs[Keys.MANUAL_LIBRARY_FOLDER_URI],
+            manualLibraryFolderLabel = prefs[Keys.MANUAL_LIBRARY_FOLDER_LABEL]
         )
     }
 
@@ -102,6 +109,22 @@ class DataStoreUserPreferencesAdapter(private val context: Context) : UserPrefer
 
     override suspend fun setAudioEffectsEnabled(enabled: Boolean) {
         context.dataStore.edit { it[Keys.AUDIO_EFFECTS_ENABLED] = enabled }
+    }
+
+    override suspend fun setAppLanguage(language: AppLanguage) {
+        context.dataStore.edit { it[Keys.APP_LANGUAGE] = language.name }
+    }
+
+    override suspend fun setManualLibraryFolder(uri: String?, label: String?) {
+        context.dataStore.edit { prefs ->
+            if (uri.isNullOrBlank()) {
+                prefs.remove(Keys.MANUAL_LIBRARY_FOLDER_URI)
+                prefs.remove(Keys.MANUAL_LIBRARY_FOLDER_LABEL)
+            } else {
+                prefs[Keys.MANUAL_LIBRARY_FOLDER_URI] = uri
+                prefs[Keys.MANUAL_LIBRARY_FOLDER_LABEL] = label ?: uri
+            }
+        }
     }
 
     private fun parseEqBands(encoded: String): Map<Int, Int> {

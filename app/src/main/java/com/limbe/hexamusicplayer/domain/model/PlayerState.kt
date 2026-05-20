@@ -2,6 +2,7 @@ package com.limbe.hexamusicplayer.domain.model
 
 data class PlayerState(
     val currentTrack: Track? = null,
+    val queue: List<Track> = emptyList(),
     val isPlaying: Boolean = false,
     val positionMs: Long = 0,
     val durationMs: Long = 0,

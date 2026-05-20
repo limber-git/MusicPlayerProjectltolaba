@@ -10,9 +10,18 @@ data class UserPreferences(
     val favoriteTrackIds: Set<Long> = emptySet(),
     val recentTrackIds: List<Long> = emptyList(),
     val darkModeMode: DarkModeMode = DarkModeMode.SYSTEM,
-    val audioEffectsEnabled: Boolean = true
+    val audioEffectsEnabled: Boolean = true,
+    val appLanguage: AppLanguage = AppLanguage.SYSTEM,
+    val manualLibraryFolderUri: String? = null,
+    val manualLibraryFolderLabel: String? = null
 )
 
 enum class DarkModeMode {
     SYSTEM, LIGHT, DARK
+}
+
+enum class AppLanguage(val languageTag: String) {
+    SYSTEM(""),
+    SPANISH("es"),
+    ENGLISH("en")
 }

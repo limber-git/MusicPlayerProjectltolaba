@@ -62,6 +62,8 @@ class AppContainer(
     val recordRecentTrackUseCase = RecordRecentTrackUseCase(userPreferences)
     val setDarkModeUseCase = SetDarkModeUseCase(userPreferences)
     val setAudioEffectsEnabledUseCase = SetAudioEffectsEnabledUseCase(userPreferences)
+    val setAppLanguageUseCase = SetAppLanguageUseCase(userPreferences)
+    val setManualLibraryFolderUseCase = SetManualLibraryFolderUseCase(userPreferences)
 
     val releaseAudioEnginesUseCase = ReleaseAudioEnginesUseCase(audioPlayer, audioEffects)
 

@@ -1,5 +1,6 @@
 ﻿package com.limbe.hexamusicplayer.infrastructure.mediastore
 
+import android.os.Build
 import android.content.ContentUris
 import android.content.Context
 import android.net.Uri
@@ -16,6 +17,11 @@ class MediaStoreLocalMusicRepository(
     override suspend fun listLocalTracks(): List<Track> = withContext(Dispatchers.IO) {
         val tracks = mutableListOf<Track>()
         val collection = MediaStore.Audio.Media.EXTERNAL_CONTENT_URI
+        val sourcePathColumnName = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            MediaStore.Audio.Media.RELATIVE_PATH
+        } else {
+            MediaStore.Audio.Media.DATA
+        }
         val projection = arrayOf(
             MediaStore.Audio.Media._ID,
             MediaStore.Audio.Media.TITLE,
@@ -23,7 +29,8 @@ class MediaStoreLocalMusicRepository(
             MediaStore.Audio.Media.ALBUM,
             MediaStore.Audio.Media.ALBUM_ID,
             MediaStore.Audio.Media.DURATION,
-            MediaStore.Audio.Media.IS_MUSIC
+            MediaStore.Audio.Media.IS_MUSIC,
+            sourcePathColumnName
         )
         val selection = "${MediaStore.Audio.Media.IS_MUSIC} != 0"
         val sortOrder = "${MediaStore.Audio.Media.DATE_ADDED} DESC"
@@ -41,6 +48,7 @@ class MediaStoreLocalMusicRepository(
             val albumColumn = cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.ALBUM)
             val albumIdColumn = cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.ALBUM_ID)
             val durationColumn = cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.DURATION)
+            val sourcePathColumn = cursor.getColumnIndexOrThrow(sourcePathColumnName)
 
             while (cursor.moveToNext()) {
                 val id = cursor.getLong(idColumn)
@@ -49,6 +57,7 @@ class MediaStoreLocalMusicRepository(
                 val album = cursor.getString(albumColumn) ?: "Unknown album"
                 val albumId = cursor.getLong(albumIdColumn)
                 val durationMs = cursor.getLong(durationColumn).coerceAtLeast(0L)
+                val sourcePath = cursor.getString(sourcePathColumn)
                 val uri = ContentUris.withAppendedId(collection, id).toString()
                 val artworkUri = albumArtworkUri(albumId)
 
@@ -60,7 +69,8 @@ class MediaStoreLocalMusicRepository(
                     albumId = albumId.takeIf { it > 0L },
                     durationMs = durationMs,
                     contentUri = uri,
-                    artworkUri = artworkUri
+                    artworkUri = artworkUri,
+                    sourcePath = sourcePath
                 )
             }
         }

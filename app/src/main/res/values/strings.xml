@@ -2,12 +2,16 @@
 <resources>
     <string name="app_name">Hexa Music Player</string>
 
-    <string name="nav_library">M&#250;sica</string>
+    <string name="nav_home">Inicio</string>
+    <string name="nav_library">Biblioteca</string>
+    <string name="nav_explore">Explorar</string>
+    <string name="nav_search">Buscar</string>
     <string name="nav_albums">Colecci&#243;n</string>
     <string name="nav_studio">Studio</string>
     <string name="nav_now_playing">Sonando</string>
 
     <string name="action_open_settings">Abrir configuraci&#243;n</string>
+    <string name="action_open_studio">Abrir modo estudio</string>
     <string name="action_close">Cerrar</string>
     <string name="action_back">Atr&#225;s</string>
     <string name="action_done">Listo</string>
@@ -18,13 +22,38 @@
     <string name="action_next">Siguiente</string>
     <string name="action_repeat">Repetir</string>
 
+    <string name="home_title">Inicio</string>
+    <string name="home_hero_title">Tu biblioteca lista para sonar</string>
+    <string name="home_hero_body">%1$d favoritas listas para volver al escenario.</string>
+    <string name="home_hero_active_label">Reproducci&#243;n activa</string>
+    <string name="home_hero_idle_label">Listo para ensayar</string>
+    <string name="home_hero_cta_player">Abrir player</string>
+    <string name="home_hero_cta_studio">Modo estudio</string>
+    <string name="home_shortcut_explore_title">Explorar colecci&#243;n</string>
+    <string name="home_shortcut_explore_body">Mu&#233;vete por &#225;lbumes y artistas con un flujo m&#225;s limpio.</string>
+    <string name="home_shortcut_studio_title">Practicar en detalle</string>
+    <string name="home_shortcut_studio_body">Pitch, velocidad, EQ y sesi&#243;n enfocada para estudiar.</string>
+    <string name="home_recent_title">Seguir escuchando</string>
+    <string name="home_favorites_title">Favoritas</string>
+    <string name="home_albums_title">&#193;lbumes a mano</string>
+    <string name="home_artists_title">Artistas de tu biblioteca</string>
+
     <string name="library_title">Biblioteca</string>
     <string name="library_search_placeholder">Buscar canciones, artistas o &#225;lbumes...</string>
     <string name="library_empty">No se encontraron canciones.</string>
     <string name="library_no_results">No hay resultados para "%1$s"</string>
+    <string name="library_active_folder">Mostrando biblioteca filtrada por carpeta: %1$s</string>
     <string name="library_recent_title">Recientes</string>
     <string name="library_favorites_title">Favoritas</string>
     <string name="library_all_tracks_title">Todas las pistas (%1$d)</string>
+
+    <string name="search_title">Buscar</string>
+    <string name="search_placeholder">Busca por tema, artista o &#225;lbum</string>
+    <string name="search_empty_prompt">Empieza a escribir para encontrar canciones, artistas y &#225;lbumes.</string>
+    <string name="search_no_results">No se encontraron resultados para "%1$s"</string>
+    <string name="search_artists_title">Artistas</string>
+    <string name="search_albums_title">&#193;lbumes</string>
+    <string name="search_tracks_title">Canciones (%1$d)</string>
 
     <string name="permission_title">Acceso a tu m&#250;sica</string>
     <string name="permission_body">Para mostrar tu biblioteca, necesitamos permiso para leer tus archivos de audio.</string>
@@ -32,8 +61,11 @@
 
     <string name="player_idle_title">No se est&#225; reproduciendo nada</string>
     <string name="player_idle_subtitle">Selecciona una canci&#243;n</string>
+    <string name="player_queue_title">Up Next</string>
+    <string name="player_queue_subtitle">%1$d pistas despu&#233;s de la actual</string>
+    <string name="player_gesture_hint">Desliza la car&#225;tula a izquierda o derecha para cambiar de pista, o hacia arriba para entrar al modo estudio.</string>
 
-    <string name="explorer_title">Colecci&#243;n</string>
+    <string name="explorer_title">Explorar</string>
     <string name="explorer_tab_albums">&#193;lbumes</string>
     <string name="explorer_tab_artists">Artistas</string>
     <string name="explorer_empty_title">No hay &#225;lbumes disponibles</string>
@@ -50,6 +82,8 @@
     <string name="settings_section_about">Informaci&#243;n</string>
     <string name="settings_theme_title">Tema de la aplicaci&#243;n</string>
     <string name="settings_theme_dialog_title">Elegir tema</string>
+    <string name="settings_language_title">Idioma</string>
+    <string name="settings_language_dialog_title">Elegir idioma</string>
     <string name="settings_favorites_title">Favoritos guardados</string>
     <string name="settings_favorites_subtitle">%1$d canciones marcadas como favoritas</string>
     <string name="settings_recent_title">Historial reciente</string>
@@ -62,15 +96,26 @@
     <string name="settings_safe_audio_title">Procesamiento avanzado</string>
     <string name="settings_safe_audio_subtitle_enabled">Efectos, EQ y post-procesado habilitados</string>
     <string name="settings_safe_audio_subtitle_disabled">Modo seguro activo. La reproducci&#243;n prioriza estabilidad.</string>
+    <string name="settings_music_source_title">Fuente musical preferida</string>
+    <string name="settings_music_source_subtitle_device">Escaneo general del tel&#233;fono activo</string>
+    <string name="settings_music_source_subtitle_folder">Carpeta guardada: %1$s</string>
+    <string name="settings_select_folder_title">Elegir carpeta manual</string>
+    <string name="settings_select_folder_subtitle">Guarda una carpeta para tus filtros y sesiones de pr&#225;ctica</string>
+    <string name="settings_clear_folder_title">Quitar carpeta manual</string>
+    <string name="settings_clear_folder_subtitle">Volver al flujo general de biblioteca del dispositivo</string>
 
     <string name="theme_mode_system">Seguir sistema</string>
     <string name="theme_mode_light">Claro</string>
     <string name="theme_mode_dark">Oscuro</string>
+    <string name="language_mode_system">Seguir idioma del sistema</string>
+    <string name="language_mode_spanish">Espa&#241;ol</string>
+    <string name="language_mode_english">Ingl&#233;s</string>
 
     <string name="studio_title">Audio Studio</string>
     <string name="studio_tab_engine">Motor</string>
     <string name="studio_tab_equalizer">Equalizador</string>
     <string name="studio_tab_effects">Efectos</string>
+    <string name="studio_tab_lyrics">Letras</string>
     <string name="studio_engine_info">Controla la velocidad y el tono de la reproducci&#243;n en tiempo real sin perder calidad.</string>
     <string name="studio_speed_label">Velocidad de reproducci&#243;n</string>
     <string name="studio_pitch_label">Tonalidad (Pitch)</string>
@@ -94,4 +139,8 @@
     <string name="studio_safe_mode_body">Los efectos avanzados est&#225;n desactivados para priorizar estabilidad. Puedes volver a activarlos cuando quieras.</string>
     <string name="studio_enable_effects">Activar efectos</string>
     <string name="studio_effect_disabled_hint">Disponible cuando el procesamiento avanzado est&#233; activo y soportado por el dispositivo.</string>
+    <string name="studio_lyrics_info">Base para modo ensayo: aqu&#237; podremos integrar letras sincronizadas locales (.lrc) y notas de estudio.</string>
+    <string name="studio_lyrics_title">Panel de letras</string>
+    <string name="studio_lyrics_body_idle">Inicia una canci&#243;n para preparar una vista de letras y anotaciones de ensayo.</string>
+    <string name="studio_lyrics_body_active">A&#250;n no hay letras cargadas para %1$s. La siguiente iteraci&#243;n puede leer letras locales o sincronizadas.</string>
 </resources>

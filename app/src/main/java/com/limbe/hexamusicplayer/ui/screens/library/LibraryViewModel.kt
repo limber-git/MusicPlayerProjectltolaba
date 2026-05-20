@@ -1,5 +1,6 @@
 package com.limbe.hexamusicplayer.ui.screens.library
 
+import android.net.Uri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.limbe.hexamusicplayer.domain.model.Track
@@ -21,6 +22,7 @@ class LibraryViewModel(
     val uiState: StateFlow<LibraryUiState> = _uiState.asStateFlow()
 
     private var currentPreferences = UserPreferences()
+    private var allTracks: List<Track> = emptyList()
 
     init {
         observePreferences()
@@ -42,16 +44,8 @@ class LibraryViewModel(
 
             runCatching { getLocalTracksUseCase() }
                 .onSuccess { tracks ->
-                    _uiState.update { state ->
-                        state.copy(
-                            tracks = tracks,
-                            filteredTracks = filterTracks(tracks, state.searchQuery),
-                            favoriteTracks = tracks.filterFavorites(currentPreferences),
-                            recentTracks = tracks.filterRecents(currentPreferences),
-                            isLoading = false,
-                            errorMessage = null
-                        )
-                    }
+                    allTracks = tracks
+                    publishTrackState(isLoading = false, errorMessage = null)
                 }
                 .onFailure { throwable ->
                     _uiState.update {
@@ -68,13 +62,26 @@ class LibraryViewModel(
         viewModelScope.launch {
             observeUserPreferencesUseCase().collect { prefs ->
                 currentPreferences = prefs
-                _uiState.update { state ->
-                    state.copy(
-                        favoriteTracks = state.tracks.filterFavorites(prefs),
-                        recentTracks = state.tracks.filterRecents(prefs)
-                    )
-                }
+                publishTrackState()
             }
+        }
+    }
+
+    private fun publishTrackState(
+        isLoading: Boolean = _uiState.value.isLoading,
+        errorMessage: String? = _uiState.value.errorMessage
+    ) {
+        _uiState.update { state ->
+            val visibleTracks = applyLibrarySourceFilter(allTracks, currentPreferences)
+            state.copy(
+                tracks = visibleTracks,
+                filteredTracks = filterTracks(visibleTracks, state.searchQuery),
+                favoriteTracks = visibleTracks.filterFavorites(currentPreferences),
+                recentTracks = visibleTracks.filterRecents(currentPreferences),
+                activeLibraryFolderLabel = currentPreferences.manualLibraryFolderLabel,
+                isLoading = isLoading,
+                errorMessage = errorMessage
+            )
         }
     }
 
@@ -97,5 +104,34 @@ class LibraryViewModel(
         if (preferences.recentTrackIds.isEmpty()) return emptyList()
         val tracksById = associateBy { it.id }
         return preferences.recentTrackIds.mapNotNull { tracksById[it] }.take(12)
+    }
+
+    private fun applyLibrarySourceFilter(
+        tracks: List<Track>,
+        preferences: UserPreferences
+    ): List<Track> {
+        val normalizedFolderToken = preferences.manualLibraryFolderUri
+            ?.toFolderMatchToken()
+            ?.takeIf { it.isNotBlank() }
+            ?: return tracks
+
+        return tracks.filter { track ->
+            val normalizedSource = track.sourcePath
+                ?.replace('\\', '/')
+                ?.lowercase()
+                .orEmpty()
+            normalizedFolderToken in normalizedSource
+        }
+    }
+
+    private fun String.toFolderMatchToken(): String? {
+        return runCatching { Uri.parse(this) }
+            .getOrNull()
+            ?.lastPathSegment
+            ?.substringAfter(':', "")
+            ?.replace('\\', '/')
+            ?.trim('/')
+            ?.lowercase()
+            ?.takeIf { it.isNotBlank() }
     }
 }

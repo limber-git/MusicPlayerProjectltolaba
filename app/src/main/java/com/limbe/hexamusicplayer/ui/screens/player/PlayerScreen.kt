@@ -1,6 +1,13 @@
 package com.limbe.hexamusicplayer.ui.screens.player
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.animateContentSize
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.background
+import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -17,9 +24,12 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.FavoriteBorder
 import androidx.compose.material.icons.filled.KeyboardArrowDown
+import androidx.compose.material.icons.filled.KeyboardArrowUp
+import androidx.compose.material.icons.filled.QueueMusic
 import androidx.compose.material.icons.filled.Repeat
 import androidx.compose.material.icons.filled.RepeatOne
 import androidx.compose.material.icons.filled.Shuffle
+import androidx.compose.material.icons.filled.Tune
 import androidx.compose.material.icons.rounded.Pause
 import androidx.compose.material.icons.rounded.PlayArrow
 import androidx.compose.material.icons.rounded.SkipNext
@@ -49,7 +59,9 @@ import androidx.compose.ui.draw.blur
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.input.pointer.consume
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -64,6 +76,7 @@ import com.limbe.hexamusicplayer.domain.model.RepeatMode
 @Composable
 fun PlayerScreen(
     viewModel: PlayerViewModel,
+    onOpenStudio: () -> Unit = {},
     onBack: () -> Unit = {}
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
@@ -80,11 +93,21 @@ fun PlayerScreen(
     var isScrubbing by remember {
         mutableStateOf(false)
     }
+    var showQueue by remember {
+        mutableStateOf(false)
+    }
 
     LaunchedEffect(playbackProgress, isScrubbing, uiState.currentTrack?.id) {
         if (!isScrubbing) {
             sliderProgress = playbackProgress
         }
+    }
+
+    val currentQueueIndex = uiState.queue.indexOfFirst { it.id == uiState.currentTrack?.id }
+    val upcomingTracks = if (currentQueueIndex >= 0) {
+        uiState.queue.drop(currentQueueIndex + 1)
+    } else {
+        emptyList()
     }
 
     Box(modifier = Modifier.fillMaxSize()) {
@@ -107,6 +130,15 @@ fun PlayerScreen(
                             )
                         }
                     }
+                    actions = {
+                        IconButton(onClick = onOpenStudio) {
+                            Icon(
+                                imageVector = Icons.Default.Tune,
+                                contentDescription = stringResource(R.string.action_open_studio),
+                                tint = MaterialTheme.colorScheme.onBackground
+                            )
+                        }
+                    }
                 )
             }
         ) { paddingValues ->
@@ -122,6 +154,29 @@ fun PlayerScreen(
                     modifier = Modifier
                         .fillMaxWidth()
                         .aspectRatio(1f)
+                        .pointerInput(uiState.currentTrack?.id) {
+                            var totalDragX = 0f
+                            var totalDragY = 0f
+                            detectDragGestures(
+                                onDragEnd = {
+                                    when {
+                                        totalDragX > 120f -> viewModel.skipToPrevious()
+                                        totalDragX < -120f -> viewModel.skipToNext()
+                                        totalDragY < -140f -> onOpenStudio()
+                                    }
+                                    totalDragX = 0f
+                                    totalDragY = 0f
+                                },
+                                onDragCancel = {
+                                    totalDragX = 0f
+                                    totalDragY = 0f
+                                }
+                            ) { change, dragAmount ->
+                                change.consume()
+                                totalDragX += dragAmount.x
+                                totalDragY += dragAmount.y
+                            }
+                        }
                         .clip(RoundedCornerShape(32.dp)),
                     elevation = CardDefaults.cardElevation(defaultElevation = 24.dp),
                     colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
@@ -337,7 +392,89 @@ fun PlayerScreen(
                     }
                 }
 
-                Spacer(modifier = Modifier.size(24.dp))
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .animateContentSize(),
+                    verticalArrangement = Arrangement.spacedBy(10.dp)
+                ) {
+                    Surface(
+                        onClick = { showQueue = !showQueue },
+                        shape = RoundedCornerShape(18.dp),
+                        color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f),
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 16.dp, vertical = 14.dp),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Row(
+                                horizontalArrangement = Arrangement.spacedBy(10.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.QueueMusic,
+                                    contentDescription = null,
+                                    tint = MaterialTheme.colorScheme.onBackground
+                                )
+                                Column {
+                                    Text(
+                                        text = stringResource(R.string.player_queue_title),
+                                        style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold),
+                                        color = MaterialTheme.colorScheme.onBackground
+                                    )
+                                    Text(
+                                        text = stringResource(R.string.player_queue_subtitle, upcomingTracks.size),
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.7f)
+                                    )
+                                }
+                            }
+                            Icon(
+                                imageVector = if (showQueue) Icons.Default.KeyboardArrowDown else Icons.Default.KeyboardArrowUp,
+                                contentDescription = null,
+                                tint = MaterialTheme.colorScheme.onBackground
+                            )
+                        }
+                    }
+
+                    AnimatedVisibility(
+                        visible = showQueue && upcomingTracks.isNotEmpty(),
+                        enter = fadeIn() + expandVertically(),
+                        exit = fadeOut() + shrinkVertically()
+                    ) {
+                        Surface(
+                            shape = RoundedCornerShape(20.dp),
+                            color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.28f),
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Column(
+                                modifier = Modifier.padding(12.dp),
+                                verticalArrangement = Arrangement.spacedBy(4.dp)
+                            ) {
+                                upcomingTracks.take(5).forEach { track ->
+                                    QueueRow(
+                                        track = track,
+                                        onClick = { viewModel.playTrack(track, uiState.queue) }
+                                    )
+                                }
+                            }
+                        }
+                    }
+
+                    if (!showQueue && upcomingTracks.isEmpty()) {
+                        Text(
+                            text = stringResource(R.string.player_gesture_hint),
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.55f)
+                        )
+                    }
+                }
+
+                Spacer(modifier = Modifier.size(16.dp))
             }
         }
     }
@@ -370,6 +507,57 @@ private fun AtmosphericBackdrop(uiState: PlayerUiState) {
                     )
                 )
         )
+    }
+}
+
+@Composable
+private fun QueueRow(
+    track: com.limbe.hexamusicplayer.domain.model.Track,
+    onClick: () -> Unit
+) {
+    Surface(
+        onClick = onClick,
+        color = Color.Transparent,
+        shape = RoundedCornerShape(16.dp)
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 10.dp, vertical = 12.dp),
+            horizontalArrangement = Arrangement.spacedBy(12.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            AsyncImage(
+                model = track.artworkUri ?: track.contentUri,
+                contentDescription = null,
+                modifier = Modifier
+                    .size(44.dp)
+                    .clip(RoundedCornerShape(12.dp)),
+                contentScale = ContentScale.Crop,
+                error = androidx.compose.ui.graphics.painter.ColorPainter(MaterialTheme.colorScheme.primary.copy(alpha = 0.18f))
+            )
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = track.title,
+                    style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.SemiBold),
+                    color = MaterialTheme.colorScheme.onBackground,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+                Text(
+                    text = track.artist,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.68f),
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+            }
+            Text(
+                text = formatDuration(track.durationMs),
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.6f)
+            )
+        }
     }
 }
 

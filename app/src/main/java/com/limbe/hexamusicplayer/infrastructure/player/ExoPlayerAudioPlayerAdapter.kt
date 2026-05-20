@@ -228,6 +228,7 @@ class ExoPlayerAudioPlayerAdapter(
                     Player.REPEAT_MODE_ALL -> RepeatMode.ALL
                     else -> RepeatMode.OFF
                 },
+                queue = currentQueue,
                 errorMessage = lastErrorMessage
             )
         }

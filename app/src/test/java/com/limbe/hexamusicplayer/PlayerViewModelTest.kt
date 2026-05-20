@@ -1,6 +1,7 @@
 package com.limbe.hexamusicplayer
 
 import com.limbe.hexamusicplayer.domain.model.AudioEffectsState
+import com.limbe.hexamusicplayer.domain.model.AppLanguage
 import com.limbe.hexamusicplayer.domain.model.DarkModeMode
 import com.limbe.hexamusicplayer.domain.model.PlayerState
 import com.limbe.hexamusicplayer.domain.model.RepeatMode
@@ -24,6 +25,7 @@ import com.limbe.hexamusicplayer.domain.usecase.SavePlaybackSpeedUseCase
 import com.limbe.hexamusicplayer.domain.usecase.SaveVirtualizerStrengthUseCase
 import com.limbe.hexamusicplayer.domain.usecase.SeekToUseCase
 import com.limbe.hexamusicplayer.domain.usecase.SetAudioEffectsEnabledUseCase
+import com.limbe.hexamusicplayer.domain.usecase.SetAppLanguageUseCase
 import com.limbe.hexamusicplayer.domain.usecase.SetBassStrengthUseCase
 import com.limbe.hexamusicplayer.domain.usecase.SetDarkModeUseCase
 import com.limbe.hexamusicplayer.domain.usecase.SetEqBandLevelUseCase
@@ -34,6 +36,7 @@ import com.limbe.hexamusicplayer.domain.usecase.SetRepeatModeUseCase
 import com.limbe.hexamusicplayer.domain.usecase.SetVirtualizerStrengthUseCase
 import com.limbe.hexamusicplayer.domain.usecase.SkipToNextUseCase
 import com.limbe.hexamusicplayer.domain.usecase.SkipToPreviousUseCase
+import com.limbe.hexamusicplayer.domain.usecase.SetManualLibraryFolderUseCase
 import com.limbe.hexamusicplayer.domain.usecase.ToggleFavoriteTrackUseCase
 import com.limbe.hexamusicplayer.domain.usecase.TogglePlaybackUseCase
 import com.limbe.hexamusicplayer.domain.usecase.ToggleShuffleUseCase
@@ -154,7 +157,9 @@ class PlayerViewModelTest {
             toggleFavoriteTrackUseCase = ToggleFavoriteTrackUseCase(preferences),
             recordRecentTrackUseCase = RecordRecentTrackUseCase(preferences),
             setDarkModeUseCase = SetDarkModeUseCase(preferences),
-            setAudioEffectsEnabledUseCase = SetAudioEffectsEnabledUseCase(preferences)
+            setAudioEffectsEnabledUseCase = SetAudioEffectsEnabledUseCase(preferences),
+            setAppLanguageUseCase = SetAppLanguageUseCase(preferences),
+            setManualLibraryFolderUseCase = SetManualLibraryFolderUseCase(preferences)
         )
     }
 
@@ -295,6 +300,17 @@ private class FakeUserPreferencesPort : UserPreferencesPort {
 
     override suspend fun setAudioEffectsEnabled(enabled: Boolean) {
         preferencesFlow.value = preferencesFlow.value.copy(audioEffectsEnabled = enabled)
+    }
+
+    override suspend fun setAppLanguage(language: AppLanguage) {
+        preferencesFlow.value = preferencesFlow.value.copy(appLanguage = language)
+    }
+
+    override suspend fun setManualLibraryFolder(uri: String?, label: String?) {
+        preferencesFlow.value = preferencesFlow.value.copy(
+            manualLibraryFolderUri = uri,
+            manualLibraryFolderLabel = label
+        )
     }
 
     fun emit(preferences: UserPreferences) {
