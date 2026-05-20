@@ -9,7 +9,8 @@ data class PlayerState(
     val pitch: Float = 1.0f,
     val audioSessionId: Int? = null,
     val shuffleModeEnabled: Boolean = false,
-    val repeatMode: RepeatMode = RepeatMode.OFF
+    val repeatMode: RepeatMode = RepeatMode.OFF,
+    val errorMessage: String? = null
 )
 
 enum class RepeatMode {

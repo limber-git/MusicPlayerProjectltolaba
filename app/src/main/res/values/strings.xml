@@ -1,4 +1,97 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">Hexa Music Player</string>
+
+    <string name="nav_library">M&#250;sica</string>
+    <string name="nav_albums">Colecci&#243;n</string>
+    <string name="nav_studio">Studio</string>
+    <string name="nav_now_playing">Sonando</string>
+
+    <string name="action_open_settings">Abrir configuraci&#243;n</string>
+    <string name="action_close">Cerrar</string>
+    <string name="action_back">Atr&#225;s</string>
+    <string name="action_done">Listo</string>
+    <string name="action_favorite">Favorito</string>
+    <string name="action_shuffle">Mezclar</string>
+    <string name="action_previous">Anterior</string>
+    <string name="action_play_pause">Reproducir o pausar</string>
+    <string name="action_next">Siguiente</string>
+    <string name="action_repeat">Repetir</string>
+
+    <string name="library_title">Biblioteca</string>
+    <string name="library_search_placeholder">Buscar canciones, artistas o &#225;lbumes...</string>
+    <string name="library_empty">No se encontraron canciones.</string>
+    <string name="library_no_results">No hay resultados para "%1$s"</string>
+    <string name="library_recent_title">Recientes</string>
+    <string name="library_favorites_title">Favoritas</string>
+    <string name="library_all_tracks_title">Todas las pistas (%1$d)</string>
+
+    <string name="permission_title">Acceso a tu m&#250;sica</string>
+    <string name="permission_body">Para mostrar tu biblioteca, necesitamos permiso para leer tus archivos de audio.</string>
+    <string name="permission_cta">Conceder permiso</string>
+
+    <string name="player_idle_title">No se est&#225; reproduciendo nada</string>
+    <string name="player_idle_subtitle">Selecciona una canci&#243;n</string>
+
+    <string name="explorer_title">Colecci&#243;n</string>
+    <string name="explorer_tab_albums">&#193;lbumes</string>
+    <string name="explorer_tab_artists">Artistas</string>
+    <string name="explorer_empty_title">No hay &#225;lbumes disponibles</string>
+    <string name="explorer_empty_body">Concede permisos y agrega m&#250;sica local para explorar tu colecci&#243;n por &#225;lbum.</string>
+    <string name="explorer_empty_artists_title">No hay artistas disponibles</string>
+    <string name="explorer_empty_artists_body">Agrega canciones locales para explorar tu m&#250;sica por artista.</string>
+    <string name="explorer_track_count">%1$d pistas</string>
+    <string name="explorer_artist_album_count">%1$d &#225;lbumes</string>
+
+    <string name="settings_title">Configuraci&#243;n</string>
+    <string name="settings_section_appearance">Apariencia</string>
+    <string name="settings_section_audio">Audio</string>
+    <string name="settings_section_library">Biblioteca</string>
+    <string name="settings_section_about">Informaci&#243;n</string>
+    <string name="settings_theme_title">Tema de la aplicaci&#243;n</string>
+    <string name="settings_theme_dialog_title">Elegir tema</string>
+    <string name="settings_favorites_title">Favoritos guardados</string>
+    <string name="settings_favorites_subtitle">%1$d canciones marcadas como favoritas</string>
+    <string name="settings_recent_title">Historial reciente</string>
+    <string name="settings_recent_subtitle">%1$d pistas reproducidas recientemente</string>
+    <string name="settings_version_title">Versi&#243;n</string>
+    <string name="settings_audio_engine_title">Motor de audio</string>
+    <string name="settings_audio_engine_status_active">Efectos activos y sesi&#243;n multimedia estable</string>
+    <string name="settings_audio_engine_status_safe">Modo seguro activado para priorizar estabilidad</string>
+    <string name="settings_audio_engine_status_limited">El dispositivo limita los efectos avanzados</string>
+    <string name="settings_safe_audio_title">Procesamiento avanzado</string>
+    <string name="settings_safe_audio_subtitle_enabled">Efectos, EQ y post-procesado habilitados</string>
+    <string name="settings_safe_audio_subtitle_disabled">Modo seguro activo. La reproducci&#243;n prioriza estabilidad.</string>
+
+    <string name="theme_mode_system">Seguir sistema</string>
+    <string name="theme_mode_light">Claro</string>
+    <string name="theme_mode_dark">Oscuro</string>
+
+    <string name="studio_title">Audio Studio</string>
+    <string name="studio_tab_engine">Motor</string>
+    <string name="studio_tab_equalizer">Equalizador</string>
+    <string name="studio_tab_effects">Efectos</string>
+    <string name="studio_engine_info">Controla la velocidad y el tono de la reproducci&#243;n en tiempo real sin perder calidad.</string>
+    <string name="studio_speed_label">Velocidad de reproducci&#243;n</string>
+    <string name="studio_pitch_label">Tonalidad (Pitch)</string>
+    <string name="studio_eq_empty">Reproduce m&#250;sica para activar el ecualizador.</string>
+    <string name="studio_eq_title">Console EQ - 10 Bands</string>
+    <string name="studio_effects_info">Los efectos de post-procesado requieren que una pista est&#233; sonando.</string>
+    <string name="studio_effects_unavailable">Este dispositivo no expone efectos avanzados para la sesi&#243;n actual.</string>
+    <string name="studio_bass_title">Bass Boost</string>
+    <string name="studio_bass_subtitle">Refuerza las frecuencias bajas</string>
+    <string name="studio_virtualizer_title">Virtualizador 3D</string>
+    <string name="studio_virtualizer_subtitle">Simulaci&#243;n de audio espacial</string>
+    <string name="studio_loudness_title">Loudness Enhancer</string>
+    <string name="studio_loudness_subtitle">Ganancia de salida maestra</string>
+    <string name="studio_preset_flat">Flat</string>
+    <string name="studio_preset_bass">Bass</string>
+    <string name="studio_preset_vocal">Vocal</string>
+    <string name="studio_preset_bright">Bright</string>
+    <string name="studio_reset_title">Reset de audio</string>
+    <string name="studio_reset_subtitle">Restaura velocidad, pitch, EQ y efectos a sus valores por defecto.</string>
+    <string name="studio_safe_mode_title">Modo seguro de audio</string>
+    <string name="studio_safe_mode_body">Los efectos avanzados est&#225;n desactivados para priorizar estabilidad. Puedes volver a activarlos cuando quieras.</string>
+    <string name="studio_enable_effects">Activar efectos</string>
+    <string name="studio_effect_disabled_hint">Disponible cuando el procesamiento avanzado est&#233; activo y soportado por el dispositivo.</string>
 </resources>

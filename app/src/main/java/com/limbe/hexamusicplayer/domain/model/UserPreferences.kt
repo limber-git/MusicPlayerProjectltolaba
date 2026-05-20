@@ -8,7 +8,9 @@ data class UserPreferences(
     val loudnessGainMb: Int = 0,
     val eqBandLevels: Map<Int, Int> = emptyMap(),
     val favoriteTrackIds: Set<Long> = emptySet(),
-    val darkModeMode: DarkModeMode = DarkModeMode.SYSTEM
+    val recentTrackIds: List<Long> = emptyList(),
+    val darkModeMode: DarkModeMode = DarkModeMode.SYSTEM,
+    val audioEffectsEnabled: Boolean = true
 )
 
 enum class DarkModeMode {

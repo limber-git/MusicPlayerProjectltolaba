@@ -1,19 +1,51 @@
 package com.limbe.hexamusicplayer.ui.screens.settings
 
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.weight
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.*
-import androidx.compose.material3.*
+import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material.icons.filled.History
+import androidx.compose.material.icons.filled.Info
+import androidx.compose.material.icons.filled.Palette
+import androidx.compose.material.icons.filled.Security
+import androidx.compose.material.icons.filled.Style
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.CenterAlignedTopAppBar
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.RadioButton
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Switch
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.limbe.hexamusicplayer.BuildConfig
+import com.limbe.hexamusicplayer.R
 import com.limbe.hexamusicplayer.domain.model.DarkModeMode
 import com.limbe.hexamusicplayer.ui.screens.player.PlayerViewModel
 
@@ -24,19 +56,36 @@ fun SettingsScreen(
     onBack: () -> Unit
 ) {
     val uiState by playerViewModel.uiState.collectAsStateWithLifecycle()
-    // We need to observe user preferences directly to get the current theme mode
-    // but for now let's assume we can get it from somewhere or add it to PlayerUiState
-    // Actually, let's just use the VM to handle the logic.
+    var showThemeDialog by remember { mutableStateOf(false) }
+
+    if (showThemeDialog) {
+        ThemeModeDialog(
+            selectedMode = uiState.darkModeMode,
+            onDismiss = { showThemeDialog = false },
+            onModeSelected = { mode ->
+                playerViewModel.setDarkModeMode(mode)
+                showThemeDialog = false
+            }
+        )
+    }
 
     Scaffold(
         containerColor = MaterialTheme.colorScheme.background,
         topBar = {
             CenterAlignedTopAppBar(
-                colors = TopAppBarDefaults.centerAlignedTopAppBarColors(containerColor = androidx.compose.ui.graphics.Color.Transparent),
-                title = { Text("Configuración", fontWeight = FontWeight.Bold) },
+                colors = TopAppBarDefaults.centerAlignedTopAppBarColors(containerColor = Color.Transparent),
+                title = {
+                    Text(
+                        text = stringResource(R.string.settings_title),
+                        fontWeight = FontWeight.Bold
+                    )
+                },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
-                        Icon(Icons.Default.ArrowBack, contentDescription = "Atrás")
+                        Icon(
+                            imageVector = Icons.Default.ArrowBack,
+                            contentDescription = stringResource(R.string.action_back)
+                        )
                     }
                 }
             )
@@ -49,56 +98,118 @@ fun SettingsScreen(
             contentPadding = PaddingValues(16.dp),
             verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            item { SettingsSectionTitle("Apariencia") }
+            item { SettingsSectionTitle(stringResource(R.string.settings_section_appearance)) }
             item {
                 SettingsClickableItem(
-                    title = "Tema de la aplicación",
-                    subtitle = "Cambiar entre modo claro, oscuro o sistema",
+                    title = stringResource(R.string.settings_theme_title),
+                    subtitle = themeModeLabel(uiState.darkModeMode),
                     icon = Icons.Default.Palette,
-                    onClick = { /* TODO: Show theme picker dialog */ }
+                    onClick = { showThemeDialog = true }
                 )
             }
 
-            item { Spacer(modifier = Modifier.height(16.dp)) }
-            item { SettingsSectionTitle("Audio") }
+            item { SettingsSectionTitle(stringResource(R.string.settings_section_audio)) }
             item {
                 SettingsToggleItem(
-                    title = "Normalización de audio",
-                    subtitle = "Mantener un volumen constante entre canciones",
-                    icon = Icons.Default.VolumeUp,
-                    checked = true,
-                    onCheckedChange = {}
+                    title = stringResource(R.string.settings_safe_audio_title),
+                    subtitle = stringResource(
+                        if (uiState.audioEffectsEnabled) {
+                            R.string.settings_safe_audio_subtitle_enabled
+                        } else {
+                            R.string.settings_safe_audio_subtitle_disabled
+                        }
+                    ),
+                    icon = Icons.Default.Security,
+                    checked = uiState.audioEffectsEnabled,
+                    onCheckedChange = playerViewModel::setAudioEffectsEnabled
                 )
             }
             item {
-                SettingsClickableItem(
-                    title = "Calidad de audio",
-                    subtitle = "Alta (320kbps)",
-                    icon = Icons.Default.HighQuality,
-                    onClick = {}
+                SettingsInfoItem(
+                    title = stringResource(R.string.settings_audio_engine_title),
+                    subtitle = stringResource(
+                        if (uiState.effectsAvailable && uiState.audioEffectsEnabled) {
+                            R.string.settings_audio_engine_status_active
+                        } else if (!uiState.audioEffectsEnabled) {
+                            R.string.settings_audio_engine_status_safe
+                        } else {
+                            R.string.settings_audio_engine_status_limited
+                        }
+                    ),
+                    icon = Icons.Default.Style
                 )
             }
 
-            item { Spacer(modifier = Modifier.height(16.dp)) }
-            item { SettingsSectionTitle("Información") }
+            item { SettingsSectionTitle(stringResource(R.string.settings_section_library)) }
             item {
-                SettingsClickableItem(
-                    title = "Versión",
-                    subtitle = "1.0.0 (Build 20260506)",
-                    icon = Icons.Default.Info,
-                    onClick = {}
+                SettingsInfoItem(
+                    title = stringResource(R.string.settings_favorites_title),
+                    subtitle = stringResource(R.string.settings_favorites_subtitle, uiState.favoriteCount),
+                    icon = Icons.Default.Favorite
                 )
             }
             item {
-                SettingsClickableItem(
-                    title = "Créditos",
-                    subtitle = "Hecho con ❤️ para amantes de la música",
-                    icon = Icons.Default.Favorite,
-                    onClick = {}
+                SettingsInfoItem(
+                    title = stringResource(R.string.settings_recent_title),
+                    subtitle = stringResource(R.string.settings_recent_subtitle, uiState.recentTrackIds.size),
+                    icon = Icons.Default.History
+                )
+            }
+
+            item { SettingsSectionTitle(stringResource(R.string.settings_section_about)) }
+            item {
+                SettingsInfoItem(
+                    title = stringResource(R.string.settings_version_title),
+                    subtitle = "${BuildConfig.VERSION_NAME} (${BuildConfig.VERSION_CODE})",
+                    icon = Icons.Default.Info
                 )
             }
         }
     }
+}
+
+@Composable
+private fun ThemeModeDialog(
+    selectedMode: DarkModeMode,
+    onDismiss: () -> Unit,
+    onModeSelected: (DarkModeMode) -> Unit
+) {
+    val options = listOf(
+        DarkModeMode.SYSTEM to stringResource(R.string.theme_mode_system),
+        DarkModeMode.LIGHT to stringResource(R.string.theme_mode_light),
+        DarkModeMode.DARK to stringResource(R.string.theme_mode_dark)
+    )
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(stringResource(R.string.settings_theme_dialog_title)) },
+        text = {
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                options.forEach { (mode, label) ->
+                    Surface(
+                        onClick = { onModeSelected(mode) },
+                        color = Color.Transparent
+                    ) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            RadioButton(
+                                selected = selectedMode == mode,
+                                onClick = { onModeSelected(mode) }
+                            )
+                            Text(text = label)
+                        }
+                    }
+                }
+            }
+        },
+        confirmButton = {
+            TextButton(onClick = onDismiss) {
+                Text(stringResource(R.string.action_done))
+            }
+        }
+    )
 }
 
 @Composable
@@ -120,37 +231,19 @@ private fun SettingsClickableItem(
 ) {
     Surface(
         onClick = onClick,
-        color = androidx.compose.ui.graphics.Color.Transparent
+        color = Color.Transparent
     ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(vertical = 12.dp, horizontal = 4.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(16.dp)
-        ) {
-            Icon(
-                imageVector = icon,
-                contentDescription = null,
-                tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier.size(24.dp)
-            )
-            Column(modifier = Modifier.weight(1f)) {
-                Text(text = title, style = MaterialTheme.typography.bodyLarge)
-                Text(
-                    text = subtitle,
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-            }
-            Icon(
-                imageVector = Icons.Default.ChevronRight,
-                contentDescription = null,
-                tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier.size(20.dp)
-            )
-        }
+        SettingsItemContent(title = title, subtitle = subtitle, icon = icon, trailing = null)
     }
+}
+
+@Composable
+private fun SettingsInfoItem(
+    title: String,
+    subtitle: String,
+    icon: ImageVector
+) {
+    SettingsItemContent(title = title, subtitle = subtitle, icon = icon, trailing = null)
 }
 
 @Composable
@@ -160,6 +253,26 @@ private fun SettingsToggleItem(
     icon: ImageVector,
     checked: Boolean,
     onCheckedChange: (Boolean) -> Unit
+) {
+    SettingsItemContent(
+        title = title,
+        subtitle = subtitle,
+        icon = icon,
+        trailing = {
+            Switch(
+                checked = checked,
+                onCheckedChange = onCheckedChange
+            )
+        }
+    )
+}
+
+@Composable
+private fun SettingsItemContent(
+    title: String,
+    subtitle: String,
+    icon: ImageVector,
+    trailing: (@Composable () -> Unit)?
 ) {
     Row(
         modifier = Modifier
@@ -182,9 +295,15 @@ private fun SettingsToggleItem(
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
         }
-        Switch(
-            checked = checked,
-            onCheckedChange = onCheckedChange
-        )
+        trailing?.invoke()
+    }
+}
+
+@Composable
+private fun themeModeLabel(mode: DarkModeMode): String {
+    return when (mode) {
+        DarkModeMode.SYSTEM -> stringResource(R.string.theme_mode_system)
+        DarkModeMode.LIGHT -> stringResource(R.string.theme_mode_light)
+        DarkModeMode.DARK -> stringResource(R.string.theme_mode_dark)
     }
 }

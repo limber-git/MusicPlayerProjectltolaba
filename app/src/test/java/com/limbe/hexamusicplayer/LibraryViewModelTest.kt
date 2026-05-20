@@ -1,10 +1,15 @@
 package com.limbe.hexamusicplayer
 
 import com.limbe.hexamusicplayer.domain.model.Track
+import com.limbe.hexamusicplayer.domain.model.UserPreferences
 import com.limbe.hexamusicplayer.domain.port.LocalMusicRepository
+import com.limbe.hexamusicplayer.domain.port.UserPreferencesPort
 import com.limbe.hexamusicplayer.domain.usecase.GetLocalTracksUseCase
+import com.limbe.hexamusicplayer.domain.usecase.ObserveUserPreferencesUseCase
 import com.limbe.hexamusicplayer.ui.screens.library.LibraryViewModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
@@ -26,13 +31,20 @@ class LibraryViewModelTest {
                     id = 1L,
                     title = "Track One",
                     artist = "Artist A",
+                    album = "Album A",
+                    albumId = 10L,
                     durationMs = 120_000L,
-                    contentUri = "content://song/1"
+                    contentUri = "content://song/1",
+                    artworkUri = "content://albumart/10"
                 )
             )
         )
+        val preferences = FakeLibraryPreferencesPort()
 
-        val viewModel = LibraryViewModel(GetLocalTracksUseCase(fakeRepository))
+        val viewModel = LibraryViewModel(
+            GetLocalTracksUseCase(fakeRepository),
+            ObserveUserPreferencesUseCase(preferences)
+        )
 
         viewModel.refreshTracks()
         advanceUntilIdle()
@@ -48,8 +60,12 @@ class LibraryViewModelTest {
         val fakeRepository = FakeLocalMusicRepository(
             error = IllegalStateException("Storage unavailable")
         )
+        val preferences = FakeLibraryPreferencesPort()
 
-        val viewModel = LibraryViewModel(GetLocalTracksUseCase(fakeRepository))
+        val viewModel = LibraryViewModel(
+            GetLocalTracksUseCase(fakeRepository),
+            ObserveUserPreferencesUseCase(preferences)
+        )
 
         viewModel.refreshTracks()
         advanceUntilIdle()
@@ -68,4 +84,20 @@ private class FakeLocalMusicRepository(
         error?.let { throw it }
         return tracks
     }
+}
+
+private class FakeLibraryPreferencesPort : UserPreferencesPort {
+    private val preferencesFlow = MutableStateFlow(UserPreferences())
+    override val preferences: Flow<UserPreferences> = preferencesFlow
+
+    override suspend fun setPlaybackSpeed(speed: Float) = Unit
+    override suspend fun setPlaybackPitch(pitch: Float) = Unit
+    override suspend fun setBassStrength(strength: Int) = Unit
+    override suspend fun setVirtualizerStrength(strength: Int) = Unit
+    override suspend fun setLoudnessGainMb(gainMb: Int) = Unit
+    override suspend fun setEqBandLevel(index: Int, level: Int) = Unit
+    override suspend fun toggleFavoriteTrack(trackId: Long) = Unit
+    override suspend fun recordRecentTrack(trackId: Long) = Unit
+    override suspend fun setDarkModeMode(mode: com.limbe.hexamusicplayer.domain.model.DarkModeMode) = Unit
+    override suspend fun setAudioEffectsEnabled(enabled: Boolean) = Unit
 }

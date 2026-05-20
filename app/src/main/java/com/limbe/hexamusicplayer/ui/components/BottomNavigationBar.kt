@@ -13,7 +13,9 @@ import androidx.compose.material3.NavigationBarItemDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import com.limbe.hexamusicplayer.R
 
 @Composable
 fun HexaBottomNavigationBar(
@@ -29,7 +31,7 @@ fun HexaBottomNavigationBar(
             selected = currentRoute == "library",
             onClick = { onNavigate("library") },
             icon = { Icon(Icons.Default.LibraryMusic, contentDescription = null) },
-            label = { Text("Música") },
+            label = { Text(stringResource(R.string.nav_library)) },
             colors = NavigationBarItemDefaults.colors(
                 selectedIconColor = MaterialTheme.colorScheme.primary,
                 selectedTextColor = MaterialTheme.colorScheme.primary,
@@ -42,7 +44,7 @@ fun HexaBottomNavigationBar(
             selected = currentRoute == "explorer",
             onClick = { onNavigate("explorer") },
             icon = { Icon(Icons.Default.Folder, contentDescription = null) },
-            label = { Text("Carpetas") },
+            label = { Text(stringResource(R.string.nav_albums)) },
             colors = NavigationBarItemDefaults.colors(
                 selectedIconColor = MaterialTheme.colorScheme.primary,
                 selectedTextColor = MaterialTheme.colorScheme.primary,
@@ -55,7 +57,7 @@ fun HexaBottomNavigationBar(
             selected = currentRoute == "studio",
             onClick = { onNavigate("studio") },
             icon = { Icon(Icons.Default.GraphicEq, contentDescription = null) },
-            label = { Text("Studio") },
+            label = { Text(stringResource(R.string.nav_studio)) },
             colors = NavigationBarItemDefaults.colors(
                 selectedIconColor = MaterialTheme.colorScheme.primary,
                 selectedTextColor = MaterialTheme.colorScheme.primary,
@@ -68,7 +70,7 @@ fun HexaBottomNavigationBar(
             selected = currentRoute == "player",
             onClick = { onNavigate("player") },
             icon = { Icon(Icons.Default.MusicNote, contentDescription = null) },
-            label = { Text("Sonando") },
+            label = { Text(stringResource(R.string.nav_now_playing)) },
             colors = NavigationBarItemDefaults.colors(
                 selectedIconColor = MaterialTheme.colorScheme.primary,
                 selectedTextColor = MaterialTheme.colorScheme.primary,

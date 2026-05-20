@@ -48,7 +48,7 @@ fun TrackRow(
     ) {
         // Real Artwork with Coil
         AsyncImage(
-            model = track.contentUri,
+            model = track.artworkUri ?: track.contentUri,
             contentDescription = null,
             modifier = Modifier
                 .size(48.dp)

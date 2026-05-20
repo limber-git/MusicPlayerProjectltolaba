@@ -1,6 +1,7 @@
 package com.limbe.hexamusicplayer.ui.theme
 
 import android.app.Activity
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.lightColorScheme
@@ -10,6 +11,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalView
 import androidx.core.view.WindowCompat
+import com.limbe.hexamusicplayer.domain.model.DarkModeMode
 
 private val DarkScheme = darkColorScheme(
     primary = AccentBlue,
@@ -49,9 +51,14 @@ private val LightScheme = lightColorScheme(
 
 @Composable
 fun HexaMusicTheme(
-    darkTheme: Boolean = true,
+    darkModeMode: DarkModeMode = DarkModeMode.SYSTEM,
     content: @Composable () -> Unit
 ) {
+    val darkTheme = when (darkModeMode) {
+        DarkModeMode.SYSTEM -> isSystemInDarkTheme()
+        DarkModeMode.LIGHT -> false
+        DarkModeMode.DARK -> true
+    }
     val colorScheme = if (darkTheme) DarkScheme else LightScheme
     val view = LocalView.current
     

@@ -7,3 +7,9 @@ class AttachAudioEffectsUseCase(
 ) {
     operator fun invoke(sessionId: Int) = audioEffectsPort.attachToSession(sessionId)
 }
+
+class ReleaseAudioEffectsOnlyUseCase(
+    private val audioEffectsPort: AudioEffectsPort
+) {
+    operator fun invoke() = audioEffectsPort.release()
+}

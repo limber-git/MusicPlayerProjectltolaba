@@ -1,7 +1,12 @@
 package com.limbe.hexamusicplayer.infrastructure.preferences
 
 import android.content.Context
-import androidx.datastore.preferences.core.*
+import androidx.datastore.preferences.core.booleanPreferencesKey
+import androidx.datastore.preferences.core.edit
+import androidx.datastore.preferences.core.floatPreferencesKey
+import androidx.datastore.preferences.core.intPreferencesKey
+import androidx.datastore.preferences.core.stringPreferencesKey
+import androidx.datastore.preferences.core.stringSetPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
 import com.limbe.hexamusicplayer.domain.model.DarkModeMode
 import com.limbe.hexamusicplayer.domain.model.UserPreferences
@@ -21,7 +26,9 @@ class DataStoreUserPreferencesAdapter(private val context: Context) : UserPrefer
         val LOUDNESS_GAIN_MB = intPreferencesKey("loudness_gain_mb")
         val EQ_BANDS = stringPreferencesKey("eq_bands")
         val FAVORITE_TRACKS = stringSetPreferencesKey("favorite_tracks")
+        val RECENT_TRACKS = stringPreferencesKey("recent_tracks")
         val DARK_MODE = stringPreferencesKey("dark_mode")
+        val AUDIO_EFFECTS_ENABLED = booleanPreferencesKey("audio_effects_enabled")
     }
 
     override val preferences: Flow<UserPreferences> = context.dataStore.data.map { prefs ->
@@ -33,7 +40,9 @@ class DataStoreUserPreferencesAdapter(private val context: Context) : UserPrefer
             loudnessGainMb = prefs[Keys.LOUDNESS_GAIN_MB] ?: 0,
             eqBandLevels = parseEqBands(prefs[Keys.EQ_BANDS] ?: ""),
             favoriteTrackIds = prefs[Keys.FAVORITE_TRACKS]?.mapNotNull { it.toLongOrNull() }?.toSet() ?: emptySet(),
-            darkModeMode = DarkModeMode.valueOf(prefs[Keys.DARK_MODE] ?: DarkModeMode.SYSTEM.name)
+            recentTrackIds = parseTrackIds(prefs[Keys.RECENT_TRACKS] ?: ""),
+            darkModeMode = DarkModeMode.valueOf(prefs[Keys.DARK_MODE] ?: DarkModeMode.SYSTEM.name),
+            audioEffectsEnabled = prefs[Keys.AUDIO_EFFECTS_ENABLED] ?: true
         )
     }
 
@@ -78,8 +87,21 @@ class DataStoreUserPreferencesAdapter(private val context: Context) : UserPrefer
         }
     }
 
+    override suspend fun recordRecentTrack(trackId: Long) {
+        context.dataStore.edit { prefs ->
+            val updated = (listOf(trackId) + parseTrackIds(prefs[Keys.RECENT_TRACKS] ?: ""))
+                .distinct()
+                .take(MAX_RECENT_TRACKS)
+            prefs[Keys.RECENT_TRACKS] = updated.joinToString(",")
+        }
+    }
+
     override suspend fun setDarkModeMode(mode: DarkModeMode) {
         context.dataStore.edit { it[Keys.DARK_MODE] = mode.name }
+    }
+
+    override suspend fun setAudioEffectsEnabled(enabled: Boolean) {
+        context.dataStore.edit { it[Keys.AUDIO_EFFECTS_ENABLED] = enabled }
     }
 
     private fun parseEqBands(encoded: String): Map<Int, Int> {
@@ -90,7 +112,18 @@ class DataStoreUserPreferencesAdapter(private val context: Context) : UserPrefer
                 parts[0].toIntOrNull()?.let { index ->
                     parts[1].toIntOrNull()?.let { level -> index to level }
                 }
-            } else null
+            } else {
+                null
+            }
         }.toMap()
+    }
+
+    private fun parseTrackIds(encoded: String): List<Long> {
+        if (encoded.isBlank()) return emptyList()
+        return encoded.split(",").mapNotNull { it.toLongOrNull() }
+    }
+
+    private companion object {
+        const val MAX_RECENT_TRACKS = 24
     }
 }

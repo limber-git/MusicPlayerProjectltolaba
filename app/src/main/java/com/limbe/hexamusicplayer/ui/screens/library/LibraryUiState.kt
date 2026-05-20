@@ -5,6 +5,8 @@ import com.limbe.hexamusicplayer.domain.model.Track
 data class LibraryUiState(
     val tracks: List<Track> = emptyList(),
     val filteredTracks: List<Track> = emptyList(),
+    val favoriteTracks: List<Track> = emptyList(),
+    val recentTracks: List<Track> = emptyList(),
     val searchQuery: String = "",
     val isLoading: Boolean = false,
     val errorMessage: String? = null

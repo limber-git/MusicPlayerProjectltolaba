@@ -1,6 +1,7 @@
-﻿package com.limbe.hexamusicplayer
+package com.limbe.hexamusicplayer
 
 import com.limbe.hexamusicplayer.domain.model.PlayerState
+import com.limbe.hexamusicplayer.domain.model.RepeatMode
 import com.limbe.hexamusicplayer.domain.model.Track
 import com.limbe.hexamusicplayer.domain.port.AudioPlayerPort
 import com.limbe.hexamusicplayer.domain.usecase.SeekToUseCase
@@ -56,8 +57,10 @@ private class FakeUseCasePlayerPort : AudioPlayerPort {
     var lastSpeed: Float = 1.0f
     var lastPitch: Float = 1.0f
     var lastSeekMs: Long = 0L
+    var shuffleEnabled: Boolean = false
+    var repeatMode: RepeatMode = RepeatMode.OFF
 
-    override fun play(track: Track) = Unit
+    override fun play(track: Track, queue: List<Track>) = Unit
 
     override fun togglePlayPause() = Unit
 
@@ -71,6 +74,18 @@ private class FakeUseCasePlayerPort : AudioPlayerPort {
 
     override fun setPitch(pitch: Float) {
         lastPitch = pitch
+    }
+
+    override fun skipToNext() = Unit
+
+    override fun skipToPrevious() = Unit
+
+    override fun setShuffleMode(enabled: Boolean) {
+        shuffleEnabled = enabled
+    }
+
+    override fun setRepeatMode(mode: RepeatMode) {
+        repeatMode = mode
     }
 
     override fun release() = Unit

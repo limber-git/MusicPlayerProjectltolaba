@@ -50,14 +50,20 @@ class PlaybackMediaSessionService : MediaSessionService() {
             val intent = Intent(context, PlaybackMediaSessionService::class.java).apply {
                 action = ACTION_START
             }
-            ContextCompat.startForegroundService(context, intent)
+            runCatching {
+                ContextCompat.startForegroundService(context, intent)
+            }.onFailure {
+                context.startService(intent)
+            }
         }
 
         fun stop(context: Context) {
             val intent = Intent(context, PlaybackMediaSessionService::class.java).apply {
                 action = ACTION_STOP
             }
-            context.startService(intent)
+            runCatching {
+                context.startService(intent)
+            }
         }
     }
 }

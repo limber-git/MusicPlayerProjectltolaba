@@ -15,7 +15,8 @@ class MusicPlayerViewModelFactory(
         return when {
             modelClass.isAssignableFrom(LibraryViewModel::class.java) -> {
                 LibraryViewModel(
-                    getLocalTracksUseCase = container.getLocalTracksUseCase
+                    getLocalTracksUseCase = container.getLocalTracksUseCase,
+                    observeUserPreferencesUseCase = container.observeUserPreferencesUseCase
                 ) as T
             }
             modelClass.isAssignableFrom(PlayerViewModel::class.java) -> {
@@ -27,6 +28,7 @@ class MusicPlayerViewModelFactory(
                     setPlaybackPitchUseCase = container.setPlaybackPitchUseCase,
                     observePlayerStateUseCase = container.observePlayerStateUseCase,
                     attachAudioEffectsUseCase = container.attachAudioEffectsUseCase,
+                    releaseAudioEffectsOnlyUseCase = container.releaseAudioEffectsOnlyUseCase,
                     setEqBandLevelUseCase = container.setEqBandLevelUseCase,
                     setBassStrengthUseCase = container.setBassStrengthUseCase,
                     setVirtualizerStrengthUseCase = container.setVirtualizerStrengthUseCase,
@@ -43,7 +45,10 @@ class MusicPlayerViewModelFactory(
                     skipToPreviousUseCase = container.skipToPreviousUseCase,
                     toggleShuffleUseCase = container.toggleShuffleUseCase,
                     setRepeatModeUseCase = container.setRepeatModeUseCase,
-                    toggleFavoriteTrackUseCase = container.toggleFavoriteTrackUseCase
+                    toggleFavoriteTrackUseCase = container.toggleFavoriteTrackUseCase,
+                    recordRecentTrackUseCase = container.recordRecentTrackUseCase,
+                    setDarkModeUseCase = container.setDarkModeUseCase,
+                    setAudioEffectsEnabledUseCase = container.setAudioEffectsEnabledUseCase
                 ) as T
             }
             else -> throw IllegalArgumentException("Unknown ViewModel class: ${modelClass.name}")

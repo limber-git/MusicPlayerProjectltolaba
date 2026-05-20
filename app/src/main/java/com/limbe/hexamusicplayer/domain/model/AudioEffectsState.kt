@@ -13,5 +13,6 @@ data class AudioEffectsState(
     val bands: List<EqBand> = emptyList(),
     val bassStrength: Int = 0,
     val virtualizerStrength: Int = 0,
-    val loudnessGainMb: Int = 0
+    val loudnessGainMb: Int = 0,
+    val effectsAvailable: Boolean = false
 )

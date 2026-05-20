@@ -41,9 +41,11 @@ fun HexaApp(
 
     val playerUiState by playerViewModel.uiState.collectAsStateWithLifecycle()
 
-    LaunchedEffect(playerUiState.currentTrack?.id, playerUiState.isPlaying) {
-        if (playerUiState.currentTrack != null || playerUiState.isPlaying) {
+    LaunchedEffect(playerUiState.isPlaying, playerUiState.currentTrack?.id) {
+        if (playerUiState.isPlaying) {
             PlaybackMediaSessionService.start(context.applicationContext)
+        } else if (playerUiState.currentTrack == null) {
+            PlaybackMediaSessionService.stop(context.applicationContext)
         }
     }
 

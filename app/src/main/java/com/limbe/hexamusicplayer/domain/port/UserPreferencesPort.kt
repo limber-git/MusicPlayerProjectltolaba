@@ -12,5 +12,7 @@ interface UserPreferencesPort {
     suspend fun setLoudnessGainMb(gainMb: Int)
     suspend fun setEqBandLevel(index: Int, level: Int)
     suspend fun toggleFavoriteTrack(trackId: Long)
+    suspend fun recordRecentTrack(trackId: Long)
     suspend fun setDarkModeMode(mode: com.limbe.hexamusicplayer.domain.model.DarkModeMode)
+    suspend fun setAudioEffectsEnabled(enabled: Boolean)
 }

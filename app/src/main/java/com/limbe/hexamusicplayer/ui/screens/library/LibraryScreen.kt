@@ -1,12 +1,18 @@
 package com.limbe.hexamusicplayer.ui.screens.library
 
-import android.Manifest
-import android.content.Context
-import android.os.Build
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -14,19 +20,40 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Audiotrack
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Settings
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material3.Button
+import androidx.compose.material3.CenterAlignedTopAppBar
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.core.content.ContextCompat
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.limbe.hexamusicplayer.R
 import com.limbe.hexamusicplayer.domain.model.Track
 import com.limbe.hexamusicplayer.ui.components.TrackRow
+import com.limbe.hexamusicplayer.ui.util.hasAudioPermission
+import com.limbe.hexamusicplayer.ui.util.requiredAudioPermission
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -39,10 +66,7 @@ fun LibraryScreen(
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val context = LocalContext.current
-
-    val permission = remember { requiredAudioPermission() }
     var hasPermission by remember { mutableStateOf(hasAudioPermission(context)) }
-
     val permissionLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.RequestPermission()
     ) { granted ->
@@ -59,7 +83,7 @@ fun LibraryScreen(
     }
 
     Scaffold(
-        modifier = Modifier.statusBarsPadding(),
+        modifier = Modifier.fillMaxSize(),
         containerColor = MaterialTheme.colorScheme.background,
         topBar = {
             Column(modifier = Modifier.background(MaterialTheme.colorScheme.background)) {
@@ -67,7 +91,7 @@ fun LibraryScreen(
                     colors = TopAppBarDefaults.centerAlignedTopAppBarColors(containerColor = Color.Transparent),
                     title = {
                         Text(
-                            text = "Biblioteca",
+                            text = stringResource(R.string.library_title),
                             style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold),
                             color = MaterialTheme.colorScheme.onBackground
                         )
@@ -76,13 +100,13 @@ fun LibraryScreen(
                         IconButton(onClick = onSettingsClick) {
                             Icon(
                                 imageVector = Icons.Default.Settings,
-                                contentDescription = "Configuración",
+                                contentDescription = stringResource(R.string.action_open_settings),
                                 tint = MaterialTheme.colorScheme.onBackground
                             )
                         }
                     }
                 )
-                
+
                 if (hasPermission) {
                     SearchBar(
                         query = uiState.searchQuery,
@@ -92,10 +116,16 @@ fun LibraryScreen(
             }
         }
     ) { paddingValues ->
-        Box(modifier = Modifier.fillMaxSize().padding(paddingValues)) {
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(paddingValues)
+        ) {
             if (!hasPermission) {
                 PermissionContent(
-                    onRequestPermission = { permissionLauncher.launch(permission) }
+                    onRequestPermission = {
+                        permissionLauncher.launch(requiredAudioPermission())
+                    }
                 )
             } else {
                 LibraryContent(
@@ -120,8 +150,14 @@ private fun SearchBar(
         modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = 20.dp, vertical = 8.dp),
-        placeholder = { Text("Buscar canciones, artistas...", fontSize = 14.sp) },
-        leadingIcon = { Icon(Icons.Default.Search, contentDescription = null, modifier = Modifier.size(20.dp)) },
+        placeholder = { Text(stringResource(R.string.library_search_placeholder), fontSize = 14.sp) },
+        leadingIcon = {
+            Icon(
+                imageVector = Icons.Default.Search,
+                contentDescription = null,
+                modifier = Modifier.size(20.dp)
+            )
+        },
         shape = RoundedCornerShape(12.dp),
         colors = OutlinedTextFieldDefaults.colors(
             focusedBorderColor = MaterialTheme.colorScheme.primary,
@@ -144,12 +180,13 @@ private fun LibraryContent(
         Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
             CircularProgressIndicator(strokeWidth = 2.dp, modifier = Modifier.size(32.dp))
         }
+        return
     }
 
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
         contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
-        verticalArrangement = Arrangement.spacedBy(4.dp)
+        verticalArrangement = Arrangement.spacedBy(6.dp)
     ) {
         if (uiState.errorMessage != null) {
             item {
@@ -162,26 +199,90 @@ private fun LibraryContent(
             }
         }
 
-        if (uiState.tracks.isEmpty() && !uiState.isLoading) {
+        if (uiState.tracks.isEmpty()) {
             item {
-                EmptyState(message = "No se encontraron canciones.")
+                EmptyState(message = stringResource(R.string.library_empty))
             }
-        } else if (uiState.filteredTracks.isEmpty() && uiState.searchQuery.isNotBlank()) {
+        } else {
+            if (uiState.searchQuery.isBlank()) {
+                item {
+                    QuickSection(
+                        title = stringResource(R.string.library_recent_title),
+                        tracks = uiState.recentTracks,
+                        currentTrackId = currentTrackId,
+                        isPlaying = isPlaying,
+                        onTrackClick = onTrackClick
+                    )
+                }
+                item {
+                    QuickSection(
+                        title = stringResource(R.string.library_favorites_title),
+                        tracks = uiState.favoriteTracks,
+                        currentTrackId = currentTrackId,
+                        isPlaying = isPlaying,
+                        onTrackClick = onTrackClick
+                    )
+                }
+            }
+
             item {
-                EmptyState(message = "No hay resultados para \"${uiState.searchQuery}\"")
+                Text(
+                    text = stringResource(R.string.library_all_tracks_title, uiState.filteredTracks.size),
+                    style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
+                    color = MaterialTheme.colorScheme.onBackground,
+                    modifier = Modifier.padding(top = 12.dp, bottom = 8.dp)
+                )
+            }
+
+            if (uiState.filteredTracks.isEmpty()) {
+                item {
+                    EmptyState(message = stringResource(R.string.library_no_results, uiState.searchQuery))
+                }
+            } else {
+                items(items = uiState.filteredTracks, key = { "all-${it.id}" }) { track ->
+                    TrackRow(
+                        track = track,
+                        isCurrent = currentTrackId == track.id,
+                        isPlaying = isPlaying,
+                        onClick = { onTrackClick(track, uiState.filteredTracks) }
+                    )
+                }
             }
         }
 
-        items(items = uiState.filteredTracks, key = { it.id }) { track ->
+        item { Spacer(modifier = Modifier.height(100.dp)) }
+    }
+}
+
+@Composable
+private fun QuickSection(
+    title: String,
+    tracks: List<Track>,
+    currentTrackId: Long?,
+    isPlaying: Boolean,
+    onTrackClick: (Track, List<Track>) -> Unit
+) {
+    if (tracks.isEmpty()) return
+
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(top = 8.dp, bottom = 8.dp)
+    ) {
+        Text(
+            text = title,
+            style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
+            color = MaterialTheme.colorScheme.onBackground,
+            modifier = Modifier.padding(bottom = 8.dp)
+        )
+        tracks.take(4).forEach { track ->
             TrackRow(
                 track = track,
                 isCurrent = currentTrackId == track.id,
                 isPlaying = isPlaying,
-                onClick = { onTrackClick(track, uiState.filteredTracks) }
+                onClick = { onTrackClick(track, tracks) }
             )
         }
-        
-        item { Spacer(modifier = Modifier.height(100.dp)) }
     }
 }
 
@@ -237,39 +338,26 @@ private fun PermissionContent(
         )
         Spacer(modifier = Modifier.height(24.dp))
         Text(
-            text = "Acceso a tu Música",
+            text = stringResource(R.string.permission_title),
             style = MaterialTheme.typography.headlineSmall.copy(fontWeight = FontWeight.Bold),
             color = MaterialTheme.colorScheme.onBackground
         )
         Spacer(modifier = Modifier.height(8.dp))
         Text(
-            text = "Para mostrar tu biblioteca, necesitamos permiso para leer tus archivos de audio.",
+            text = stringResource(R.string.permission_body),
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
-            textAlign = androidx.compose.ui.text.style.TextAlign.Center
+            textAlign = TextAlign.Center
         )
         Spacer(modifier = Modifier.height(32.dp))
         Button(
             onClick = onRequestPermission,
             shape = RoundedCornerShape(12.dp),
-            modifier = Modifier.fillMaxWidth().height(56.dp)
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(56.dp)
         ) {
-            Text("Conceder Permiso", fontWeight = FontWeight.Bold)
+            Text(stringResource(R.string.permission_cta), fontWeight = FontWeight.Bold)
         }
     }
-}
-
-private fun requiredAudioPermission(): String {
-    return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-        Manifest.permission.READ_MEDIA_AUDIO
-    } else {
-        Manifest.permission.READ_EXTERNAL_STORAGE
-    }
-}
-
-private fun hasAudioPermission(context: Context): Boolean {
-    return ContextCompat.checkSelfPermission(
-        context,
-        requiredAudioPermission()
-    ) == android.content.pm.PackageManager.PERMISSION_GRANTED
 }

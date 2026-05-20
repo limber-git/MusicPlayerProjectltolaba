@@ -44,6 +44,7 @@ class AppContainer(
     val observePlayerStateUseCase = ObservePlayerStateUseCase(audioPlayer)
 
     val attachAudioEffectsUseCase = AttachAudioEffectsUseCase(audioEffects)
+    val releaseAudioEffectsOnlyUseCase = ReleaseAudioEffectsOnlyUseCase(audioEffects)
     val setEqBandLevelUseCase = SetEqBandLevelUseCase(audioEffects)
     val setBassStrengthUseCase = SetBassStrengthUseCase(audioEffects)
     val setVirtualizerStrengthUseCase = SetVirtualizerStrengthUseCase(audioEffects)
@@ -58,7 +59,9 @@ class AppContainer(
     val saveLoudnessGainUseCase = SaveLoudnessGainUseCase(userPreferences)
     val saveEqBandLevelUseCase = SaveEqBandLevelUseCase(userPreferences)
     val toggleFavoriteTrackUseCase = ToggleFavoriteTrackUseCase(userPreferences)
+    val recordRecentTrackUseCase = RecordRecentTrackUseCase(userPreferences)
     val setDarkModeUseCase = SetDarkModeUseCase(userPreferences)
+    val setAudioEffectsEnabledUseCase = SetAudioEffectsEnabledUseCase(userPreferences)
 
     val releaseAudioEnginesUseCase = ReleaseAudioEnginesUseCase(audioPlayer, audioEffects)
 

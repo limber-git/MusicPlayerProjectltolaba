@@ -10,13 +10,17 @@ import androidx.compose.material.icons.filled.Pause
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import com.limbe.hexamusicplayer.R
 import com.limbe.hexamusicplayer.ui.screens.player.PlayerUiState
 
 @Composable
@@ -52,7 +56,7 @@ fun MiniPlayer(
             ) {
                 // Artwork with Coil
                 coil.compose.AsyncImage(
-                    model = track.contentUri,
+                    model = track.artworkUri ?: track.contentUri,
                     contentDescription = null,
                     modifier = Modifier
                         .size(48.dp)
@@ -85,7 +89,7 @@ fun MiniPlayer(
                 ) {
                     Icon(
                         imageVector = if (uiState.isPlaying) Icons.Default.Pause else Icons.Default.PlayArrow,
-                        contentDescription = null,
+                        contentDescription = stringResource(R.string.action_play_pause),
                         tint = MaterialTheme.colorScheme.primary,
                         modifier = Modifier.size(32.dp)
                     )

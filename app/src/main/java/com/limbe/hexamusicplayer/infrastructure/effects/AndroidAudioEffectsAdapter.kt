@@ -1,4 +1,4 @@
-﻿package com.limbe.hexamusicplayer.infrastructure.effects
+package com.limbe.hexamusicplayer.infrastructure.effects
 
 import android.media.audiofx.BassBoost
 import android.media.audiofx.Equalizer
@@ -29,11 +29,16 @@ class AndroidAudioEffectsAdapter : AudioEffectsPort {
 
         releaseEffectsOnly()
 
-        runCatching {
+        val attachResult = runCatching {
             equalizer = Equalizer(0, sessionId).apply { enabled = true }
             bassBoost = BassBoost(0, sessionId).apply { enabled = true }
             virtualizer = Virtualizer(0, sessionId).apply { enabled = true }
             loudnessEnhancer = LoudnessEnhancer(sessionId).apply { enabled = true }
+        }
+
+        if (attachResult.isFailure) {
+            resetState()
+            return
         }
 
         currentLoudnessGainMb = 0
@@ -42,69 +47,104 @@ class AndroidAudioEffectsAdapter : AudioEffectsPort {
 
     override fun setBandLevel(index: Int, level: Int) {
         val eq = equalizer ?: return
-        val bandIndex = index.toShort()
-        if (bandIndex < 0 || bandIndex >= eq.numberOfBands) {
-            return
-        }
 
-        val range = eq.bandLevelRange
-        val clamped = level.coerceIn(range[0].toInt(), range[1].toInt())
-        eq.setBandLevel(bandIndex, clamped.toShort())
-        publishState(_state.value.attachedSessionId)
+        runCatching {
+            val bandIndex = index.toShort()
+            if (bandIndex < 0 || bandIndex >= eq.numberOfBands) {
+                return
+            }
+
+            val range = eq.bandLevelRange
+            val clamped = level.coerceIn(range[0].toInt(), range[1].toInt())
+            eq.setBandLevel(bandIndex, clamped.toShort())
+        }.onSuccess {
+            publishState(_state.value.attachedSessionId)
+        }.onFailure {
+            resetState()
+        }
     }
 
     override fun setBassStrength(strength: Int) {
         val clamped = strength.coerceIn(0, 1000)
-        bassBoost?.setStrength(clamped.toShort())
-        publishState(_state.value.attachedSessionId)
+
+        runCatching {
+            bassBoost?.setStrength(clamped.toShort())
+        }.onSuccess {
+            publishState(_state.value.attachedSessionId)
+        }.onFailure {
+            resetState()
+        }
     }
 
     override fun setVirtualizerStrength(strength: Int) {
         val clamped = strength.coerceIn(0, 1000)
-        virtualizer?.setStrength(clamped.toShort())
-        publishState(_state.value.attachedSessionId)
+
+        runCatching {
+            virtualizer?.setStrength(clamped.toShort())
+        }.onSuccess {
+            publishState(_state.value.attachedSessionId)
+        }.onFailure {
+            resetState()
+        }
     }
 
     override fun setLoudnessGainMb(gainMb: Int) {
         val clamped = gainMb.coerceIn(-1500, 3000)
-        loudnessEnhancer?.setTargetGain(clamped)
-        currentLoudnessGainMb = clamped
-        publishState(_state.value.attachedSessionId)
+
+        runCatching {
+            loudnessEnhancer?.setTargetGain(clamped)
+        }.onSuccess {
+            currentLoudnessGainMb = clamped
+            publishState(_state.value.attachedSessionId)
+        }.onFailure {
+            resetState()
+        }
     }
 
     override fun release() {
-        releaseEffectsOnly()
-        _state.value = AudioEffectsState()
-        currentLoudnessGainMb = 0
+        resetState()
     }
 
     private fun publishState(sessionId: Int?) {
-        val eq = equalizer
-        val eqBands = if (eq == null) {
-            emptyList()
-        } else {
-            val range = eq.bandLevelRange
-            val minLevel = range[0].toInt()
-            val maxLevel = range[1].toInt()
-            (0 until eq.numberOfBands.toInt()).map { band ->
-                val bandShort = band.toShort()
-                EqBand(
-                    index = band,
-                    centerFreqHz = (eq.getCenterFreq(bandShort) / 1000).toInt(),
-                    level = eq.getBandLevel(bandShort).toInt(),
-                    minLevel = minLevel,
-                    maxLevel = maxLevel
-                )
+        val publishResult = runCatching {
+            val eq = equalizer
+            val eqBands = if (eq == null) {
+                emptyList()
+            } else {
+                val range = eq.bandLevelRange
+                val minLevel = range[0].toInt()
+                val maxLevel = range[1].toInt()
+                (0 until eq.numberOfBands.toInt()).map { band ->
+                    val bandShort = band.toShort()
+                    EqBand(
+                        index = band,
+                        centerFreqHz = (eq.getCenterFreq(bandShort) / 1000).toInt(),
+                        level = eq.getBandLevel(bandShort).toInt(),
+                        minLevel = minLevel,
+                        maxLevel = maxLevel
+                    )
+                }
             }
+
+            AudioEffectsState(
+                attachedSessionId = sessionId,
+                bands = eqBands,
+                bassStrength = bassBoost?.roundedStrength?.toInt() ?: 0,
+                virtualizerStrength = virtualizer?.roundedStrength?.toInt() ?: 0,
+                loudnessGainMb = currentLoudnessGainMb,
+                effectsAvailable = eq != null || bassBoost != null || virtualizer != null || loudnessEnhancer != null
+            )
         }
 
-        _state.value = AudioEffectsState(
-            attachedSessionId = sessionId,
-            bands = eqBands,
-            bassStrength = bassBoost?.roundedStrength?.toInt() ?: 0,
-            virtualizerStrength = virtualizer?.roundedStrength?.toInt() ?: 0,
-            loudnessGainMb = currentLoudnessGainMb
-        )
+        publishResult
+            .onSuccess { state -> _state.value = state }
+            .onFailure { resetState() }
+    }
+
+    private fun resetState() {
+        releaseEffectsOnly()
+        currentLoudnessGainMb = 0
+        _state.value = AudioEffectsState()
     }
 
     private fun releaseEffectsOnly() {

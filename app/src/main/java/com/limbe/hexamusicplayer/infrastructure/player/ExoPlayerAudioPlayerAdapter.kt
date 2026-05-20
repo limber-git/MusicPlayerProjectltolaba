@@ -6,6 +6,7 @@ import android.os.Looper
 import androidx.media3.common.C
 import androidx.media3.common.MediaItem
 import androidx.media3.common.MediaMetadata
+import androidx.media3.common.PlaybackException
 import androidx.media3.common.PlaybackParameters
 import androidx.media3.common.Player
 import androidx.media3.common.util.UnstableApi
@@ -26,6 +27,8 @@ class ExoPlayerAudioPlayerAdapter(
 
     private val mainHandler = Handler(Looper.getMainLooper())
     private var currentQueue: List<Track> = emptyList()
+    private var lastErrorMessage: String? = null
+    private var progressLoopScheduled = false
 
     private val _state = MutableStateFlow(PlayerState())
     override val state: StateFlow<PlayerState> = _state.asStateFlow()
@@ -33,7 +36,11 @@ class ExoPlayerAudioPlayerAdapter(
     private val progressLoop = object : Runnable {
         override fun run() {
             publishState()
-            mainHandler.postDelayed(this, 500L)
+            if (shouldKeepProgressLoopRunning()) {
+                mainHandler.postDelayed(this, 500L)
+            } else {
+                progressLoopScheduled = false
+            }
         }
     }
 
@@ -41,10 +48,15 @@ class ExoPlayerAudioPlayerAdapter(
         exoPlayer.addListener(
             object : Player.Listener {
                 override fun onPlaybackStateChanged(playbackState: Int) {
+                    if (playbackState == Player.STATE_READY) {
+                        lastErrorMessage = null
+                    }
+                    syncProgressLoop()
                     publishState()
                 }
 
                 override fun onIsPlayingChanged(isPlaying: Boolean) {
+                    syncProgressLoop()
                     publishState()
                 }
 
@@ -61,25 +73,35 @@ class ExoPlayerAudioPlayerAdapter(
                 }
 
                 override fun onMediaItemTransition(mediaItem: MediaItem?, reason: Int) {
+                    lastErrorMessage = null
                     val currentId = mediaItem?.mediaId?.toLongOrNull()
                     val currentTrack = currentQueue.find { it.id == currentId }
                     if (currentTrack != null) {
-                        _state.update { it.copy(currentTrack = currentTrack) }
+                        _state.update { it.copy(currentTrack = currentTrack, errorMessage = null) }
                     }
+                    syncProgressLoop()
+                    publishState()
+                }
+
+                override fun onPlayerError(error: PlaybackException) {
+                    lastErrorMessage = error.localizedMessage ?: "Playback error"
+                    syncProgressLoop()
                     publishState()
                 }
 
                 override fun onEvents(player: Player, events: Player.Events) {
+                    syncProgressLoop()
                     publishState()
                 }
             }
         )
-        mainHandler.post(progressLoop)
+        publishState()
     }
 
     override fun play(track: Track, queue: List<Track>) {
         currentQueue = queue.ifEmpty { listOf(track) }
-        
+        lastErrorMessage = null
+
         val mediaItems = currentQueue.map { t ->
             MediaItem.Builder()
                 .setUri(Uri.parse(t.contentUri))
@@ -88,33 +110,38 @@ class ExoPlayerAudioPlayerAdapter(
                     MediaMetadata.Builder()
                         .setTitle(t.title)
                         .setArtist(t.artist)
+                        .setAlbumTitle(t.album)
                         .build()
                 )
                 .build()
         }
 
         val startIndex = currentQueue.indexOfFirst { it.id == track.id }.coerceAtLeast(0)
-        
+
         exoPlayer.setMediaItems(mediaItems, startIndex, 0L)
         exoPlayer.prepare()
         exoPlayer.playWhenReady = true
+        syncProgressLoop()
 
         _state.update { current ->
-            current.copy(currentTrack = track)
+            current.copy(currentTrack = track, errorMessage = null)
         }
         publishState()
     }
 
     override fun togglePlayPause() {
+        lastErrorMessage = null
         if (exoPlayer.isPlaying) {
             exoPlayer.pause()
         } else {
             exoPlayer.play()
         }
+        syncProgressLoop()
         publishState()
     }
 
     override fun seekTo(positionMs: Long) {
+        lastErrorMessage = null
         exoPlayer.seekTo(positionMs)
         publishState()
     }
@@ -132,12 +159,14 @@ class ExoPlayerAudioPlayerAdapter(
     }
 
     override fun skipToNext() {
+        lastErrorMessage = null
         if (exoPlayer.hasNextMediaItem()) {
             exoPlayer.seekToNext()
         }
     }
 
     override fun skipToPrevious() {
+        lastErrorMessage = null
         if (exoPlayer.hasPreviousMediaItem()) {
             exoPlayer.seekToPrevious()
         }
@@ -159,7 +188,24 @@ class ExoPlayerAudioPlayerAdapter(
 
     override fun release() {
         mainHandler.removeCallbacks(progressLoop)
+        progressLoopScheduled = false
         exoPlayer.release()
+    }
+
+    private fun syncProgressLoop() {
+        if (shouldKeepProgressLoopRunning()) {
+            if (!progressLoopScheduled) {
+                progressLoopScheduled = true
+                mainHandler.post(progressLoop)
+            }
+        } else if (progressLoopScheduled) {
+            mainHandler.removeCallbacks(progressLoop)
+            progressLoopScheduled = false
+        }
+    }
+
+    private fun shouldKeepProgressLoopRunning(): Boolean {
+        return exoPlayer.isPlaying || exoPlayer.playbackState == Player.STATE_BUFFERING
     }
 
     private fun publishState() {
@@ -181,7 +227,8 @@ class ExoPlayerAudioPlayerAdapter(
                     Player.REPEAT_MODE_ONE -> RepeatMode.ONE
                     Player.REPEAT_MODE_ALL -> RepeatMode.ALL
                     else -> RepeatMode.OFF
-                }
+                },
+                errorMessage = lastErrorMessage
             )
         }
     }
