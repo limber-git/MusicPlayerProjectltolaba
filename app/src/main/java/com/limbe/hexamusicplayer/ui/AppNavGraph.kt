@@ -4,8 +4,6 @@ import androidx.compose.animation.AnimatedContentTransitionScope
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
-import androidx.compose.animation.slideIntoContainer
-import androidx.compose.animation.slideOutOfContainer
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.navigation.NavHostController
@@ -57,6 +55,8 @@ fun AppNavGraph(
                 libraryViewModel = libraryViewModel,
                 playerUiState = playerUiState,
                 onTrackClick = playerViewModel::playTrack,
+                onTrackPlayNext = playerViewModel::playNext,
+                onTrackAddToQueue = playerViewModel::addToQueue,
                 onOpenPlayer = { navController.navigate(AppRoute.PLAYER) },
                 onOpenStudio = { navController.navigate(AppRoute.STUDIO) },
                 onOpenExplorer = {
@@ -73,6 +73,8 @@ fun AppNavGraph(
                 currentTrackId = playerUiState.currentTrack?.id,
                 isPlaying = playerUiState.isPlaying,
                 onTrackClick = playerViewModel::playTrack,
+                onTrackPlayNext = playerViewModel::playNext,
+                onTrackAddToQueue = playerViewModel::addToQueue,
                 onSettingsClick = { navController.navigate(AppRoute.SETTINGS) }
             )
         }
@@ -86,7 +88,9 @@ fun AppNavGraph(
             SearchScreen(
                 libraryViewModel = libraryViewModel,
                 playerUiState = playerUiState,
-                onTrackClick = playerViewModel::playTrack
+                onTrackClick = playerViewModel::playTrack,
+                onTrackPlayNext = playerViewModel::playNext,
+                onTrackAddToQueue = playerViewModel::addToQueue
             )
         }
         composable(AppRoute.STUDIO) {

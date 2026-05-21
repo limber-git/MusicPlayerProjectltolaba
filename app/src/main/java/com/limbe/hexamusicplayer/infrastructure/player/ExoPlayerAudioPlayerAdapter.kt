@@ -186,6 +186,54 @@ class ExoPlayerAudioPlayerAdapter(
         publishState()
     }
 
+    override fun addToQueue(track: Track) {
+        currentQueue = currentQueue + track
+        exoPlayer.addMediaItem(track.toMediaItem())
+        publishState()
+    }
+
+    override fun playNext(track: Track) {
+        if (currentQueue.isEmpty()) {
+            play(track, listOf(track))
+            return
+        }
+
+        val insertIndex = (exoPlayer.currentMediaItemIndex + 1).coerceAtLeast(0)
+        currentQueue = currentQueue.toMutableList().apply {
+            add(insertIndex.coerceAtMost(size), track)
+        }
+        exoPlayer.addMediaItem(insertIndex, track.toMediaItem())
+        publishState()
+    }
+
+    override fun removeFromQueue(trackId: Long) {
+        val index = currentQueue.indexOfFirst { it.id == trackId }
+        if (index < 0) return
+
+        val removingCurrent = exoPlayer.currentMediaItemIndex == index
+        currentQueue = currentQueue.toMutableList().apply { removeAt(index) }
+        exoPlayer.removeMediaItem(index)
+
+        if (currentQueue.isEmpty()) {
+            exoPlayer.stop()
+        } else if (removingCurrent) {
+            exoPlayer.playWhenReady = true
+        }
+        publishState()
+    }
+
+    override fun moveQueueItem(fromIndex: Int, toIndex: Int) {
+        if (fromIndex == toIndex) return
+        if (fromIndex !in currentQueue.indices || toIndex !in currentQueue.indices) return
+
+        val mutableQueue = currentQueue.toMutableList()
+        val movedTrack = mutableQueue.removeAt(fromIndex)
+        mutableQueue.add(toIndex, movedTrack)
+        currentQueue = mutableQueue
+        exoPlayer.moveMediaItem(fromIndex, toIndex)
+        publishState()
+    }
+
     override fun release() {
         mainHandler.removeCallbacks(progressLoop)
         progressLoopScheduled = false
@@ -232,5 +280,19 @@ class ExoPlayerAudioPlayerAdapter(
                 errorMessage = lastErrorMessage
             )
         }
+    }
+
+    private fun Track.toMediaItem(): MediaItem {
+        return MediaItem.Builder()
+            .setUri(Uri.parse(contentUri))
+            .setMediaId(id.toString())
+            .setMediaMetadata(
+                MediaMetadata.Builder()
+                    .setTitle(title)
+                    .setArtist(artist)
+                    .setAlbumTitle(album)
+                    .build()
+            )
+            .build()
     }
 }

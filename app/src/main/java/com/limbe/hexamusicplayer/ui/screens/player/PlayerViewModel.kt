@@ -12,8 +12,10 @@ import com.limbe.hexamusicplayer.domain.usecase.ObserveAudioEffectsStateUseCase
 import com.limbe.hexamusicplayer.domain.usecase.ObservePlayerStateUseCase
 import com.limbe.hexamusicplayer.domain.usecase.ObserveUserPreferencesUseCase
 import com.limbe.hexamusicplayer.domain.usecase.PlayTrackUseCase
+import com.limbe.hexamusicplayer.domain.usecase.PlayNextUseCase
 import com.limbe.hexamusicplayer.domain.usecase.RecordRecentTrackUseCase
 import com.limbe.hexamusicplayer.domain.usecase.ReleaseAudioEffectsOnlyUseCase
+import com.limbe.hexamusicplayer.domain.usecase.RemoveFromQueueUseCase
 import com.limbe.hexamusicplayer.domain.usecase.SaveBassStrengthUseCase
 import com.limbe.hexamusicplayer.domain.usecase.SaveEqBandLevelUseCase
 import com.limbe.hexamusicplayer.domain.usecase.SaveLoudnessGainUseCase
@@ -37,6 +39,8 @@ import com.limbe.hexamusicplayer.domain.usecase.ToggleFavoriteTrackUseCase
 import com.limbe.hexamusicplayer.domain.usecase.TogglePlaybackUseCase
 import com.limbe.hexamusicplayer.domain.usecase.ToggleShuffleUseCase
 import com.limbe.hexamusicplayer.domain.usecase.SetManualLibraryFolderUseCase
+import com.limbe.hexamusicplayer.domain.usecase.AddToQueueUseCase
+import com.limbe.hexamusicplayer.domain.usecase.MoveQueueItemUseCase
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -66,6 +70,10 @@ class PlayerViewModel(
     private val saveEqBandLevelUseCase: SaveEqBandLevelUseCase,
     private val skipToNextUseCase: SkipToNextUseCase,
     private val skipToPreviousUseCase: SkipToPreviousUseCase,
+    private val addToQueueUseCase: AddToQueueUseCase,
+    private val playNextUseCase: PlayNextUseCase,
+    private val removeFromQueueUseCase: RemoveFromQueueUseCase,
+    private val moveQueueItemUseCase: MoveQueueItemUseCase,
     private val toggleShuffleUseCase: ToggleShuffleUseCase,
     private val setRepeatModeUseCase: SetRepeatModeUseCase,
     private val toggleFavoriteTrackUseCase: ToggleFavoriteTrackUseCase,
@@ -110,6 +118,22 @@ class PlayerViewModel(
 
     fun skipToPrevious() {
         skipToPreviousUseCase()
+    }
+
+    fun addToQueue(track: Track) {
+        addToQueueUseCase(track)
+    }
+
+    fun playNext(track: Track) {
+        playNextUseCase(track)
+    }
+
+    fun removeFromQueue(trackId: Long) {
+        removeFromQueueUseCase(trackId)
+    }
+
+    fun moveQueueItem(fromIndex: Int, toIndex: Int) {
+        moveQueueItemUseCase(fromIndex, toIndex)
     }
 
     fun toggleShuffle() {

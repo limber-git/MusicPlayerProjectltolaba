@@ -42,6 +42,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.limbe.hexamusicplayer.R
 import com.limbe.hexamusicplayer.domain.model.Track
+import com.limbe.hexamusicplayer.ui.components.TrackMenuAction
 import com.limbe.hexamusicplayer.ui.components.TrackRow
 import com.limbe.hexamusicplayer.ui.screens.home.PermissionState
 import com.limbe.hexamusicplayer.ui.screens.library.LibraryViewModel
@@ -54,7 +55,9 @@ import com.limbe.hexamusicplayer.ui.util.requiredAudioPermission
 fun SearchScreen(
     libraryViewModel: LibraryViewModel,
     playerUiState: PlayerUiState,
-    onTrackClick: (Track, List<Track>) -> Unit
+    onTrackClick: (Track, List<Track>) -> Unit,
+    onTrackPlayNext: (Track) -> Unit,
+    onTrackAddToQueue: (Track) -> Unit
 ) {
     val uiState by libraryViewModel.uiState.collectAsStateWithLifecycle()
     val context = LocalContext.current
@@ -159,7 +162,8 @@ fun SearchScreen(
                             track = track,
                             isCurrent = playerUiState.currentTrack?.id == track.id,
                             isPlaying = playerUiState.isPlaying,
-                            onClick = { onTrackClick(track, uiState.filteredTracks) }
+                            onClick = { onTrackClick(track, uiState.filteredTracks) },
+                            menuActions = searchTrackMenuActions(track, onTrackPlayNext, onTrackAddToQueue)
                         )
                     }
                 }
@@ -170,6 +174,24 @@ fun SearchScreen(
             }
         }
     }
+}
+
+@Composable
+private fun searchTrackMenuActions(
+    track: Track,
+    onTrackPlayNext: (Track) -> Unit,
+    onTrackAddToQueue: (Track) -> Unit
+): List<TrackMenuAction> {
+    return listOf(
+        TrackMenuAction(
+            label = stringResource(R.string.action_play_next),
+            onClick = { onTrackPlayNext(track) }
+        ),
+        TrackMenuAction(
+            label = stringResource(R.string.action_add_to_queue),
+            onClick = { onTrackAddToQueue(track) }
+        )
+    )
 }
 
 @Composable

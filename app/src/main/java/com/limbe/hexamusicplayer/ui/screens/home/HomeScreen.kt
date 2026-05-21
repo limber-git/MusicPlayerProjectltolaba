@@ -16,7 +16,6 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.layout.weight
 import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
@@ -60,6 +59,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil.compose.AsyncImage
 import com.limbe.hexamusicplayer.R
 import com.limbe.hexamusicplayer.domain.model.Track
+import com.limbe.hexamusicplayer.ui.components.TrackMenuAction
 import com.limbe.hexamusicplayer.ui.components.TrackRow
 import com.limbe.hexamusicplayer.ui.screens.library.LibraryViewModel
 import com.limbe.hexamusicplayer.ui.screens.player.PlayerUiState
@@ -72,6 +72,8 @@ fun HomeScreen(
     libraryViewModel: LibraryViewModel,
     playerUiState: PlayerUiState,
     onTrackClick: (Track, List<Track>) -> Unit,
+    onTrackPlayNext: (Track) -> Unit,
+    onTrackAddToQueue: (Track) -> Unit,
     onOpenPlayer: () -> Unit,
     onOpenStudio: () -> Unit,
     onOpenExplorer: () -> Unit,
@@ -173,7 +175,8 @@ fun HomeScreen(
                         track = track,
                         isCurrent = playerUiState.currentTrack?.id == track.id,
                         isPlaying = playerUiState.isPlaying,
-                        onClick = { onTrackClick(track, uiState.recentTracks) }
+                        onClick = { onTrackClick(track, uiState.recentTracks) },
+                        menuActions = homeTrackMenuActions(track, onTrackPlayNext, onTrackAddToQueue)
                     )
                 }
             }
@@ -186,7 +189,8 @@ fun HomeScreen(
                         track = track,
                         isCurrent = playerUiState.currentTrack?.id == track.id,
                         isPlaying = playerUiState.isPlaying,
-                        onClick = { onTrackClick(track, uiState.favoriteTracks) }
+                        onClick = { onTrackClick(track, uiState.favoriteTracks) },
+                        menuActions = homeTrackMenuActions(track, onTrackPlayNext, onTrackAddToQueue)
                     )
                 }
             }
@@ -237,6 +241,24 @@ fun HomeScreen(
             }
         }
     }
+}
+
+@Composable
+private fun homeTrackMenuActions(
+    track: Track,
+    onTrackPlayNext: (Track) -> Unit,
+    onTrackAddToQueue: (Track) -> Unit
+): List<TrackMenuAction> {
+    return listOf(
+        TrackMenuAction(
+            label = stringResource(R.string.action_play_next),
+            onClick = { onTrackPlayNext(track) }
+        ),
+        TrackMenuAction(
+            label = stringResource(R.string.action_add_to_queue),
+            onClick = { onTrackAddToQueue(track) }
+        )
+    )
 }
 
 @Composable

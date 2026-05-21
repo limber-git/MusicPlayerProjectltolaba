@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -52,6 +53,7 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.limbe.hexamusicplayer.R
 import com.limbe.hexamusicplayer.domain.model.Track
+import com.limbe.hexamusicplayer.ui.components.TrackMenuAction
 import com.limbe.hexamusicplayer.ui.components.TrackRow
 import com.limbe.hexamusicplayer.ui.util.hasAudioPermission
 import com.limbe.hexamusicplayer.ui.util.requiredAudioPermission
@@ -63,6 +65,8 @@ fun LibraryScreen(
     currentTrackId: Long?,
     isPlaying: Boolean,
     onTrackClick: (Track, List<Track>) -> Unit,
+    onTrackPlayNext: (Track) -> Unit,
+    onTrackAddToQueue: (Track) -> Unit,
     onSettingsClick: () -> Unit
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
@@ -133,7 +137,9 @@ fun LibraryScreen(
                     uiState = uiState,
                     currentTrackId = currentTrackId,
                     isPlaying = isPlaying,
-                    onTrackClick = onTrackClick
+                    onTrackClick = onTrackClick,
+                    onTrackPlayNext = onTrackPlayNext,
+                    onTrackAddToQueue = onTrackAddToQueue
                 )
             }
         }
@@ -175,7 +181,9 @@ private fun LibraryContent(
     uiState: LibraryUiState,
     currentTrackId: Long?,
     isPlaying: Boolean,
-    onTrackClick: (Track, List<Track>) -> Unit
+    onTrackClick: (Track, List<Track>) -> Unit,
+    onTrackPlayNext: (Track) -> Unit,
+    onTrackAddToQueue: (Track) -> Unit
 ) {
     if (uiState.isLoading) {
         Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
@@ -239,7 +247,9 @@ private fun LibraryContent(
                         tracks = uiState.recentTracks,
                         currentTrackId = currentTrackId,
                         isPlaying = isPlaying,
-                        onTrackClick = onTrackClick
+                        onTrackClick = onTrackClick,
+                        onTrackPlayNext = onTrackPlayNext,
+                        onTrackAddToQueue = onTrackAddToQueue
                     )
                 }
                 item {
@@ -248,7 +258,9 @@ private fun LibraryContent(
                         tracks = uiState.favoriteTracks,
                         currentTrackId = currentTrackId,
                         isPlaying = isPlaying,
-                        onTrackClick = onTrackClick
+                        onTrackClick = onTrackClick,
+                        onTrackPlayNext = onTrackPlayNext,
+                        onTrackAddToQueue = onTrackAddToQueue
                     )
                 }
             }
@@ -272,7 +284,8 @@ private fun LibraryContent(
                         track = track,
                         isCurrent = currentTrackId == track.id,
                         isPlaying = isPlaying,
-                        onClick = { onTrackClick(track, uiState.filteredTracks) }
+                        onClick = { onTrackClick(track, uiState.filteredTracks) },
+                        menuActions = trackMenuActions(track, onTrackPlayNext, onTrackAddToQueue)
                     )
                 }
             }
@@ -288,7 +301,9 @@ private fun QuickSection(
     tracks: List<Track>,
     currentTrackId: Long?,
     isPlaying: Boolean,
-    onTrackClick: (Track, List<Track>) -> Unit
+    onTrackClick: (Track, List<Track>) -> Unit,
+    onTrackPlayNext: (Track) -> Unit,
+    onTrackAddToQueue: (Track) -> Unit
 ) {
     if (tracks.isEmpty()) return
 
@@ -308,10 +323,29 @@ private fun QuickSection(
                 track = track,
                 isCurrent = currentTrackId == track.id,
                 isPlaying = isPlaying,
-                onClick = { onTrackClick(track, tracks) }
+                onClick = { onTrackClick(track, tracks) },
+                menuActions = trackMenuActions(track, onTrackPlayNext, onTrackAddToQueue)
             )
         }
     }
+}
+
+@Composable
+private fun trackMenuActions(
+    track: Track,
+    onTrackPlayNext: (Track) -> Unit,
+    onTrackAddToQueue: (Track) -> Unit
+): List<TrackMenuAction> {
+    return listOf(
+        TrackMenuAction(
+            label = stringResource(R.string.action_play_next),
+            onClick = { onTrackPlayNext(track) }
+        ),
+        TrackMenuAction(
+            label = stringResource(R.string.action_add_to_queue),
+            onClick = { onTrackAddToQueue(track) }
+        )
+    )
 }
 
 @Composable

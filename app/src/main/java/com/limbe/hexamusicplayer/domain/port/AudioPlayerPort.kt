@@ -16,5 +16,9 @@ interface AudioPlayerPort {
     fun skipToPrevious()
     fun setShuffleMode(enabled: Boolean)
     fun setRepeatMode(mode: com.limbe.hexamusicplayer.domain.model.RepeatMode)
+    fun addToQueue(track: Track)
+    fun playNext(track: Track)
+    fun removeFromQueue(trackId: Long)
+    fun moveQueueItem(fromIndex: Int, toIndex: Int)
     fun release()
 }

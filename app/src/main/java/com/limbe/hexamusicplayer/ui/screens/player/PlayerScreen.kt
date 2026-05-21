@@ -25,6 +25,7 @@ import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.FavoriteBorder
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.KeyboardArrowUp
+import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.QueueMusic
 import androidx.compose.material.icons.filled.Repeat
 import androidx.compose.material.icons.filled.RepeatOne
@@ -36,6 +37,8 @@ import androidx.compose.material.icons.rounded.SkipNext
 import androidx.compose.material.icons.rounded.SkipPrevious
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -44,6 +47,7 @@ import androidx.compose.material3.Slider
 import androidx.compose.material3.SliderDefaults
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
@@ -59,9 +63,8 @@ import androidx.compose.ui.draw.blur
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.input.pointer.consume
-import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -73,6 +76,7 @@ import coil.compose.AsyncImage
 import com.limbe.hexamusicplayer.R
 import com.limbe.hexamusicplayer.domain.model.RepeatMode
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun PlayerScreen(
     viewModel: PlayerViewModel,
@@ -129,7 +133,7 @@ fun PlayerScreen(
                                 modifier = Modifier.size(32.dp)
                             )
                         }
-                    }
+                    },
                     actions = {
                         IconButton(onClick = onOpenStudio) {
                             Icon(
@@ -455,10 +459,31 @@ fun PlayerScreen(
                                 modifier = Modifier.padding(12.dp),
                                 verticalArrangement = Arrangement.spacedBy(4.dp)
                             ) {
-                                upcomingTracks.take(5).forEach { track ->
+                                upcomingTracks.take(5).forEachIndexed { queueOffset, track ->
                                     QueueRow(
                                         track = track,
-                                        onClick = { viewModel.playTrack(track, uiState.queue) }
+                                        onClick = { viewModel.playTrack(track, uiState.queue) },
+                                        onMoveUp = if (queueOffset > 0) {
+                                            {
+                                                viewModel.moveQueueItem(
+                                                    currentQueueIndex + 1 + queueOffset,
+                                                    currentQueueIndex + queueOffset
+                                                )
+                                            }
+                                        } else {
+                                            null
+                                        },
+                                        onMoveDown = if (queueOffset < upcomingTracks.take(5).lastIndex) {
+                                            {
+                                                viewModel.moveQueueItem(
+                                                    currentQueueIndex + 1 + queueOffset,
+                                                    currentQueueIndex + 2 + queueOffset
+                                                )
+                                            }
+                                        } else {
+                                            null
+                                        },
+                                        onRemove = { viewModel.removeFromQueue(track.id) }
                                     )
                                 }
                             }
@@ -513,8 +538,13 @@ private fun AtmosphericBackdrop(uiState: PlayerUiState) {
 @Composable
 private fun QueueRow(
     track: com.limbe.hexamusicplayer.domain.model.Track,
-    onClick: () -> Unit
+    onClick: () -> Unit,
+    onMoveUp: (() -> Unit)?,
+    onMoveDown: (() -> Unit)?,
+    onRemove: () -> Unit
 ) {
+    var showMenu by remember(track.id) { mutableStateOf(false) }
+
     Surface(
         onClick = onClick,
         color = Color.Transparent,
@@ -557,6 +587,52 @@ private fun QueueRow(
                 style = MaterialTheme.typography.labelSmall,
                 color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.6f)
             )
+            Box {
+                IconButton(onClick = { showMenu = true }) {
+                    Icon(
+                        imageVector = Icons.Default.MoreVert,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+                DropdownMenu(
+                    expanded = showMenu,
+                    onDismissRequest = { showMenu = false }
+                ) {
+                    DropdownMenuItem(
+                        text = { Text(stringResource(R.string.action_play_now)) },
+                        onClick = {
+                            showMenu = false
+                            onClick()
+                        }
+                    )
+                    if (onMoveUp != null) {
+                        DropdownMenuItem(
+                            text = { Text(stringResource(R.string.action_move_up)) },
+                            onClick = {
+                                showMenu = false
+                                onMoveUp()
+                            }
+                        )
+                    }
+                    if (onMoveDown != null) {
+                        DropdownMenuItem(
+                            text = { Text(stringResource(R.string.action_move_down)) },
+                            onClick = {
+                                showMenu = false
+                                onMoveDown()
+                            }
+                        )
+                    }
+                    DropdownMenuItem(
+                        text = { Text(stringResource(R.string.action_remove_from_queue)) },
+                        onClick = {
+                            showMenu = false
+                            onRemove()
+                        }
+                    )
+                }
+            }
         }
     }
 }

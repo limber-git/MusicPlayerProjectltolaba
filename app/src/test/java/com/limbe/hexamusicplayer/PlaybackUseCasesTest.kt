@@ -52,13 +52,14 @@ class PlaybackUseCasesTest {
 }
 
 private class FakeUseCasePlayerPort : AudioPlayerPort {
-    override val state: StateFlow<PlayerState> = MutableStateFlow(PlayerState())
+    private val stateFlow = MutableStateFlow(PlayerState())
+    override val state: StateFlow<PlayerState> = stateFlow
 
     var lastSpeed: Float = 1.0f
     var lastPitch: Float = 1.0f
     var lastSeekMs: Long = 0L
     var shuffleEnabled: Boolean = false
-    var repeatMode: RepeatMode = RepeatMode.OFF
+    var repeatModeValue: RepeatMode = RepeatMode.OFF
 
     override fun play(track: Track, queue: List<Track>) = Unit
 
@@ -85,7 +86,37 @@ private class FakeUseCasePlayerPort : AudioPlayerPort {
     }
 
     override fun setRepeatMode(mode: RepeatMode) {
-        repeatMode = mode
+        repeatModeValue = mode
+    }
+
+    override fun addToQueue(track: Track) {
+        stateFlow.value = stateFlow.value.copy(queue = stateFlow.value.queue + track)
+    }
+
+    override fun playNext(track: Track) {
+        val queue = stateFlow.value.queue
+        if (queue.isEmpty()) {
+            stateFlow.value = stateFlow.value.copy(currentTrack = track, queue = listOf(track), isPlaying = true)
+            return
+        }
+
+        val currentIndex = queue.indexOfFirst { it.id == stateFlow.value.currentTrack?.id }.coerceAtLeast(0)
+        val updatedQueue = queue.toMutableList().apply {
+            add((currentIndex + 1).coerceAtMost(size), track)
+        }
+        stateFlow.value = stateFlow.value.copy(queue = updatedQueue)
+    }
+
+    override fun removeFromQueue(trackId: Long) {
+        stateFlow.value = stateFlow.value.copy(queue = stateFlow.value.queue.filterNot { it.id == trackId })
+    }
+
+    override fun moveQueueItem(fromIndex: Int, toIndex: Int) {
+        val queue = stateFlow.value.queue.toMutableList()
+        if (fromIndex !in queue.indices || toIndex !in queue.indices) return
+        val track = queue.removeAt(fromIndex)
+        queue.add(toIndex, track)
+        stateFlow.value = stateFlow.value.copy(queue = queue)
     }
 
     override fun release() = Unit

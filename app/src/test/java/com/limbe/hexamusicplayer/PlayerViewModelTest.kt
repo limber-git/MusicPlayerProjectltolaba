@@ -15,8 +15,10 @@ import com.limbe.hexamusicplayer.domain.usecase.ObserveAudioEffectsStateUseCase
 import com.limbe.hexamusicplayer.domain.usecase.ObservePlayerStateUseCase
 import com.limbe.hexamusicplayer.domain.usecase.ObserveUserPreferencesUseCase
 import com.limbe.hexamusicplayer.domain.usecase.PlayTrackUseCase
+import com.limbe.hexamusicplayer.domain.usecase.PlayNextUseCase
 import com.limbe.hexamusicplayer.domain.usecase.RecordRecentTrackUseCase
 import com.limbe.hexamusicplayer.domain.usecase.ReleaseAudioEffectsOnlyUseCase
+import com.limbe.hexamusicplayer.domain.usecase.RemoveFromQueueUseCase
 import com.limbe.hexamusicplayer.domain.usecase.SaveBassStrengthUseCase
 import com.limbe.hexamusicplayer.domain.usecase.SaveEqBandLevelUseCase
 import com.limbe.hexamusicplayer.domain.usecase.SaveLoudnessGainUseCase
@@ -37,6 +39,8 @@ import com.limbe.hexamusicplayer.domain.usecase.SetVirtualizerStrengthUseCase
 import com.limbe.hexamusicplayer.domain.usecase.SkipToNextUseCase
 import com.limbe.hexamusicplayer.domain.usecase.SkipToPreviousUseCase
 import com.limbe.hexamusicplayer.domain.usecase.SetManualLibraryFolderUseCase
+import com.limbe.hexamusicplayer.domain.usecase.AddToQueueUseCase
+import com.limbe.hexamusicplayer.domain.usecase.MoveQueueItemUseCase
 import com.limbe.hexamusicplayer.domain.usecase.ToggleFavoriteTrackUseCase
 import com.limbe.hexamusicplayer.domain.usecase.TogglePlaybackUseCase
 import com.limbe.hexamusicplayer.domain.usecase.ToggleShuffleUseCase
@@ -124,6 +128,56 @@ class PlayerViewModelTest {
         assertEquals(null, viewModel.uiState.value.attachedSessionId)
     }
 
+    @Test
+    fun `play next inserts track after current one in queue`() = runTest {
+        val fakePlayer = FakeViewModelPlayerPort()
+        val fakeEffects = FakeAudioEffectsPort()
+        val fakePreferences = FakeUserPreferencesPort()
+        val viewModel = createViewModel(fakePlayer, fakeEffects, fakePreferences)
+        val current = sampleTrack(1L)
+        val second = sampleTrack(2L)
+        val inserted = sampleTrack(3L)
+
+        fakePlayer.emit(
+            PlayerState(
+                currentTrack = current,
+                queue = listOf(current, second),
+                isPlaying = true
+            )
+        )
+
+        advanceUntilIdle()
+        viewModel.playNext(inserted)
+        advanceUntilIdle()
+
+        assertEquals(listOf(1L, 3L, 2L), viewModel.uiState.value.queue.map { it.id })
+    }
+
+    @Test
+    fun `moving queue item updates visible queue order`() = runTest {
+        val fakePlayer = FakeViewModelPlayerPort()
+        val fakeEffects = FakeAudioEffectsPort()
+        val fakePreferences = FakeUserPreferencesPort()
+        val viewModel = createViewModel(fakePlayer, fakeEffects, fakePreferences)
+        val first = sampleTrack(10L)
+        val second = sampleTrack(20L)
+        val third = sampleTrack(30L)
+
+        fakePlayer.emit(
+            PlayerState(
+                currentTrack = first,
+                queue = listOf(first, second, third),
+                isPlaying = true
+            )
+        )
+
+        advanceUntilIdle()
+        viewModel.moveQueueItem(fromIndex = 2, toIndex = 1)
+        advanceUntilIdle()
+
+        assertEquals(listOf(10L, 30L, 20L), viewModel.uiState.value.queue.map { it.id })
+    }
+
     private fun createViewModel(
         player: FakeViewModelPlayerPort,
         effects: FakeAudioEffectsPort,
@@ -152,6 +206,10 @@ class PlayerViewModelTest {
             saveEqBandLevelUseCase = SaveEqBandLevelUseCase(preferences),
             skipToNextUseCase = SkipToNextUseCase(player),
             skipToPreviousUseCase = SkipToPreviousUseCase(player),
+            addToQueueUseCase = AddToQueueUseCase(player),
+            playNextUseCase = PlayNextUseCase(player),
+            removeFromQueueUseCase = RemoveFromQueueUseCase(player),
+            moveQueueItemUseCase = MoveQueueItemUseCase(player),
             toggleShuffleUseCase = ToggleShuffleUseCase(player),
             setRepeatModeUseCase = SetRepeatModeUseCase(player),
             toggleFavoriteTrackUseCase = ToggleFavoriteTrackUseCase(preferences),
@@ -180,7 +238,12 @@ private class FakeViewModelPlayerPort : AudioPlayerPort {
     override val state: StateFlow<PlayerState> = _state
 
     override fun play(track: Track, queue: List<Track>) {
-        _state.value = _state.value.copy(currentTrack = track, isPlaying = true, errorMessage = null)
+        _state.value = _state.value.copy(
+            currentTrack = track,
+            queue = queue.ifEmpty { listOf(track) },
+            isPlaying = true,
+            errorMessage = null
+        )
     }
 
     override fun togglePlayPause() {
@@ -208,6 +271,36 @@ private class FakeViewModelPlayerPort : AudioPlayerPort {
 
     override fun setRepeatMode(mode: RepeatMode) {
         _state.value = _state.value.copy(repeatMode = mode)
+    }
+
+    override fun addToQueue(track: Track) {
+        _state.value = _state.value.copy(queue = _state.value.queue + track)
+    }
+
+    override fun playNext(track: Track) {
+        val queue = _state.value.queue
+        if (queue.isEmpty()) {
+            _state.value = _state.value.copy(currentTrack = track, queue = listOf(track), isPlaying = true)
+            return
+        }
+
+        val currentIndex = queue.indexOfFirst { it.id == _state.value.currentTrack?.id }.coerceAtLeast(0)
+        val updatedQueue = queue.toMutableList().apply {
+            add((currentIndex + 1).coerceAtMost(size), track)
+        }
+        _state.value = _state.value.copy(queue = updatedQueue)
+    }
+
+    override fun removeFromQueue(trackId: Long) {
+        _state.value = _state.value.copy(queue = _state.value.queue.filterNot { it.id == trackId })
+    }
+
+    override fun moveQueueItem(fromIndex: Int, toIndex: Int) {
+        val queue = _state.value.queue.toMutableList()
+        if (fromIndex !in queue.indices || toIndex !in queue.indices) return
+        val track = queue.removeAt(fromIndex)
+        queue.add(toIndex, track)
+        _state.value = _state.value.copy(queue = queue)
     }
 
     override fun release() = Unit

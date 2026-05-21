@@ -19,8 +19,14 @@
     <string name="action_shuffle">Mezclar</string>
     <string name="action_previous">Anterior</string>
     <string name="action_play_pause">Reproducir o pausar</string>
+    <string name="action_play_now">Reproducir ahora</string>
+    <string name="action_play_next">Reproducir siguiente</string>
+    <string name="action_add_to_queue">Agregar a la cola</string>
     <string name="action_next">Siguiente</string>
     <string name="action_repeat">Repetir</string>
+    <string name="action_move_up">Subir en la cola</string>
+    <string name="action_move_down">Bajar en la cola</string>
+    <string name="action_remove_from_queue">Quitar de la cola</string>
 
     <string name="home_title">Inicio</string>
     <string name="home_hero_title">Tu biblioteca lista para sonar</string>
