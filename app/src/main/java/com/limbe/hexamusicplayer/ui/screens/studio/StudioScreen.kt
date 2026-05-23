@@ -1,29 +1,35 @@
 package com.limbe.hexamusicplayer.ui.screens.studio
 
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.MenuBook
 import androidx.compose.material.icons.automirrored.filled.VolumeUp
 import androidx.compose.material.icons.filled.Audiotrack
 import androidx.compose.material.icons.filled.GraphicEq
 import androidx.compose.material.icons.filled.Info
-import androidx.compose.material.icons.filled.MenuBook
 import androidx.compose.material.icons.filled.Speed
 import androidx.compose.material.icons.filled.SurroundSound
 import androidx.compose.material.icons.filled.Waves
 import androidx.compose.material3.Button
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -44,6 +50,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
@@ -66,74 +74,216 @@ fun StudioScreen(
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     var selectedTab by remember { mutableIntStateOf(1) }
 
-    Scaffold(
-        modifier = Modifier.fillMaxSize(),
-        containerColor = MaterialTheme.colorScheme.background,
-        topBar = {
-            androidx.compose.foundation.layout.Column {
-                CenterAlignedTopAppBar(
-                    colors = TopAppBarDefaults.centerAlignedTopAppBarColors(containerColor = Color.Transparent),
-                    title = {
-                        Text(
-                            text = stringResource(R.string.studio_title),
-                            style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold),
-                            color = MaterialTheme.colorScheme.onBackground
-                        )
-                    }
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(
+                brush = Brush.verticalGradient(
+                    colors = listOf(
+                        MaterialTheme.colorScheme.background,
+                        MaterialTheme.colorScheme.surface.copy(alpha = 0.96f),
+                        MaterialTheme.colorScheme.background
+                    )
                 )
-
-                TabRow(
-                    selectedTabIndex = selectedTab,
-                    containerColor = Color.Transparent,
-                    contentColor = MaterialTheme.colorScheme.primary,
-                    indicator = { tabPositions ->
-                        if (selectedTab < tabPositions.size) {
-                            TabRowDefaults.SecondaryIndicator(
-                                modifier = Modifier.tabIndicatorOffset(tabPositions[selectedTab]),
-                                color = MaterialTheme.colorScheme.primary
+            )
+    ) {
+        Scaffold(
+            modifier = Modifier.fillMaxSize(),
+            containerColor = Color.Transparent,
+            topBar = {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 20.dp)
+                ) {
+                    CenterAlignedTopAppBar(
+                        colors = TopAppBarDefaults.centerAlignedTopAppBarColors(containerColor = Color.Transparent),
+                        title = {
+                            Text(
+                                text = stringResource(R.string.studio_title),
+                                style = MaterialTheme.typography.headlineMedium.copy(fontWeight = FontWeight.Bold),
+                                color = MaterialTheme.colorScheme.onBackground
                             )
                         }
-                    },
-                    divider = {}
-                ) {
-                    Tab(
-                        selected = selectedTab == 0,
-                        onClick = { selectedTab = 0 },
-                        text = { Text(stringResource(R.string.studio_tab_engine), fontSize = 12.sp) },
-                        icon = { Icon(Icons.Default.Speed, contentDescription = null, modifier = Modifier.size(20.dp)) }
                     )
-                    Tab(
-                        selected = selectedTab == 1,
-                        onClick = { selectedTab = 1 },
-                        text = { Text(stringResource(R.string.studio_tab_equalizer), fontSize = 12.sp) },
-                        icon = { Icon(Icons.Default.GraphicEq, contentDescription = null, modifier = Modifier.size(20.dp)) }
-                    )
-                    Tab(
-                        selected = selectedTab == 2,
-                        onClick = { selectedTab = 2 },
-                        text = { Text(stringResource(R.string.studio_tab_effects), fontSize = 12.sp) },
-                        icon = { Icon(Icons.Default.Waves, contentDescription = null, modifier = Modifier.size(20.dp)) }
-                    )
-                    Tab(
-                        selected = selectedTab == 3,
-                        onClick = { selectedTab = 3 },
-                        text = { Text(stringResource(R.string.studio_tab_lyrics), fontSize = 12.sp) },
-                        icon = { Icon(Icons.Default.MenuBook, contentDescription = null, modifier = Modifier.size(20.dp)) }
-                    )
+
+                    StudioHeroCard(uiState = uiState)
+
+                    Surface(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(top = 12.dp),
+                        shape = RoundedCornerShape(24.dp),
+                        color = MaterialTheme.colorScheme.surface.copy(alpha = 0.84f),
+                        tonalElevation = 10.dp,
+                        shadowElevation = 0.dp
+                    ) {
+                        TabRow(
+                            selectedTabIndex = selectedTab,
+                            containerColor = Color.Transparent,
+                            contentColor = MaterialTheme.colorScheme.primary,
+                            indicator = { tabPositions ->
+                                if (selectedTab < tabPositions.size) {
+                                    TabRowDefaults.SecondaryIndicator(
+                                        modifier = Modifier
+                                            .tabIndicatorOffset(tabPositions[selectedTab])
+                                            .padding(horizontal = 16.dp),
+                                        height = 3.dp,
+                                        color = MaterialTheme.colorScheme.primary
+                                    )
+                                }
+                            },
+                            divider = {}
+                        ) {
+                            StudioTab(
+                                selected = selectedTab == 0,
+                                onClick = { selectedTab = 0 },
+                                text = stringResource(R.string.studio_tab_engine),
+                                icon = Icons.Default.Speed
+                            )
+                            StudioTab(
+                                selected = selectedTab == 1,
+                                onClick = { selectedTab = 1 },
+                                text = stringResource(R.string.studio_tab_equalizer),
+                                icon = Icons.Default.GraphicEq
+                            )
+                            StudioTab(
+                                selected = selectedTab == 2,
+                                onClick = { selectedTab = 2 },
+                                text = stringResource(R.string.studio_tab_effects),
+                                icon = Icons.Default.Waves
+                            )
+                            StudioTab(
+                                selected = selectedTab == 3,
+                                onClick = { selectedTab = 3 },
+                                text = stringResource(R.string.studio_tab_lyrics),
+                                icon = Icons.AutoMirrored.Filled.MenuBook
+                            )
+                        }
+                    }
+                }
+            }
+        ) { paddingValues ->
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(paddingValues)
+            ) {
+                when (selectedTab) {
+                    0 -> EngineTab(uiState, viewModel)
+                    1 -> EqualizerTab(uiState, viewModel)
+                    2 -> EffectsTab(uiState, viewModel)
+                    3 -> LyricsTab(uiState)
                 }
             }
         }
-    ) { paddingValues ->
+    }
+}
+
+@Composable
+private fun StudioTab(
+    selected: Boolean,
+    onClick: () -> Unit,
+    text: String,
+    icon: ImageVector
+) {
+    Tab(
+        selected = selected,
+        onClick = onClick,
+        text = {
+            Text(
+                text = text,
+                fontSize = 12.sp,
+                fontWeight = if (selected) FontWeight.SemiBold else FontWeight.Medium
+            )
+        },
+        icon = { Icon(icon, contentDescription = null, modifier = Modifier.size(20.dp)) },
+        selectedContentColor = MaterialTheme.colorScheme.primary,
+        unselectedContentColor = MaterialTheme.colorScheme.onSurfaceVariant
+    )
+}
+
+@Composable
+private fun StudioHeroCard(uiState: PlayerUiState) {
+    Surface(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(30.dp),
+        color = MaterialTheme.colorScheme.surface.copy(alpha = 0.88f),
+        tonalElevation = 12.dp,
+        shadowElevation = 0.dp
+    ) {
         Box(
             modifier = Modifier
-                .fillMaxSize()
-                .padding(paddingValues)
+                .fillMaxWidth()
+                .background(
+                    brush = Brush.linearGradient(
+                        colors = listOf(
+                            MaterialTheme.colorScheme.primary.copy(alpha = 0.16f),
+                            MaterialTheme.colorScheme.secondary.copy(alpha = 0.12f),
+                            MaterialTheme.colorScheme.surface.copy(alpha = 0.98f)
+                        )
+                    )
+                )
+                .padding(22.dp)
         ) {
-            when (selectedTab) {
-                0 -> EngineTab(uiState, viewModel)
-                1 -> EqualizerTab(uiState, viewModel)
-                2 -> EffectsTab(uiState, viewModel)
-                3 -> LyricsTab(uiState)
+            Column(verticalArrangement = Arrangement.spacedBy(18.dp)) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.Top
+                ) {
+                    Column(
+                        modifier = Modifier.weight(1f),
+                        verticalArrangement = Arrangement.spacedBy(6.dp)
+                    ) {
+                        StudioPill(text = "PRO SESSION")
+                        Text(
+                            text = uiState.currentTrack?.title ?: stringResource(R.string.studio_title),
+                            style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold),
+                            color = MaterialTheme.colorScheme.onSurface
+                        )
+                        Text(
+                            text = uiState.currentTrack?.artist ?: "Ajuste fino de speed, pitch y cadena de efectos.",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                    Box(
+                        modifier = Modifier
+                            .size(52.dp)
+                            .clip(CircleShape)
+                            .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.12f)),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.GraphicEq,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier.size(24.dp)
+                        )
+                    }
+                }
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    MetricCard(
+                        modifier = Modifier.weight(1f),
+                        label = stringResource(R.string.studio_speed_label),
+                        value = String.format(Locale.US, "%.2fx", uiState.speed)
+                    )
+                    MetricCard(
+                        modifier = Modifier.weight(1f),
+                        label = stringResource(R.string.studio_pitch_label),
+                        value = String.format(Locale.US, "%.2fx", uiState.pitch)
+                    )
+                    MetricCard(
+                        modifier = Modifier.weight(1f),
+                        label = "FX",
+                        value = if (uiState.audioEffectsEnabled) "ON" else "SAFE"
+                    )
+                }
             }
         }
     }
@@ -141,31 +291,42 @@ fun StudioScreen(
 
 @Composable
 private fun EngineTab(uiState: PlayerUiState, viewModel: PlayerViewModel) {
-    androidx.compose.foundation.layout.Column(
+    Column(
         modifier = Modifier
             .fillMaxSize()
             .verticalScroll(rememberScrollState())
-            .padding(24.dp),
-        verticalArrangement = Arrangement.spacedBy(24.dp)
+            .padding(horizontal = 20.dp, vertical = 18.dp),
+        verticalArrangement = Arrangement.spacedBy(18.dp)
     ) {
-        InfoCard(text = stringResource(R.string.studio_engine_info))
+        StudioPanel {
+            SectionHeading(
+                overline = "ENGINE",
+                title = "Control de reproduccion",
+                body = stringResource(R.string.studio_engine_info)
+            )
+        }
+
         ResetCard(onReset = viewModel::resetAudioStudio)
 
-        LabeledSlider(
-            label = stringResource(R.string.studio_speed_label),
-            value = uiState.speed,
-            valueRange = 0.5f..2.0f,
-            valueText = String.format(Locale.US, "%.2fx", uiState.speed),
-            onValueChange = viewModel::setSpeed
-        )
+        StudioPanel {
+            LabeledSlider(
+                label = stringResource(R.string.studio_speed_label),
+                value = uiState.speed,
+                valueRange = 0.5f..2.0f,
+                valueText = String.format(Locale.US, "%.2fx", uiState.speed),
+                onValueChange = viewModel::setSpeed
+            )
+        }
 
-        LabeledSlider(
-            label = stringResource(R.string.studio_pitch_label),
-            value = uiState.pitch,
-            valueRange = 0.5f..2.0f,
-            valueText = String.format(Locale.US, "%.2fx", uiState.pitch),
-            onValueChange = viewModel::setPitch
-        )
+        StudioPanel {
+            LabeledSlider(
+                label = stringResource(R.string.studio_pitch_label),
+                value = uiState.pitch,
+                valueRange = 0.5f..2.0f,
+                valueText = String.format(Locale.US, "%.2fx", uiState.pitch),
+                onValueChange = viewModel::setPitch
+            )
+        }
     }
 }
 
@@ -187,42 +348,98 @@ private fun EqualizerTab(uiState: PlayerUiState, viewModel: PlayerViewModel) {
         return
     }
 
-    androidx.compose.foundation.layout.Column(modifier = Modifier.fillMaxSize()) {
-        Text(
-            text = stringResource(R.string.studio_eq_title),
-            style = MaterialTheme.typography.labelSmall.copy(letterSpacing = 2.sp),
-            modifier = Modifier
-                .padding(16.dp)
-                .align(Alignment.CenterHorizontally),
-            color = MaterialTheme.colorScheme.primary
-        )
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(horizontal = 20.dp, vertical = 18.dp),
+        verticalArrangement = Arrangement.spacedBy(18.dp)
+    ) {
+        StudioPanel {
+            SectionHeading(
+                overline = "EQ CONSOLE",
+                title = stringResource(R.string.studio_eq_title),
+                body = "Ajuste fino por banda con referencia central y recorrido preciso."
+            )
+        }
 
         PresetRow(
             onPresetClick = { preset -> viewModel.applyEqPreset(preset) },
             onReset = viewModel::resetAudioStudio
         )
 
-        LazyRow(
-            modifier = Modifier.fillMaxSize(),
-            contentPadding = PaddingValues(horizontal = 24.dp, vertical = 32.dp),
-            horizontalArrangement = Arrangement.spacedBy(16.dp),
-            verticalAlignment = Alignment.CenterVertically
+        Surface(
+            modifier = Modifier.fillMaxWidth(),
+            shape = RoundedCornerShape(30.dp),
+            color = MaterialTheme.colorScheme.surface.copy(alpha = 0.9f),
+            tonalElevation = 12.dp,
+            shadowElevation = 0.dp
         ) {
-            items(uiState.eqBands) { band ->
-                val freqKhz = band.centerFreqHz / 1000f
-                val label = if (freqKhz >= 1f) {
-                    String.format(Locale.US, "%.1fk", freqKhz)
-                } else {
-                    "${band.centerFreqHz}"
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .background(
+                        brush = Brush.verticalGradient(
+                            colors = listOf(
+                                MaterialTheme.colorScheme.surface.copy(alpha = 0.98f),
+                                MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.45f)
+                            )
+                        )
+                    )
+                    .padding(vertical = 22.dp),
+                verticalArrangement = Arrangement.spacedBy(16.dp)
+            ) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 20.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = "MASTER BOARD",
+                        style = MaterialTheme.typography.labelSmall.copy(
+                            fontWeight = FontWeight.Bold,
+                            letterSpacing = 2.sp
+                        ),
+                        color = MaterialTheme.colorScheme.primary
+                    )
+                    Text(
+                        text = "10 BANDS",
+                        style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Medium),
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
                 }
 
-                StudioFader(
-                    value = band.level.toFloat(),
-                    valueRange = band.minLevel.toFloat()..band.maxLevel.toFloat(),
-                    onValueChange = { viewModel.setEqBandLevel(band.index, it.toInt()) },
-                    label = label,
-                    valueText = "${band.level / 100}dB"
-                )
+                LazyRow(
+                    modifier = Modifier.fillMaxWidth(),
+                    contentPadding = PaddingValues(horizontal = 18.dp),
+                    horizontalArrangement = Arrangement.spacedBy(10.dp),
+                    verticalAlignment = Alignment.Bottom
+                ) {
+                    items(uiState.eqBands) { band ->
+                        val freqKhz = band.centerFreqHz / 1000f
+                        val label = if (freqKhz >= 1f) {
+                            String.format(Locale.US, "%.1fk", freqKhz)
+                        } else {
+                            "${band.centerFreqHz}"
+                        }
+
+                        Box(
+                            modifier = Modifier
+                                .width(72.dp)
+                                .height(320.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            StudioFader(
+                                value = band.level.toFloat(),
+                                valueRange = band.minLevel.toFloat()..band.maxLevel.toFloat(),
+                                onValueChange = { viewModel.setEqBandLevel(band.index, it.toInt()) },
+                                label = label,
+                                valueText = "${band.level / 100}dB"
+                            )
+                        }
+                    }
+                }
             }
         }
     }
@@ -230,12 +447,12 @@ private fun EqualizerTab(uiState: PlayerUiState, viewModel: PlayerViewModel) {
 
 @Composable
 private fun EffectsTab(uiState: PlayerUiState, viewModel: PlayerViewModel) {
-    androidx.compose.foundation.layout.Column(
+    Column(
         modifier = Modifier
             .fillMaxSize()
             .verticalScroll(rememberScrollState())
-            .padding(24.dp),
-        verticalArrangement = Arrangement.spacedBy(24.dp)
+            .padding(horizontal = 20.dp, vertical = 18.dp),
+        verticalArrangement = Arrangement.spacedBy(18.dp)
     ) {
         when {
             !uiState.audioEffectsEnabled -> DisabledEffectsCard(onEnable = { viewModel.setAudioEffectsEnabled(true) })
@@ -280,36 +497,25 @@ private fun EffectsTab(uiState: PlayerUiState, viewModel: PlayerViewModel) {
 
 @Composable
 private fun LyricsTab(uiState: PlayerUiState) {
-    androidx.compose.foundation.layout.Column(
+    Column(
         modifier = Modifier
             .fillMaxSize()
             .verticalScroll(rememberScrollState())
-            .padding(24.dp),
-        verticalArrangement = Arrangement.spacedBy(24.dp)
+            .padding(horizontal = 20.dp, vertical = 18.dp),
+        verticalArrangement = Arrangement.spacedBy(18.dp)
     ) {
         InfoCard(text = stringResource(R.string.studio_lyrics_info))
-        Card(
-            modifier = Modifier.fillMaxWidth(),
-            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f))
-        ) {
-            androidx.compose.foundation.layout.Column(
-                modifier = Modifier.padding(20.dp),
-                verticalArrangement = Arrangement.spacedBy(12.dp)
-            ) {
-                Text(
-                    text = stringResource(R.string.studio_lyrics_title),
-                    style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold)
-                )
-                Text(
-                    text = if (uiState.currentTrack != null) {
-                        stringResource(R.string.studio_lyrics_body_active, uiState.currentTrack.title)
-                    } else {
-                        stringResource(R.string.studio_lyrics_body_idle)
-                    },
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-            }
+
+        StudioPanel {
+            SectionHeading(
+                overline = "LYRICS",
+                title = stringResource(R.string.studio_lyrics_title),
+                body = if (uiState.currentTrack != null) {
+                    stringResource(R.string.studio_lyrics_body_active, uiState.currentTrack.title)
+                } else {
+                    stringResource(R.string.studio_lyrics_body_idle)
+                }
+            )
         }
     }
 }
@@ -327,8 +533,8 @@ private fun PresetRow(
     )
 
     LazyRow(
-        contentPadding = PaddingValues(horizontal = 24.dp),
-        horizontalArrangement = Arrangement.spacedBy(12.dp)
+        contentPadding = PaddingValues(horizontal = 2.dp),
+        horizontalArrangement = Arrangement.spacedBy(10.dp)
     ) {
         items(presets) { (label, values) ->
             OutlinedButton(onClick = { onPresetClick(values) }) {
@@ -347,16 +553,10 @@ private fun PresetRow(
 private fun DisabledEffectsCard(
     onEnable: () -> Unit
 ) {
-    Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(24.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.35f))
+    StudioPanel(
+        modifier = Modifier.padding(horizontal = 20.dp, vertical = 18.dp)
     ) {
-        androidx.compose.foundation.layout.Column(
-            modifier = Modifier.padding(20.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp)
-        ) {
+        Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
             Text(
                 text = stringResource(R.string.studio_safe_mode_title),
                 style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold)
@@ -377,19 +577,15 @@ private fun DisabledEffectsCard(
 private fun ResetCard(
     onReset: () -> Unit
 ) {
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f))
-    ) {
+    StudioPanel {
         Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(20.dp),
+            modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            androidx.compose.foundation.layout.Column(
-                modifier = Modifier.weight(1f)
+            Column(
+                modifier = Modifier.weight(1f),
+                verticalArrangement = Arrangement.spacedBy(6.dp)
             ) {
                 Text(
                     text = stringResource(R.string.studio_reset_title),
@@ -419,20 +615,22 @@ private fun EffectControlCard(
     icon: ImageVector,
     enabled: Boolean
 ) {
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f))
-    ) {
-        androidx.compose.foundation.layout.Column(
-            modifier = Modifier.padding(20.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
-        ) {
+    StudioPanel {
+        Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
             Row(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                Icon(icon, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
-                androidx.compose.foundation.layout.Column {
+                Box(
+                    modifier = Modifier
+                        .size(42.dp)
+                        .clip(CircleShape)
+                        .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.1f)),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(icon, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
+                }
+                Column {
                     Text(text = title, style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold))
                     Text(
                         text = subtitle,
@@ -464,10 +662,11 @@ private fun EffectControlCard(
 private fun InfoCard(text: String) {
     Surface(
         modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(24.dp),
         color = MaterialTheme.colorScheme.primary.copy(alpha = 0.1f)
     ) {
         Row(
-            modifier = Modifier.padding(16.dp),
+            modifier = Modifier.padding(18.dp),
             horizontalArrangement = Arrangement.spacedBy(12.dp)
         ) {
             Icon(
@@ -482,5 +681,101 @@ private fun InfoCard(text: String) {
                 color = MaterialTheme.colorScheme.onSurface
             )
         }
+    }
+}
+
+@Composable
+private fun StudioPanel(
+    modifier: Modifier = Modifier,
+    content: @Composable ColumnScope.() -> Unit
+) {
+    Surface(
+        modifier = modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(28.dp),
+        color = MaterialTheme.colorScheme.surface.copy(alpha = 0.88f),
+        tonalElevation = 10.dp,
+        shadowElevation = 0.dp
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .border(
+                    width = 1.dp,
+                    color = MaterialTheme.colorScheme.outline.copy(alpha = 0.16f),
+                    shape = RoundedCornerShape(28.dp)
+                )
+                .padding(20.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp),
+            content = content
+        )
+    }
+}
+
+@Composable
+private fun StudioPill(text: String) {
+    Surface(
+        shape = RoundedCornerShape(999.dp),
+        color = MaterialTheme.colorScheme.primary.copy(alpha = 0.12f)
+    ) {
+        Text(
+            text = text,
+            modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
+            style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold, letterSpacing = 1.5.sp),
+            color = MaterialTheme.colorScheme.primary
+        )
+    }
+}
+
+@Composable
+private fun MetricCard(
+    modifier: Modifier = Modifier,
+    label: String,
+    value: String
+) {
+    Surface(
+        modifier = modifier,
+        shape = RoundedCornerShape(20.dp),
+        color = MaterialTheme.colorScheme.surface.copy(alpha = 0.78f)
+    ) {
+        Column(
+            modifier = Modifier.padding(horizontal = 14.dp, vertical = 12.dp),
+            verticalArrangement = Arrangement.spacedBy(4.dp)
+        ) {
+            Text(
+                text = label,
+                style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Medium),
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+            Text(
+                text = value,
+                style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
+                color = MaterialTheme.colorScheme.onSurface
+            )
+        }
+    }
+}
+
+@Composable
+private fun SectionHeading(
+    overline: String,
+    title: String,
+    body: String
+) {
+    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        Text(
+            text = overline,
+            style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold, letterSpacing = 2.sp),
+            color = MaterialTheme.colorScheme.primary
+        )
+        Text(
+            text = title,
+            style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold),
+            color = MaterialTheme.colorScheme.onSurface
+        )
+        Text(
+            text = body,
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
     }
 }

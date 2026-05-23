@@ -70,6 +70,10 @@
     <string name="player_queue_title">Up Next</string>
     <string name="player_queue_subtitle">%1$d tracks after the current one</string>
     <string name="player_gesture_hint">Swipe the artwork left or right to change tracks, or upward to enter studio mode.</string>
+    <string name="notification_channel_playback_name">Playback</string>
+    <string name="notification_channel_playback_description">Playback controls and background session status.</string>
+    <string name="notification_playback_title_fallback">Playing music</string>
+    <string name="notification_playback_text_fallback">Your session is still active</string>
 
     <string name="explorer_title">Explore</string>
     <string name="explorer_tab_albums">Albums</string>
