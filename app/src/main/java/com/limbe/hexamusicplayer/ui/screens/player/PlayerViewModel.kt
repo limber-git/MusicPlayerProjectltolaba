@@ -2,13 +2,22 @@ package com.limbe.hexamusicplayer.ui.screens.player
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.limbe.hexamusicplayer.domain.model.AnalysisSource
+import com.limbe.hexamusicplayer.domain.model.ChordEvent
 import com.limbe.hexamusicplayer.domain.model.AppLanguage
 import com.limbe.hexamusicplayer.domain.model.DarkModeMode
+import com.limbe.hexamusicplayer.domain.model.KeyEstimate
+import com.limbe.hexamusicplayer.domain.model.KeyMode
 import com.limbe.hexamusicplayer.domain.model.RepeatMode
+import com.limbe.hexamusicplayer.domain.model.StudioInstrument
 import com.limbe.hexamusicplayer.domain.model.Track
 import com.limbe.hexamusicplayer.domain.model.UserPreferences
+import com.limbe.hexamusicplayer.domain.usecase.AddManualChordUseCase
+import com.limbe.hexamusicplayer.domain.usecase.AnalyzeTrackUseCase
 import com.limbe.hexamusicplayer.domain.usecase.AttachAudioEffectsUseCase
+import com.limbe.hexamusicplayer.domain.usecase.LoadTrackAnalysisUseCase
 import com.limbe.hexamusicplayer.domain.usecase.ObserveAudioEffectsStateUseCase
+import com.limbe.hexamusicplayer.domain.usecase.ObserveMusicAnalysisUseCase
 import com.limbe.hexamusicplayer.domain.usecase.ObservePlayerStateUseCase
 import com.limbe.hexamusicplayer.domain.usecase.ObserveUserPreferencesUseCase
 import com.limbe.hexamusicplayer.domain.usecase.PlayTrackUseCase
@@ -22,6 +31,7 @@ import com.limbe.hexamusicplayer.domain.usecase.SaveLoudnessGainUseCase
 import com.limbe.hexamusicplayer.domain.usecase.SavePlaybackPitchUseCase
 import com.limbe.hexamusicplayer.domain.usecase.SavePlaybackSpeedUseCase
 import com.limbe.hexamusicplayer.domain.usecase.SaveVirtualizerStrengthUseCase
+import com.limbe.hexamusicplayer.domain.usecase.SaveManualKeyUseCase
 import com.limbe.hexamusicplayer.domain.usecase.SeekToUseCase
 import com.limbe.hexamusicplayer.domain.usecase.SetAudioEffectsEnabledUseCase
 import com.limbe.hexamusicplayer.domain.usecase.SetAppLanguageUseCase
@@ -39,8 +49,11 @@ import com.limbe.hexamusicplayer.domain.usecase.ToggleFavoriteTrackUseCase
 import com.limbe.hexamusicplayer.domain.usecase.TogglePlaybackUseCase
 import com.limbe.hexamusicplayer.domain.usecase.ToggleShuffleUseCase
 import com.limbe.hexamusicplayer.domain.usecase.SetManualLibraryFolderUseCase
+import com.limbe.hexamusicplayer.domain.usecase.SelectStudioInstrumentUseCase
 import com.limbe.hexamusicplayer.domain.usecase.AddToQueueUseCase
 import com.limbe.hexamusicplayer.domain.usecase.MoveQueueItemUseCase
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -81,7 +94,13 @@ class PlayerViewModel(
     private val setDarkModeUseCase: SetDarkModeUseCase,
     private val setAudioEffectsEnabledUseCase: SetAudioEffectsEnabledUseCase,
     private val setAppLanguageUseCase: SetAppLanguageUseCase,
-    private val setManualLibraryFolderUseCase: SetManualLibraryFolderUseCase
+    private val setManualLibraryFolderUseCase: SetManualLibraryFolderUseCase,
+    private val observeMusicAnalysisUseCase: ObserveMusicAnalysisUseCase,
+    private val loadTrackAnalysisUseCase: LoadTrackAnalysisUseCase,
+    private val analyzeTrackUseCase: AnalyzeTrackUseCase,
+    private val saveManualKeyUseCase: SaveManualKeyUseCase,
+    private val addManualChordUseCase: AddManualChordUseCase,
+    private val selectStudioInstrumentUseCase: SelectStudioInstrumentUseCase
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(PlayerUiState())
@@ -90,13 +109,21 @@ class PlayerViewModel(
     private var lastAttachedSessionId: Int? = null
     private var lastKnownPlayerSessionId: Int? = null
     private var lastRecordedRecentTrackId: Long? = null
+    private var lastLoadedAnalysisTrackId: Long? = null
     private var currentPreferences = UserPreferences()
     private var hasAppliedInitialPlaybackSettings = false
+    private var saveSpeedJob: Job? = null
+    private var savePitchJob: Job? = null
+    private var saveBassJob: Job? = null
+    private var saveVirtualizerJob: Job? = null
+    private var saveLoudnessJob: Job? = null
+    private val saveEqJobs = mutableMapOf<Int, Job>()
 
     init {
         observeUserPreferences()
         observePlayerState()
         observeAudioEffectsState()
+        observeMusicAnalysis()
     }
 
     fun playTrack(track: Track, queue: List<Track> = emptyList()) {
@@ -196,18 +223,22 @@ class PlayerViewModel(
 
     fun setSpeed(speed: Float) {
         setPlaybackSpeedUseCase(speed)
-        viewModelScope.launch { savePlaybackSpeedUseCase(speed) }
+        saveSpeedJob = debouncePreferenceSave(saveSpeedJob) {
+            savePlaybackSpeedUseCase(speed)
+        }
     }
 
     fun setPitch(pitch: Float) {
         setPlaybackPitchUseCase(pitch)
-        viewModelScope.launch { savePlaybackPitchUseCase(pitch) }
+        savePitchJob = debouncePreferenceSave(savePitchJob) {
+            savePlaybackPitchUseCase(pitch)
+        }
     }
 
     fun setEqBandLevel(index: Int, level: Int) {
         if (!currentPreferences.audioEffectsEnabled) return
         setEqBandLevelUseCase(index, level)
-        viewModelScope.launch { saveEqBandLevelUseCase(index, level) }
+        scheduleEqBandSave(index, level)
     }
 
     fun applyEqPreset(levels: List<Int>) {
@@ -217,7 +248,7 @@ class PlayerViewModel(
         bands.forEachIndexed { position, band ->
             val level = levels.getOrNull(position) ?: 0
             setEqBandLevelUseCase(band.index, level)
-            viewModelScope.launch { saveEqBandLevelUseCase(band.index, level) }
+            scheduleEqBandSave(band.index, level)
         }
     }
 
@@ -234,22 +265,74 @@ class PlayerViewModel(
         }
     }
 
+    fun saveManualKey(tonic: String, mode: KeyMode) {
+        val track = _uiState.value.currentTrack ?: return
+        val normalizedTonic = tonic.trim().ifBlank { return }
+
+        viewModelScope.launch {
+            saveManualKeyUseCase(
+                track = track,
+                keyEstimate = KeyEstimate(
+                    tonic = normalizedTonic,
+                    mode = mode,
+                    confidence = 1f,
+                    source = AnalysisSource.MANUAL
+                )
+            )
+        }
+    }
+
+    fun addManualChordAtCurrentPosition(chordName: String) {
+        val track = _uiState.value.currentTrack ?: return
+        val normalizedChord = chordName.trim().ifBlank { return }
+        val positionMs = _uiState.value.currentPositionMs
+
+        viewModelScope.launch {
+            addManualChordUseCase(
+                track = track,
+                chordEvent = ChordEvent(
+                    startMs = positionMs,
+                    chordName = normalizedChord,
+                    confidence = 1f,
+                    source = AnalysisSource.MANUAL
+                )
+            )
+        }
+    }
+
+    fun selectStudioInstrument(instrument: StudioInstrument) {
+        selectStudioInstrumentUseCase(instrument)
+    }
+
+    fun analyzeCurrentTrack() {
+        val track = _uiState.value.currentTrack ?: return
+        viewModelScope.launch {
+            analyzeTrackUseCase(track)
+        }
+    }
+
     fun setBassStrength(strength: Int) {
         if (!currentPreferences.audioEffectsEnabled) return
         setBassStrengthUseCase(strength)
-        viewModelScope.launch { saveBassStrengthUseCase(strength) }
+        saveBassJob = debouncePreferenceSave(saveBassJob) {
+            saveBassStrengthUseCase(strength)
+        }
     }
 
     fun setVirtualizerStrength(strength: Int) {
         if (!currentPreferences.audioEffectsEnabled) return
         setVirtualizerStrengthUseCase(strength)
-        viewModelScope.launch { saveVirtualizerStrengthUseCase(strength) }
+        saveVirtualizerJob = debouncePreferenceSave(saveVirtualizerJob) {
+            saveVirtualizerStrengthUseCase(strength)
+        }
     }
 
     fun setLoudnessGain(gainMb: Int) {
         if (!currentPreferences.audioEffectsEnabled) return
         setLoudnessGainUseCase(gainMb)
-        viewModelScope.launch { saveLoudnessGainUseCase(gainMb) }
+        saveLoudnessJob = debouncePreferenceSave(saveLoudnessJob) {
+            saveLoudnessGainUseCase(gainMb)
+        }
     }
 
     private fun observeUserPreferences() {
@@ -282,6 +365,8 @@ class PlayerViewModel(
                 _uiState.update { it.withPlayerState(playerState, currentPreferences) }
 
                 playerState.currentTrack?.id?.let(::recordRecentTrack)
+
+                loadAnalysisIfTrackChanged(playerState.currentTrack)
 
                 val audioSessionId = playerState.audioSessionId
                 if (audioSessionId != null && audioSessionId > 0) {
@@ -320,6 +405,24 @@ class PlayerViewModel(
         }
     }
 
+    private fun loadAnalysisIfTrackChanged(track: Track?) {
+        val trackId = track?.id
+        if (trackId == lastLoadedAnalysisTrackId) return
+        lastLoadedAnalysisTrackId = trackId
+
+        viewModelScope.launch {
+            loadTrackAnalysisUseCase(track)
+        }
+    }
+
+    private fun observeMusicAnalysis() {
+        viewModelScope.launch {
+            observeMusicAnalysisUseCase().collect { musicAnalysisState ->
+                _uiState.update { it.withMusicAnalysis(musicAnalysisState) }
+            }
+        }
+    }
+
     private fun recordRecentTrack(trackId: Long) {
         if (lastRecordedRecentTrackId == trackId) return
         lastRecordedRecentTrackId = trackId
@@ -328,8 +431,31 @@ class PlayerViewModel(
         }
     }
 
+    private fun debouncePreferenceSave(
+        previousJob: Job?,
+        save: suspend () -> Unit
+    ): Job {
+        previousJob?.cancel()
+        return viewModelScope.launch {
+            delay(PREFERENCE_SAVE_DEBOUNCE_MS)
+            save()
+        }
+    }
+
+    private fun scheduleEqBandSave(index: Int, level: Int) {
+        lateinit var job: Job
+        job = debouncePreferenceSave(saveEqJobs[index]) {
+            saveEqBandLevelUseCase(index, level)
+        }
+        job.invokeOnCompletion {
+            saveEqJobs.remove(index, job)
+        }
+        saveEqJobs[index] = job
+    }
+
     private companion object {
         const val DEFAULT_SPEED = 1.0f
         const val DEFAULT_PITCH = 1.0f
+        const val PREFERENCE_SAVE_DEBOUNCE_MS = 500L
     }
 }

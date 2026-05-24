@@ -3,6 +3,7 @@ package com.limbe.hexamusicplayer.ui.screens.player
 import com.limbe.hexamusicplayer.domain.model.AppLanguage
 import com.limbe.hexamusicplayer.domain.model.DarkModeMode
 import com.limbe.hexamusicplayer.domain.model.EqBand
+import com.limbe.hexamusicplayer.domain.model.MusicAnalysisState
 import com.limbe.hexamusicplayer.domain.model.RepeatMode
 import com.limbe.hexamusicplayer.domain.model.Track
 
@@ -30,5 +31,6 @@ data class PlayerUiState(
     val appLanguage: AppLanguage = AppLanguage.SYSTEM,
     val manualLibraryFolderUri: String? = null,
     val manualLibraryFolderLabel: String? = null,
-    val playerErrorMessage: String? = null
+    val playerErrorMessage: String? = null,
+    val musicAnalysis: MusicAnalysisState = MusicAnalysisState()
 )

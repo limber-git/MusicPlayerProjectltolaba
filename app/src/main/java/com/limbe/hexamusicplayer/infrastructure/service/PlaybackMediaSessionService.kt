@@ -26,6 +26,7 @@ class PlaybackMediaSessionService : MediaSessionService() {
         getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
     }
     private var isInForeground = false
+    private var lastNotificationSnapshot: NotificationSnapshot? = null
     private val playerListener = object : Player.Listener {
         override fun onIsPlayingChanged(isPlaying: Boolean) {
             refreshNotification()
@@ -48,11 +49,26 @@ class PlaybackMediaSessionService : MediaSessionService() {
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
-        if (intent?.action == ACTION_STOP) {
-            appContainer.exoPlayer.pause()
-            stopForegroundCompat()
-            stopSelf()
-            return START_NOT_STICKY
+        when (intent?.action) {
+            ACTION_PREVIOUS -> {
+                appContainer.exoPlayer.seekToPreviousMediaItem()
+            }
+            ACTION_PLAY_PAUSE -> {
+                if (appContainer.exoPlayer.isPlaying) {
+                    appContainer.exoPlayer.pause()
+                } else {
+                    appContainer.exoPlayer.play()
+                }
+            }
+            ACTION_NEXT -> {
+                appContainer.exoPlayer.seekToNextMediaItem()
+            }
+            ACTION_STOP -> {
+                appContainer.exoPlayer.pause()
+                stopForegroundCompat()
+                stopSelf()
+                return START_NOT_STICKY
+            }
         }
 
         startForegroundIfNeeded()
@@ -79,6 +95,10 @@ class PlaybackMediaSessionService : MediaSessionService() {
     }
 
     private fun startForegroundIfNeeded() {
+        if (isInForeground) {
+            refreshNotification()
+            return
+        }
         val notification = buildNotification()
         ServiceCompat.startForeground(
             this,
@@ -97,6 +117,9 @@ class PlaybackMediaSessionService : MediaSessionService() {
 
     private fun refreshNotification() {
         if (!isInForeground) return
+        val snapshot = currentNotificationSnapshot()
+        if (snapshot == lastNotificationSnapshot) return
+        lastNotificationSnapshot = snapshot
         notificationManager.notify(NOTIFICATION_ID, buildNotification())
     }
 
@@ -135,6 +158,24 @@ class PlaybackMediaSessionService : MediaSessionService() {
             stopIntent,
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )
+        val previousPendingIntent = PendingIntent.getService(
+            this,
+            REQUEST_CODE_PREVIOUS,
+            buildServiceIntent(ACTION_PREVIOUS),
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+        )
+        val playPausePendingIntent = PendingIntent.getService(
+            this,
+            REQUEST_CODE_PLAY_PAUSE,
+            buildServiceIntent(ACTION_PLAY_PAUSE),
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+        )
+        val nextPendingIntent = PendingIntent.getService(
+            this,
+            REQUEST_CODE_NEXT,
+            buildServiceIntent(ACTION_NEXT),
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+        )
 
         val title = metadata?.title?.toString().orEmpty().ifBlank {
             getString(R.string.notification_playback_title_fallback)
@@ -154,16 +195,62 @@ class PlaybackMediaSessionService : MediaSessionService() {
             .setOngoing(appContainer.exoPlayer.isPlaying)
             .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
             .setCategory(NotificationCompat.CATEGORY_TRANSPORT)
+            .addAction(
+                android.R.drawable.ic_media_previous,
+                getString(R.string.action_previous),
+                previousPendingIntent
+            )
+            .addAction(
+                if (appContainer.exoPlayer.isPlaying) {
+                    android.R.drawable.ic_media_pause
+                } else {
+                    android.R.drawable.ic_media_play
+                },
+                getString(R.string.action_play_pause),
+                playPausePendingIntent
+            )
+            .addAction(
+                android.R.drawable.ic_media_next,
+                getString(R.string.action_next),
+                nextPendingIntent
+            )
+            .addAction(
+                android.R.drawable.ic_menu_close_clear_cancel,
+                getString(R.string.notification_action_stop),
+                stopPendingIntent
+            )
             .build()
     }
 
+    private fun currentNotificationSnapshot(): NotificationSnapshot {
+        val metadata = appContainer.exoPlayer.currentMediaItem?.mediaMetadata
+        return NotificationSnapshot(
+            title = metadata?.title?.toString().orEmpty(),
+            artist = metadata?.artist?.toString().orEmpty(),
+            isPlaying = appContainer.exoPlayer.isPlaying
+        )
+    }
+
+    private fun buildServiceIntent(action: String): Intent {
+        return Intent(this, PlaybackMediaSessionService::class.java).apply {
+            this.action = action
+            component = ComponentName(this@PlaybackMediaSessionService, PlaybackMediaSessionService::class.java)
+        }
+    }
+
     companion object {
-        private const val ACTION_START = "com.limbe.hexamusicplayer.action.SESSION_START"
-        private const val ACTION_STOP = "com.limbe.hexamusicplayer.action.SESSION_STOP"
-        private const val CHANNEL_ID = "hexa_playback"
+        private const val ACTION_START = "com.tolaba.studiomusic.action.SESSION_START"
+        private const val ACTION_PREVIOUS = "com.tolaba.studiomusic.action.SESSION_PREVIOUS"
+        private const val ACTION_PLAY_PAUSE = "com.tolaba.studiomusic.action.SESSION_PLAY_PAUSE"
+        private const val ACTION_NEXT = "com.tolaba.studiomusic.action.SESSION_NEXT"
+        private const val ACTION_STOP = "com.tolaba.studiomusic.action.SESSION_STOP"
+        private const val CHANNEL_ID = "studio_music_playback"
         private const val NOTIFICATION_ID = 4101
         private const val REQUEST_CODE_OPEN_APP = 6101
-        private const val REQUEST_CODE_STOP_SERVICE = 6102
+        private const val REQUEST_CODE_PREVIOUS = 6102
+        private const val REQUEST_CODE_PLAY_PAUSE = 6103
+        private const val REQUEST_CODE_NEXT = 6104
+        private const val REQUEST_CODE_STOP_SERVICE = 6105
 
         fun start(context: Context) {
             val intent = Intent(context, PlaybackMediaSessionService::class.java).apply {
@@ -185,4 +272,10 @@ class PlaybackMediaSessionService : MediaSessionService() {
             }
         }
     }
+
+    private data class NotificationSnapshot(
+        val title: String,
+        val artist: String,
+        val isPlaying: Boolean
+    )
 }

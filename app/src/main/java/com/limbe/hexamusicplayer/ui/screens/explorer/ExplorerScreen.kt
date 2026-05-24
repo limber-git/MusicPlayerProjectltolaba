@@ -59,6 +59,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil.compose.AsyncImage
 import com.limbe.hexamusicplayer.R
 import com.limbe.hexamusicplayer.domain.model.Track
+import com.limbe.hexamusicplayer.ui.components.rememberArtworkImageRequest
 import com.limbe.hexamusicplayer.ui.screens.library.LibraryViewModel
 import com.limbe.hexamusicplayer.ui.util.hasAudioPermission
 import com.limbe.hexamusicplayer.ui.util.requiredAudioPermission
@@ -85,7 +86,7 @@ fun ExplorerScreen(
     val artists = remember(uiState.tracks) { buildArtists(uiState.tracks) }
 
     LaunchedEffect(hasPermission) {
-        if (hasPermission && uiState.tracks.isEmpty() && !uiState.isLoading) {
+        if (hasPermission && !uiState.hasLoadedOnce && !uiState.isLoading) {
             viewModel.refreshTracks()
         }
     }
@@ -285,7 +286,12 @@ private fun CollectionCard(
             .clickable(onClick = onClick)
     ) {
         AsyncImage(
-            model = artworkUri,
+            model = rememberArtworkImageRequest(
+                data = artworkUri,
+                width = 180.dp,
+                height = 180.dp,
+                cacheKey = "collection-$artworkUri"
+            ),
             contentDescription = null,
             modifier = Modifier
                 .fillMaxWidth()

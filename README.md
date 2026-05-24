@@ -1,39 +1,57 @@
-# HexaMusicPlayer
+# studioMusicTolaba
 
-Reproductor de música nativo para Android (Kotlin + Jetpack Compose) con arquitectura hexagonal, biblioteca local, reproducción avanzada y procesamiento de audio.
+Reproductor de musica nativo para Android hecho con Kotlin, Jetpack Compose y Media3. La vision del proyecto es combinar una experiencia de reproduccion moderna, inspirada por apps como Spotify y YouTube Music, con un modo estudio pensado para practicar, analizar canciones y acompanar instrumentos.
 
-## Características
+## Funciones actuales
 
-- **Reproducción Local:** Escaneo automático de música mediante `MediaStore`.
-- **Audio de Alta Fidelidad:** Motor basado en Media3 ExoPlayer con soporte para reproducción en segundo plano y controles de sesión multimedia.
-- **Audio Studio:** Control granular de velocidad, tonalidad (pitch), ecualizador de 10 bandas, refuerzo de bajos, virtualizador 3D y potenciador de ganancia.
-- **UI/UX Moderna:** Interfaz fluida construida íntegramente con Jetpack Compose y Material 3.
-- **Arquitectura Limpia:** Separación estricta de responsabilidades siguiendo el patrón de puertos y adaptadores.
+- Biblioteca local mediante `MediaStore`.
+- Reproduccion con Media3 ExoPlayer.
+- Cola de reproduccion, favoritos, recientes, shuffle y repeat.
+- Controles de reproduccion en segundo plano mediante servicio foreground y MediaSession.
+- Modo Studio con speed, pitch, ecualizador de 10 bandas, bass boost, virtualizer y loudness.
+- Preferencias persistentes para tema, idioma, fuente musical y ajustes de audio.
 
-## Estructura del Proyecto (Arquitectura Hexagonal)
+## En progreso
 
-- `domain`: Contiene la lógica de negocio pura (modelos, puertos/interfaces y casos de uso).
-- `infrastructure`: Implementaciones técnicas de los puertos (reproductor, base de datos, efectos de audio, preferencias).
-- `ui`: Capa de presentación reactiva con Compose y ViewModels.
+- Reestructuracion visual del reproductor y del modo Studio.
+- Widget de inicio y experiencia de lockscreen/notificacion mas completa.
+- Internacionalizacion total en espanol e ingles.
+- Analisis musical del modo Studio: nota, tonalidad, cambios armonicos y vistas por instrumento.
+- Preparacion para publicacion futura en Google Play.
 
-## Requisitos y Configuración
+## Requisitos
 
 - JDK 17 o superior.
-- Android SDK (Nivel de API 26+).
 - Android Studio Ladybug o superior recomendado.
+- Android SDK con API 35 para builds compatibles con requisitos actuales de Google Play.
 
-## Comandos de Desarrollo
+## Comandos
 
-Ejecutar análisis de código y pruebas:
+Ejecutar pruebas y lint:
+
 ```bash
 ./gradlew lint test
 ```
 
-Generar APK de depuración:
+Generar APK instalable de desarrollo:
+
 ```bash
 ./gradlew assembleDevDebug
 ```
 
+Generar build de produccion:
+
+```bash
+./gradlew assembleProdRelease
+```
+
+## Documentacion
+
+- [Guia de lanzamiento](docs/RELEASE.md)
+- [Checklist Google Play](docs/PLAY_STORE_CHECKLIST.md)
+- [Arquitectura Studio Pro](docs/STUDIO_PRO_ARCHITECTURE.md)
+- [Backlog de rendimiento](docs/PERFORMANCE_BACKLOG.md)
+
 ## Licencia
 
-Este proyecto está bajo la licencia MIT. Consulta el archivo [LICENSE](LICENSE) para más detalles.
+MIT. Consulta [LICENSE](LICENSE).

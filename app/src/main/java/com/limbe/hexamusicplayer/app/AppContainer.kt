@@ -5,6 +5,10 @@ import androidx.media3.common.AudioAttributes
 import androidx.media3.common.C
 import androidx.media3.exoplayer.ExoPlayer
 import com.limbe.hexamusicplayer.domain.usecase.*
+import com.limbe.hexamusicplayer.infrastructure.analysis.AndroidPcmAudioExtractor
+import com.limbe.hexamusicplayer.infrastructure.analysis.LightweightMusicAnalyzer
+import com.limbe.hexamusicplayer.infrastructure.analysis.ManualMusicAnalysisAdapter
+import com.limbe.hexamusicplayer.infrastructure.analysis.SharedPreferencesMusicAnalysisCache
 import com.limbe.hexamusicplayer.infrastructure.effects.AndroidAudioEffectsAdapter
 import com.limbe.hexamusicplayer.infrastructure.mediastore.MediaStoreLocalMusicRepository
 import com.limbe.hexamusicplayer.infrastructure.player.ExoPlayerAudioPlayerAdapter
@@ -29,6 +33,12 @@ class AppContainer(
     private val audioPlayer = ExoPlayerAudioPlayerAdapter(exoPlayer)
     private val audioEffects = AndroidAudioEffectsAdapter()
     private val userPreferences = DataStoreUserPreferencesAdapter(context)
+    private val musicAnalysisCache = SharedPreferencesMusicAnalysisCache(context)
+    private val musicAnalysis = ManualMusicAnalysisAdapter(
+        cachePort = musicAnalysisCache,
+        pcmAudioExtractor = AndroidPcmAudioExtractor(context),
+        musicAnalyzer = LightweightMusicAnalyzer()
+    )
     val playbackSessionManager = PlaybackSessionManager(context, exoPlayer)
 
     val getLocalTracksUseCase = GetLocalTracksUseCase(musicRepository)
@@ -55,6 +65,13 @@ class AppContainer(
     val setVirtualizerStrengthUseCase = SetVirtualizerStrengthUseCase(audioEffects)
     val setLoudnessGainUseCase = SetLoudnessGainUseCase(audioEffects)
     val observeAudioEffectsStateUseCase = ObserveAudioEffectsStateUseCase(audioEffects)
+
+    val observeMusicAnalysisUseCase = ObserveMusicAnalysisUseCase(musicAnalysis)
+    val loadTrackAnalysisUseCase = LoadTrackAnalysisUseCase(musicAnalysis)
+    val analyzeTrackUseCase = AnalyzeTrackUseCase(musicAnalysis)
+    val saveManualKeyUseCase = SaveManualKeyUseCase(musicAnalysis)
+    val addManualChordUseCase = AddManualChordUseCase(musicAnalysis)
+    val selectStudioInstrumentUseCase = SelectStudioInstrumentUseCase(musicAnalysis)
 
     val observeUserPreferencesUseCase = ObserveUserPreferencesUseCase(userPreferences)
     val savePlaybackSpeedUseCase = SavePlaybackSpeedUseCase(userPreferences)

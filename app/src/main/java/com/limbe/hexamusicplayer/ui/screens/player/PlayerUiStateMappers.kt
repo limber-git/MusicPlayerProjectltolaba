@@ -1,6 +1,7 @@
 package com.limbe.hexamusicplayer.ui.screens.player
 
 import com.limbe.hexamusicplayer.domain.model.AudioEffectsState
+import com.limbe.hexamusicplayer.domain.model.MusicAnalysisState
 import com.limbe.hexamusicplayer.domain.model.PlayerState
 import com.limbe.hexamusicplayer.domain.model.UserPreferences
 
@@ -52,4 +53,10 @@ internal fun PlayerUiState.withAudioEffects(
         loudnessGainMb = effectsState.loudnessGainMb,
         effectsAvailable = effectsState.effectsAvailable
     )
+}
+
+internal fun PlayerUiState.withMusicAnalysis(
+    musicAnalysisState: MusicAnalysisState
+): PlayerUiState {
+    return copy(musicAnalysis = musicAnalysisState)
 }

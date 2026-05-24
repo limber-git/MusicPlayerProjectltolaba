@@ -54,9 +54,13 @@ fun MiniPlayer(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                // Artwork with Coil
                 coil.compose.AsyncImage(
-                    model = track.artworkUri ?: track.contentUri,
+                    model = rememberArtworkImageRequest(
+                        track = track,
+                        width = 48.dp,
+                        height = 48.dp,
+                        cacheKeySuffix = "mini"
+                    ),
                     contentDescription = null,
                     modifier = Modifier
                         .size(48.dp)

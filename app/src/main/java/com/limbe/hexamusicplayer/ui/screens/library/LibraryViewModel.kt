@@ -7,11 +7,15 @@ import com.limbe.hexamusicplayer.domain.model.UserPreferences
 import com.limbe.hexamusicplayer.domain.usecase.BuildVisibleLibraryUseCase
 import com.limbe.hexamusicplayer.domain.usecase.GetLocalTracksUseCase
 import com.limbe.hexamusicplayer.domain.usecase.ObserveUserPreferencesUseCase
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 class LibraryViewModel(
     private val getLocalTracksUseCase: GetLocalTracksUseCase,
@@ -24,6 +28,7 @@ class LibraryViewModel(
 
     private var currentPreferences = UserPreferences()
     private var allTracks: List<Track> = emptyList()
+    private var publishJob: Job? = null
 
     init {
         observePreferences()
@@ -31,7 +36,7 @@ class LibraryViewModel(
 
     fun onSearchQueryChange(query: String) {
         _uiState.update { it.copy(searchQuery = query) }
-        publishTrackState()
+        publishTrackState(debounceMs = SEARCH_DEBOUNCE_MS)
     }
 
     fun refreshTracks() {
@@ -41,12 +46,13 @@ class LibraryViewModel(
             runCatching { getLocalTracksUseCase() }
                 .onSuccess { tracks ->
                     allTracks = tracks
-                    publishTrackState(isLoading = false, errorMessage = null)
+                    publishTrackState(isLoading = false, hasLoadedOnce = true, errorMessage = null)
                 }
                 .onFailure { throwable ->
                     _uiState.update {
                         it.copy(
                             isLoading = false,
+                            hasLoadedOnce = true,
                             errorMessage = throwable.message ?: "Error loading local music"
                         )
                     }
@@ -65,23 +71,39 @@ class LibraryViewModel(
 
     private fun publishTrackState(
         isLoading: Boolean = _uiState.value.isLoading,
+        hasLoadedOnce: Boolean = _uiState.value.hasLoadedOnce,
+        debounceMs: Long = 0L,
         errorMessage: String? = _uiState.value.errorMessage
     ) {
-        _uiState.update { state ->
-            val visibleLibrary = buildVisibleLibraryUseCase(
-                allTracks = allTracks,
-                preferences = currentPreferences,
-                searchQuery = state.searchQuery
-            )
-            state.copy(
-                tracks = visibleLibrary.visibleTracks,
-                filteredTracks = visibleLibrary.filteredTracks,
-                favoriteTracks = visibleLibrary.favoriteTracks,
-                recentTracks = visibleLibrary.recentTracks,
-                activeLibraryFolderLabel = visibleLibrary.activeFolderLabel,
-                isLoading = isLoading,
-                errorMessage = errorMessage
-            )
+        publishJob?.cancel()
+        publishJob = viewModelScope.launch {
+            if (debounceMs > 0L) {
+                delay(debounceMs)
+            }
+            val state = _uiState.value
+            val visibleLibrary = withContext(Dispatchers.Default) {
+                buildVisibleLibraryUseCase(
+                    allTracks = allTracks,
+                    preferences = currentPreferences,
+                    searchQuery = state.searchQuery
+                )
+            }
+            _uiState.update {
+                it.copy(
+                    tracks = visibleLibrary.visibleTracks,
+                    filteredTracks = visibleLibrary.filteredTracks,
+                    favoriteTracks = visibleLibrary.favoriteTracks,
+                    recentTracks = visibleLibrary.recentTracks,
+                    activeLibraryFolderLabel = visibleLibrary.activeFolderLabel,
+                    isLoading = isLoading,
+                    hasLoadedOnce = hasLoadedOnce,
+                    errorMessage = errorMessage
+                )
+            }
         }
+    }
+
+    private companion object {
+        const val SEARCH_DEBOUNCE_MS = 250L
     }
 }

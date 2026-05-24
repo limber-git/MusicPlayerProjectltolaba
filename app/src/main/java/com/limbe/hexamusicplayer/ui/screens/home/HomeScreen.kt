@@ -61,6 +61,7 @@ import com.limbe.hexamusicplayer.R
 import com.limbe.hexamusicplayer.domain.model.Track
 import com.limbe.hexamusicplayer.ui.components.TrackMenuAction
 import com.limbe.hexamusicplayer.ui.components.TrackRow
+import com.limbe.hexamusicplayer.ui.components.rememberArtworkImageRequest
 import com.limbe.hexamusicplayer.ui.screens.library.LibraryViewModel
 import com.limbe.hexamusicplayer.ui.screens.player.PlayerUiState
 import com.limbe.hexamusicplayer.ui.util.hasAudioPermission
@@ -92,7 +93,7 @@ fun HomeScreen(
     }
 
     LaunchedEffect(hasPermission) {
-        if (hasPermission && uiState.tracks.isEmpty() && !uiState.isLoading) {
+        if (hasPermission && !uiState.hasLoadedOnce && !uiState.isLoading) {
             libraryViewModel.refreshTracks()
         }
     }
@@ -389,7 +390,12 @@ private fun MediaSpotlightCard(
             .clickable(onClick = onClick)
     ) {
         AsyncImage(
-            model = artworkUri,
+            model = rememberArtworkImageRequest(
+                data = artworkUri,
+                width = 148.dp,
+                height = 148.dp,
+                cacheKey = "spotlight-$artworkUri"
+            ),
             contentDescription = null,
             modifier = Modifier
                 .fillMaxWidth()

@@ -26,6 +26,7 @@ import androidx.compose.material.icons.automirrored.filled.VolumeUp
 import androidx.compose.material.icons.filled.Audiotrack
 import androidx.compose.material.icons.filled.GraphicEq
 import androidx.compose.material.icons.filled.Info
+import androidx.compose.material.icons.filled.Psychology
 import androidx.compose.material.icons.filled.Speed
 import androidx.compose.material.icons.filled.SurroundSound
 import androidx.compose.material.icons.filled.Waves
@@ -35,6 +36,7 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Tab
@@ -46,6 +48,7 @@ import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -60,6 +63,9 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.limbe.hexamusicplayer.R
+import com.limbe.hexamusicplayer.domain.model.KeyMode
+import com.limbe.hexamusicplayer.domain.model.MusicAnalysisStatus
+import com.limbe.hexamusicplayer.domain.model.StudioInstrument
 import com.limbe.hexamusicplayer.ui.components.LabeledSlider
 import com.limbe.hexamusicplayer.ui.components.StudioFader
 import com.limbe.hexamusicplayer.ui.screens.player.PlayerUiState
@@ -156,6 +162,12 @@ fun StudioScreen(
                             StudioTab(
                                 selected = selectedTab == 3,
                                 onClick = { selectedTab = 3 },
+                                text = stringResource(R.string.studio_tab_analysis),
+                                icon = Icons.Default.Psychology
+                            )
+                            StudioTab(
+                                selected = selectedTab == 4,
+                                onClick = { selectedTab = 4 },
                                 text = stringResource(R.string.studio_tab_lyrics),
                                 icon = Icons.AutoMirrored.Filled.MenuBook
                             )
@@ -173,7 +185,8 @@ fun StudioScreen(
                     0 -> EngineTab(uiState, viewModel)
                     1 -> EqualizerTab(uiState, viewModel)
                     2 -> EffectsTab(uiState, viewModel)
-                    3 -> LyricsTab(uiState)
+                    3 -> AnalysisTab(uiState, viewModel)
+                    4 -> LyricsTab(uiState)
                 }
             }
         }
@@ -236,14 +249,14 @@ private fun StudioHeroCard(uiState: PlayerUiState) {
                         modifier = Modifier.weight(1f),
                         verticalArrangement = Arrangement.spacedBy(6.dp)
                     ) {
-                        StudioPill(text = "PRO SESSION")
+                        StudioPill(text = stringResource(R.string.studio_hero_session_label))
                         Text(
                             text = uiState.currentTrack?.title ?: stringResource(R.string.studio_title),
                             style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold),
                             color = MaterialTheme.colorScheme.onSurface
                         )
                         Text(
-                            text = uiState.currentTrack?.artist ?: "Ajuste fino de speed, pitch y cadena de efectos.",
+                            text = uiState.currentTrack?.artist ?: stringResource(R.string.studio_hero_fallback_body),
                             style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -280,8 +293,12 @@ private fun StudioHeroCard(uiState: PlayerUiState) {
                     )
                     MetricCard(
                         modifier = Modifier.weight(1f),
-                        label = "FX",
-                        value = if (uiState.audioEffectsEnabled) "ON" else "SAFE"
+                        label = stringResource(R.string.studio_metric_fx_label),
+                        value = if (uiState.audioEffectsEnabled) {
+                            stringResource(R.string.studio_metric_fx_on)
+                        } else {
+                            stringResource(R.string.studio_metric_fx_safe)
+                        }
                     )
                 }
             }
@@ -300,8 +317,8 @@ private fun EngineTab(uiState: PlayerUiState, viewModel: PlayerViewModel) {
     ) {
         StudioPanel {
             SectionHeading(
-                overline = "ENGINE",
-                title = "Control de reproduccion",
+                overline = stringResource(R.string.studio_section_engine_overline),
+                title = stringResource(R.string.studio_section_engine_title),
                 body = stringResource(R.string.studio_engine_info)
             )
         }
@@ -351,14 +368,15 @@ private fun EqualizerTab(uiState: PlayerUiState, viewModel: PlayerViewModel) {
     Column(
         modifier = Modifier
             .fillMaxSize()
+            .verticalScroll(rememberScrollState())
             .padding(horizontal = 20.dp, vertical = 18.dp),
         verticalArrangement = Arrangement.spacedBy(18.dp)
     ) {
         StudioPanel {
             SectionHeading(
-                overline = "EQ CONSOLE",
+                overline = stringResource(R.string.studio_section_eq_overline),
                 title = stringResource(R.string.studio_eq_title),
-                body = "Ajuste fino por banda con referencia central y recorrido preciso."
+                body = stringResource(R.string.studio_section_eq_body)
             )
         }
 
@@ -396,7 +414,7 @@ private fun EqualizerTab(uiState: PlayerUiState, viewModel: PlayerViewModel) {
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
-                        text = "MASTER BOARD",
+                        text = stringResource(R.string.studio_eq_board_title),
                         style = MaterialTheme.typography.labelSmall.copy(
                             fontWeight = FontWeight.Bold,
                             letterSpacing = 2.sp
@@ -404,7 +422,7 @@ private fun EqualizerTab(uiState: PlayerUiState, viewModel: PlayerViewModel) {
                         color = MaterialTheme.colorScheme.primary
                     )
                     Text(
-                        text = "10 BANDS",
+                        text = stringResource(R.string.studio_eq_board_bands),
                         style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Medium),
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -496,6 +514,173 @@ private fun EffectsTab(uiState: PlayerUiState, viewModel: PlayerViewModel) {
 }
 
 @Composable
+private fun AnalysisTab(uiState: PlayerUiState, viewModel: PlayerViewModel) {
+    var tonicInput by remember(uiState.currentTrack?.id) { mutableStateOf("") }
+    var chordInput by remember(uiState.currentTrack?.id) { mutableStateOf("") }
+    var selectedMode by remember(uiState.currentTrack?.id) { mutableStateOf(KeyMode.MAJOR) }
+    val analysis = uiState.musicAnalysis
+    val selectedInstrumentView = analysis.instrumentViews.firstOrNull {
+        it.instrument == analysis.selectedInstrument
+    }
+    val activeChord = analysis.chordEvents
+        .filter { it.startMs <= uiState.currentPositionMs }
+        .maxByOrNull { it.startMs }
+
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .verticalScroll(rememberScrollState())
+            .padding(horizontal = 20.dp, vertical = 18.dp),
+        verticalArrangement = Arrangement.spacedBy(18.dp)
+    ) {
+        StudioPanel {
+            SectionHeading(
+                overline = stringResource(R.string.studio_intelligence_overline),
+                title = stringResource(R.string.studio_intelligence_title),
+                body = stringResource(R.string.studio_intelligence_body)
+            )
+            Text(
+                text = when (analysis.status) {
+                    MusicAnalysisStatus.NOT_ANALYZED -> if (uiState.currentTrack == null) {
+                        stringResource(R.string.studio_analysis_idle)
+                    } else {
+                        stringResource(R.string.studio_analysis_ready)
+                    }
+                    MusicAnalysisStatus.ANALYZING -> stringResource(R.string.studio_analysis_dsp_required)
+                    MusicAnalysisStatus.MANUAL -> stringResource(R.string.studio_analysis_manual)
+                    MusicAnalysisStatus.ESTIMATED -> stringResource(R.string.studio_analysis_estimated)
+                    MusicAnalysisStatus.CONFIRMED -> stringResource(R.string.studio_analysis_confirmed)
+                    MusicAnalysisStatus.FAILED -> analysis.errorMessage ?: stringResource(R.string.studio_analysis_error)
+                },
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+            Button(
+                onClick = viewModel::analyzeCurrentTrack,
+                enabled = uiState.currentTrack != null && analysis.status != MusicAnalysisStatus.ANALYZING
+            ) {
+                Text(
+                    text = if (analysis.status == MusicAnalysisStatus.ANALYZING) {
+                        stringResource(R.string.studio_analysis_running)
+                    } else {
+                        stringResource(R.string.studio_analysis_run)
+                    }
+                )
+            }
+        }
+
+        if (uiState.currentTrack == null) {
+            InfoCard(text = stringResource(R.string.studio_analysis_no_track))
+            return@Column
+        }
+
+        StudioPanel {
+            SectionHeading(
+                overline = stringResource(R.string.studio_key_label),
+                title = analysis.keyEstimate?.displayName ?: stringResource(R.string.studio_key_pending),
+                body = stringResource(R.string.studio_key_manual_body)
+            )
+            AnalysisMetric(
+                label = stringResource(R.string.studio_note_label),
+                value = analysis.currentNote?.displayName ?: stringResource(R.string.studio_note_pending)
+            )
+            OutlinedTextField(
+                modifier = Modifier.fillMaxWidth(),
+                value = tonicInput,
+                onValueChange = { tonicInput = it },
+                singleLine = true,
+                label = { Text(stringResource(R.string.studio_key_tonic_hint)) }
+            )
+            Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                OutlinedButton(
+                    onClick = { selectedMode = KeyMode.MAJOR },
+                    enabled = selectedMode != KeyMode.MAJOR
+                ) {
+                    Text(stringResource(R.string.studio_key_mode_major))
+                }
+                OutlinedButton(
+                    onClick = { selectedMode = KeyMode.MINOR },
+                    enabled = selectedMode != KeyMode.MINOR
+                ) {
+                    Text(stringResource(R.string.studio_key_mode_minor))
+                }
+                Button(onClick = { viewModel.saveManualKey(tonicInput, selectedMode) }) {
+                    Text(stringResource(R.string.studio_save_key))
+                }
+            }
+        }
+
+        StudioPanel {
+            SectionHeading(
+                overline = stringResource(R.string.studio_chords_label),
+                title = activeChord?.chordName ?: stringResource(R.string.studio_chords_pending),
+                body = stringResource(
+                    R.string.studio_chord_current_position,
+                    formatTimestamp(uiState.currentPositionMs)
+                )
+            )
+            OutlinedTextField(
+                modifier = Modifier.fillMaxWidth(),
+                value = chordInput,
+                onValueChange = { chordInput = it },
+                singleLine = true,
+                label = { Text(stringResource(R.string.studio_chord_hint)) }
+            )
+            Button(onClick = {
+                viewModel.addManualChordAtCurrentPosition(chordInput)
+                chordInput = ""
+            }) {
+                Text(stringResource(R.string.studio_add_chord))
+            }
+        }
+
+        StudioPanel {
+            SectionHeading(
+                overline = stringResource(R.string.studio_chord_timeline_overline),
+                title = stringResource(R.string.studio_chord_timeline_title),
+                body = if (analysis.chordEvents.isEmpty()) {
+                    stringResource(R.string.studio_chord_timeline_empty)
+                } else {
+                    stringResource(R.string.studio_chord_timeline_body)
+                }
+            )
+            analysis.chordEvents.takeLast(12).forEach { chord ->
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = chord.chordName,
+                        style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold)
+                    )
+                    Text(
+                        text = formatTimestamp(chord.startMs),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+            }
+        }
+
+        StudioPanel {
+            SectionHeading(
+                overline = stringResource(R.string.studio_instruments_label),
+                title = selectedInstrumentView?.title ?: analysis.selectedInstrument.displayName,
+                body = selectedInstrumentView?.body ?: stringResource(R.string.studio_instrument_body)
+            )
+            LazyRow(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                items(StudioInstrument.values().toList()) { instrument ->
+                    OutlinedButton(onClick = { viewModel.selectStudioInstrument(instrument) }) {
+                        Text(instrument.displayName)
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
 private fun LyricsTab(uiState: PlayerUiState) {
     Column(
         modifier = Modifier
@@ -504,17 +689,109 @@ private fun LyricsTab(uiState: PlayerUiState) {
             .padding(horizontal = 20.dp, vertical = 18.dp),
         verticalArrangement = Arrangement.spacedBy(18.dp)
     ) {
+        StudioIntelligenceCard()
         InfoCard(text = stringResource(R.string.studio_lyrics_info))
 
         StudioPanel {
             SectionHeading(
-                overline = "LYRICS",
+                overline = stringResource(R.string.studio_section_lyrics_overline),
                 title = stringResource(R.string.studio_lyrics_title),
                 body = if (uiState.currentTrack != null) {
                     stringResource(R.string.studio_lyrics_body_active, uiState.currentTrack.title)
                 } else {
                     stringResource(R.string.studio_lyrics_body_idle)
                 }
+            )
+        }
+    }
+}
+
+private fun formatTimestamp(positionMs: Long): String {
+    val totalSeconds = (positionMs / 1000).coerceAtLeast(0)
+    val minutes = totalSeconds / 60
+    val seconds = totalSeconds % 60
+    return String.format(Locale.US, "%d:%02d", minutes, seconds)
+}
+
+@Composable
+private fun StudioIntelligenceCard() {
+    StudioPanel {
+        SectionHeading(
+            overline = stringResource(R.string.studio_intelligence_overline),
+            title = stringResource(R.string.studio_intelligence_title),
+            body = stringResource(R.string.studio_intelligence_body)
+        )
+
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(10.dp)
+        ) {
+            AnalysisMetric(
+                modifier = Modifier.weight(1f),
+                label = stringResource(R.string.studio_key_label),
+                value = stringResource(R.string.studio_key_pending)
+            )
+            AnalysisMetric(
+                modifier = Modifier.weight(1f),
+                label = stringResource(R.string.studio_note_label),
+                value = stringResource(R.string.studio_note_pending)
+            )
+        }
+
+        AnalysisMetric(
+            label = stringResource(R.string.studio_chords_label),
+            value = stringResource(R.string.studio_chords_pending)
+        )
+
+        Text(
+            text = stringResource(R.string.studio_instruments_label),
+            style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold, letterSpacing = 1.4.sp),
+            color = MaterialTheme.colorScheme.primary
+        )
+
+        LazyRow(
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            contentPadding = PaddingValues(0.dp)
+        ) {
+            items(
+                listOf(
+                    R.string.studio_instrument_keyboard,
+                    R.string.studio_instrument_guitar,
+                    R.string.studio_instrument_bass,
+                    R.string.studio_instrument_sax,
+                    R.string.studio_instrument_flute
+                )
+            ) { instrument ->
+                StudioPill(text = stringResource(instrument))
+            }
+        }
+    }
+}
+
+@Composable
+private fun AnalysisMetric(
+    label: String,
+    value: String,
+    modifier: Modifier = Modifier
+) {
+    Surface(
+        modifier = modifier,
+        shape = RoundedCornerShape(18.dp),
+        color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.38f)
+    ) {
+        Column(
+            modifier = Modifier.padding(14.dp),
+            verticalArrangement = Arrangement.spacedBy(4.dp)
+        ) {
+            Text(
+                text = label,
+                style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Medium),
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+            Text(
+                text = value,
+                style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
+                color = MaterialTheme.colorScheme.onSurface
             )
         }
     }

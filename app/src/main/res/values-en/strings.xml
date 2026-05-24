@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">Hexa Music Player</string>
+    <string name="app_name">studioMusicTolaba</string>
 
     <string name="nav_home">Home</string>
     <string name="nav_library">Library</string>
@@ -74,6 +74,7 @@
     <string name="notification_channel_playback_description">Playback controls and background session status.</string>
     <string name="notification_playback_title_fallback">Playing music</string>
     <string name="notification_playback_text_fallback">Your session is still active</string>
+    <string name="notification_action_stop">Stop playback</string>
 
     <string name="explorer_title">Explore</string>
     <string name="explorer_tab_albums">Albums</string>
@@ -125,6 +126,7 @@
     <string name="studio_tab_engine">Engine</string>
     <string name="studio_tab_equalizer">Equalizer</string>
     <string name="studio_tab_effects">Effects</string>
+    <string name="studio_tab_analysis">Analysis</string>
     <string name="studio_tab_lyrics">Lyrics</string>
     <string name="studio_engine_info">Control playback speed and pitch in real time without losing quality.</string>
     <string name="studio_speed_label">Playback speed</string>
@@ -153,4 +155,56 @@
     <string name="studio_lyrics_title">Lyrics panel</string>
     <string name="studio_lyrics_body_idle">Start a song to prepare a lyrics and rehearsal notes view.</string>
     <string name="studio_lyrics_body_active">No lyrics are loaded yet for %1$s. The next iteration can read local or synchronized lyrics.</string>
+    <string name="studio_hero_session_label">PRO SESSION</string>
+    <string name="studio_hero_fallback_body">Fine control of speed, pitch and the effects chain.</string>
+    <string name="studio_metric_fx_label">FX</string>
+    <string name="studio_metric_fx_on">ON</string>
+    <string name="studio_metric_fx_safe">SAFE</string>
+    <string name="studio_section_engine_overline">ENGINE</string>
+    <string name="studio_section_engine_title">Playback control</string>
+    <string name="studio_section_eq_overline">EQ CONSOLE</string>
+    <string name="studio_section_eq_body">Precise band shaping with a center reference and accurate travel.</string>
+    <string name="studio_eq_board_title">MASTER BOARD</string>
+    <string name="studio_eq_board_bands">10 BANDS</string>
+    <string name="studio_section_lyrics_overline">LYRICS</string>
+    <string name="studio_intelligence_overline">STUDIO PRO</string>
+    <string name="studio_intelligence_title">Music intelligence</string>
+    <string name="studio_intelligence_body">Foundation for detecting note, key, chords and section changes in the song.</string>
+    <string name="studio_key_label">Key</string>
+    <string name="studio_key_pending">Analysis pending</string>
+    <string name="studio_note_label">Current note</string>
+    <string name="studio_note_pending">--</string>
+    <string name="studio_chords_label">Changes</string>
+    <string name="studio_chords_pending">No harmonic map yet</string>
+    <string name="studio_instruments_label">Instruments</string>
+    <string name="studio_instrument_keyboard">Keyboard</string>
+    <string name="studio_instrument_guitar">Guitar</string>
+    <string name="studio_instrument_bass">Bass</string>
+    <string name="studio_instrument_sax">Sax</string>
+    <string name="studio_instrument_flute">Flute</string>
+    <string name="studio_analysis_idle">No active track. Analysis loads when a song starts.</string>
+    <string name="studio_analysis_ready">Ready for manual data. Automatic detection is prepared for the DSP phase.</string>
+    <string name="studio_analysis_run">Analyze track</string>
+    <string name="studio_analysis_running">Analyzing...</string>
+    <string name="studio_analysis_manual">Using manual data saved for this track.</string>
+    <string name="studio_analysis_estimated">Using automatic estimates pending confirmation.</string>
+    <string name="studio_analysis_confirmed">Music map confirmed for this track.</string>
+    <string name="studio_analysis_dsp_required">This feature requires PCM extraction and pitch/chromagram/chord algorithms.</string>
+    <string name="studio_analysis_error">Could not load analysis.</string>
+    <string name="studio_analysis_no_track">Play a track to create or load its music map.</string>
+    <string name="studio_key_manual_body">Save the song base key. Later it can be transposed with the current pitch.</string>
+    <string name="studio_key_tonic_hint">Tonic, e.g. C, F#, Bb</string>
+    <string name="studio_key_mode_major">Major</string>
+    <string name="studio_key_mode_minor">Minor</string>
+    <string name="studio_save_key">Save key</string>
+    <string name="studio_chord_current_position">Current position: %1$s</string>
+    <string name="studio_chord_hint">Chord, e.g. Am7, G, Fmaj7</string>
+    <string name="studio_add_chord">Add chord here</string>
+    <string name="studio_chord_timeline_overline">TIMELINE</string>
+    <string name="studio_chord_timeline_title">Harmonic changes</string>
+    <string name="studio_chord_timeline_empty">Add chords manually to build the practice map.</string>
+    <string name="studio_chord_timeline_body">Saved events synchronized with playback position.</string>
+    <string name="studio_instrument_body">View ready to generate instrument guides from the harmonic map.</string>
+    <string name="widget_playback_subtitle">Quick playback controls</string>
+    <string name="widget_playback_description">studioMusicTolaba playback widget</string>
 </resources>

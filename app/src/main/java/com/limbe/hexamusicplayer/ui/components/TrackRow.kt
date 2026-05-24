@@ -56,9 +56,13 @@ fun TrackRow(
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(12.dp)
     ) {
-        // Real Artwork with Coil
         AsyncImage(
-            model = track.artworkUri ?: track.contentUri,
+            model = rememberArtworkImageRequest(
+                track = track,
+                width = 48.dp,
+                height = 48.dp,
+                cacheKeySuffix = "row"
+            ),
             contentDescription = null,
             modifier = Modifier
                 .size(48.dp)

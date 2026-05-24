@@ -11,9 +11,13 @@ import androidx.core.os.LocaleListCompat
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.limbe.hexamusicplayer.app.MusicApplication
+import com.limbe.hexamusicplayer.domain.model.AppLanguage
+import com.limbe.hexamusicplayer.domain.model.DarkModeMode
 import com.limbe.hexamusicplayer.ui.screens.library.LibraryViewModel
 import com.limbe.hexamusicplayer.ui.screens.player.PlayerViewModel
 import com.limbe.hexamusicplayer.ui.theme.HexaMusicTheme
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.map
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -26,15 +30,18 @@ class MainActivity : ComponentActivity() {
             val factory = MusicPlayerViewModelFactory(container)
             val libraryViewModel: LibraryViewModel = viewModel(factory = factory)
             val playerViewModel: PlayerViewModel = viewModel(factory = factory)
-            val playerUiState by playerViewModel.uiState.collectAsStateWithLifecycle()
+            val appShellState by playerViewModel.uiState
+                .map { it.darkModeMode to it.appLanguage }
+                .distinctUntilChanged()
+                .collectAsStateWithLifecycle(DarkModeMode.SYSTEM to AppLanguage.SYSTEM)
 
-            LaunchedEffect(playerUiState.appLanguage) {
+            LaunchedEffect(appShellState.second) {
                 AppCompatDelegate.setApplicationLocales(
-                    LocaleListCompat.forLanguageTags(playerUiState.appLanguage.languageTag)
+                    LocaleListCompat.forLanguageTags(appShellState.second.languageTag)
                 )
             }
 
-            HexaMusicTheme(darkModeMode = playerUiState.darkModeMode) {
+            HexaMusicTheme(darkModeMode = appShellState.first) {
                 HexaApp(
                     libraryViewModel = libraryViewModel,
                     playerViewModel = playerViewModel

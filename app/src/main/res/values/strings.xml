@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">Hexa Music Player</string>
+    <string name="app_name">studioMusicTolaba</string>
 
     <string name="nav_home">Inicio</string>
     <string name="nav_library">Biblioteca</string>
@@ -67,13 +67,14 @@
 
     <string name="player_idle_title">No se est&#225; reproduciendo nada</string>
     <string name="player_idle_subtitle">Selecciona una canci&#243;n</string>
-    <string name="player_queue_title">Up Next</string>
+    <string name="player_queue_title">Siguientes</string>
     <string name="player_queue_subtitle">%1$d pistas despu&#233;s de la actual</string>
     <string name="player_gesture_hint">Desliza la car&#225;tula a izquierda o derecha para cambiar de pista, o hacia arriba para entrar al modo estudio.</string>
     <string name="notification_channel_playback_name">Reproducci&#243;n</string>
     <string name="notification_channel_playback_description">Controles y estado de la reproducci&#243;n en segundo plano.</string>
     <string name="notification_playback_title_fallback">Reproduciendo m&#250;sica</string>
     <string name="notification_playback_text_fallback">Tu sesi&#243;n sigue activa</string>
+    <string name="notification_action_stop">Detener reproducci&#243;n</string>
 
     <string name="explorer_title">Explorar</string>
     <string name="explorer_tab_albums">&#193;lbumes</string>
@@ -125,6 +126,7 @@
     <string name="studio_tab_engine">Motor</string>
     <string name="studio_tab_equalizer">Equalizador</string>
     <string name="studio_tab_effects">Efectos</string>
+    <string name="studio_tab_analysis">An&#225;lisis</string>
     <string name="studio_tab_lyrics">Letras</string>
     <string name="studio_engine_info">Controla la velocidad y el tono de la reproducci&#243;n en tiempo real sin perder calidad.</string>
     <string name="studio_speed_label">Velocidad de reproducci&#243;n</string>
@@ -153,4 +155,56 @@
     <string name="studio_lyrics_title">Panel de letras</string>
     <string name="studio_lyrics_body_idle">Inicia una canci&#243;n para preparar una vista de letras y anotaciones de ensayo.</string>
     <string name="studio_lyrics_body_active">A&#250;n no hay letras cargadas para %1$s. La siguiente iteraci&#243;n puede leer letras locales o sincronizadas.</string>
+    <string name="studio_hero_session_label">SESION PRO</string>
+    <string name="studio_hero_fallback_body">Ajuste fino de speed, pitch y cadena de efectos.</string>
+    <string name="studio_metric_fx_label">FX</string>
+    <string name="studio_metric_fx_on">ACTIVO</string>
+    <string name="studio_metric_fx_safe">SEGURO</string>
+    <string name="studio_section_engine_overline">ENGINE</string>
+    <string name="studio_section_engine_title">Control de reproducci&#243;n</string>
+    <string name="studio_section_eq_overline">EQ CONSOLE</string>
+    <string name="studio_section_eq_body">Ajuste fino por banda con referencia central y recorrido preciso.</string>
+    <string name="studio_eq_board_title">MASTER BOARD</string>
+    <string name="studio_eq_board_bands">10 BANDS</string>
+    <string name="studio_section_lyrics_overline">LYRICS</string>
+    <string name="studio_intelligence_overline">STUDIO PRO</string>
+    <string name="studio_intelligence_title">Inteligencia musical</string>
+    <string name="studio_intelligence_body">Base para detectar nota, tonalidad, acordes y cambios por secciones de la canci&#243;n.</string>
+    <string name="studio_key_label">Tonalidad</string>
+    <string name="studio_key_pending">Pendiente de an&#225;lisis</string>
+    <string name="studio_note_label">Nota actual</string>
+    <string name="studio_note_pending">--</string>
+    <string name="studio_chords_label">Cambios</string>
+    <string name="studio_chords_pending">Sin mapa arm&#243;nico todav&#237;a</string>
+    <string name="studio_instruments_label">Instrumentos</string>
+    <string name="studio_instrument_keyboard">Teclado</string>
+    <string name="studio_instrument_guitar">Guitarra</string>
+    <string name="studio_instrument_bass">Bajo</string>
+    <string name="studio_instrument_sax">Saxo</string>
+    <string name="studio_instrument_flute">Flauta</string>
+    <string name="studio_analysis_idle">Sin pista activa. El an&#225;lisis se carga cuando empieza una canci&#243;n.</string>
+    <string name="studio_analysis_ready">Listo para datos manuales. La detecci&#243;n autom&#225;tica queda preparada para la fase DSP.</string>
+    <string name="studio_analysis_run">Analizar pista</string>
+    <string name="studio_analysis_running">Analizando...</string>
+    <string name="studio_analysis_manual">Usando datos manuales guardados para esta pista.</string>
+    <string name="studio_analysis_estimated">Usando estimaciones autom&#225;ticas pendientes de confirmaci&#243;n.</string>
+    <string name="studio_analysis_confirmed">Mapa musical confirmado para esta pista.</string>
+    <string name="studio_analysis_dsp_required">Esta funci&#243;n requiere extraer PCM y ejecutar algoritmos de pitch/cromagrama/acordes.</string>
+    <string name="studio_analysis_error">No se pudo cargar el an&#225;lisis.</string>
+    <string name="studio_analysis_no_track">Reproduce una pista para crear o cargar su mapa musical.</string>
+    <string name="studio_key_manual_body">Guarda la tonalidad base de la canci&#243;n. Luego se podr&#225; transportar con el pitch actual.</string>
+    <string name="studio_key_tonic_hint">T&#243;nica, ej. C, F#, Bb</string>
+    <string name="studio_key_mode_major">Mayor</string>
+    <string name="studio_key_mode_minor">Menor</string>
+    <string name="studio_save_key">Guardar tonalidad</string>
+    <string name="studio_chord_current_position">Posici&#243;n actual: %1$s</string>
+    <string name="studio_chord_hint">Acorde, ej. Am7, G, Fmaj7</string>
+    <string name="studio_add_chord">Agregar acorde aqu&#237;</string>
+    <string name="studio_chord_timeline_overline">TIMELINE</string>
+    <string name="studio_chord_timeline_title">Cambios arm&#243;nicos</string>
+    <string name="studio_chord_timeline_empty">Agrega acordes manualmente para construir el mapa de pr&#225;ctica.</string>
+    <string name="studio_chord_timeline_body">Eventos guardados y sincronizados con la posici&#243;n de reproducci&#243;n.</string>
+    <string name="studio_instrument_body">Vista lista para generar gu&#237;as por instrumento desde el mapa arm&#243;nico.</string>
+    <string name="widget_playback_subtitle">Controles rapidos de reproduccion</string>
+    <string name="widget_playback_description">Widget de reproduccion de studioMusicTolaba</string>
 </resources>

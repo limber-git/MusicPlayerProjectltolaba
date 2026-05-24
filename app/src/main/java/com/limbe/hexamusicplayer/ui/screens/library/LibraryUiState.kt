@@ -10,5 +10,6 @@ data class LibraryUiState(
     val activeLibraryFolderLabel: String? = null,
     val searchQuery: String = "",
     val isLoading: Boolean = false,
+    val hasLoadedOnce: Boolean = false,
     val errorMessage: String? = null
 )

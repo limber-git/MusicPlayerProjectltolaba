@@ -1,17 +1,27 @@
 package com.limbe.hexamusicplayer
 
 import com.limbe.hexamusicplayer.domain.model.AudioEffectsState
+import com.limbe.hexamusicplayer.domain.model.EqBand
 import com.limbe.hexamusicplayer.domain.model.AppLanguage
+import com.limbe.hexamusicplayer.domain.model.ChordEvent
 import com.limbe.hexamusicplayer.domain.model.DarkModeMode
+import com.limbe.hexamusicplayer.domain.model.KeyEstimate
+import com.limbe.hexamusicplayer.domain.model.MusicAnalysisState
 import com.limbe.hexamusicplayer.domain.model.PlayerState
 import com.limbe.hexamusicplayer.domain.model.RepeatMode
+import com.limbe.hexamusicplayer.domain.model.StudioInstrument
 import com.limbe.hexamusicplayer.domain.model.Track
 import com.limbe.hexamusicplayer.domain.model.UserPreferences
 import com.limbe.hexamusicplayer.domain.port.AudioEffectsPort
 import com.limbe.hexamusicplayer.domain.port.AudioPlayerPort
+import com.limbe.hexamusicplayer.domain.port.MusicAnalysisPort
 import com.limbe.hexamusicplayer.domain.port.UserPreferencesPort
+import com.limbe.hexamusicplayer.domain.usecase.AddManualChordUseCase
+import com.limbe.hexamusicplayer.domain.usecase.AnalyzeTrackUseCase
 import com.limbe.hexamusicplayer.domain.usecase.AttachAudioEffectsUseCase
+import com.limbe.hexamusicplayer.domain.usecase.LoadTrackAnalysisUseCase
 import com.limbe.hexamusicplayer.domain.usecase.ObserveAudioEffectsStateUseCase
+import com.limbe.hexamusicplayer.domain.usecase.ObserveMusicAnalysisUseCase
 import com.limbe.hexamusicplayer.domain.usecase.ObservePlayerStateUseCase
 import com.limbe.hexamusicplayer.domain.usecase.ObserveUserPreferencesUseCase
 import com.limbe.hexamusicplayer.domain.usecase.PlayTrackUseCase
@@ -22,6 +32,7 @@ import com.limbe.hexamusicplayer.domain.usecase.RemoveFromQueueUseCase
 import com.limbe.hexamusicplayer.domain.usecase.SaveBassStrengthUseCase
 import com.limbe.hexamusicplayer.domain.usecase.SaveEqBandLevelUseCase
 import com.limbe.hexamusicplayer.domain.usecase.SaveLoudnessGainUseCase
+import com.limbe.hexamusicplayer.domain.usecase.SaveManualKeyUseCase
 import com.limbe.hexamusicplayer.domain.usecase.SavePlaybackPitchUseCase
 import com.limbe.hexamusicplayer.domain.usecase.SavePlaybackSpeedUseCase
 import com.limbe.hexamusicplayer.domain.usecase.SaveVirtualizerStrengthUseCase
@@ -39,6 +50,7 @@ import com.limbe.hexamusicplayer.domain.usecase.SetVirtualizerStrengthUseCase
 import com.limbe.hexamusicplayer.domain.usecase.SkipToNextUseCase
 import com.limbe.hexamusicplayer.domain.usecase.SkipToPreviousUseCase
 import com.limbe.hexamusicplayer.domain.usecase.SetManualLibraryFolderUseCase
+import com.limbe.hexamusicplayer.domain.usecase.SelectStudioInstrumentUseCase
 import com.limbe.hexamusicplayer.domain.usecase.AddToQueueUseCase
 import com.limbe.hexamusicplayer.domain.usecase.MoveQueueItemUseCase
 import com.limbe.hexamusicplayer.domain.usecase.ToggleFavoriteTrackUseCase
@@ -49,6 +61,7 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.test.advanceTimeBy
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
@@ -178,11 +191,39 @@ class PlayerViewModelTest {
         assertEquals(listOf(10L, 30L, 20L), viewModel.uiState.value.queue.map { it.id })
     }
 
+    @Test
+    fun `rapid eq changes save latest level without crashing`() = runTest {
+        val fakePlayer = FakeViewModelPlayerPort()
+        val fakeEffects = FakeAudioEffectsPort()
+        val fakePreferences = FakeUserPreferencesPort()
+        val viewModel = createViewModel(fakePlayer, fakeEffects, fakePreferences)
+
+        fakePreferences.emit(UserPreferences(audioEffectsEnabled = true))
+        fakeEffects.emit(
+            AudioEffectsState(
+                bands = listOf(
+                    EqBand(index = 0, centerFreqHz = 60, level = 0, minLevel = -1500, maxLevel = 1500)
+                ),
+                effectsAvailable = true
+            )
+        )
+        advanceUntilIdle()
+
+        viewModel.setEqBandLevel(index = 0, level = 250)
+        viewModel.setEqBandLevel(index = 0, level = 500)
+
+        advanceTimeBy(500)
+        advanceUntilIdle()
+
+        assertEquals(500, fakePreferences.currentPreferences.eqBandLevels[0])
+    }
+
     private fun createViewModel(
         player: FakeViewModelPlayerPort,
         effects: FakeAudioEffectsPort,
         preferences: FakeUserPreferencesPort
     ): PlayerViewModel {
+        val analysis = FakeMusicAnalysisPort()
         return PlayerViewModel(
             playTrackUseCase = PlayTrackUseCase(player),
             togglePlaybackUseCase = TogglePlaybackUseCase(player),
@@ -217,7 +258,13 @@ class PlayerViewModelTest {
             setDarkModeUseCase = SetDarkModeUseCase(preferences),
             setAudioEffectsEnabledUseCase = SetAudioEffectsEnabledUseCase(preferences),
             setAppLanguageUseCase = SetAppLanguageUseCase(preferences),
-            setManualLibraryFolderUseCase = SetManualLibraryFolderUseCase(preferences)
+            setManualLibraryFolderUseCase = SetManualLibraryFolderUseCase(preferences),
+            observeMusicAnalysisUseCase = ObserveMusicAnalysisUseCase(analysis),
+            loadTrackAnalysisUseCase = LoadTrackAnalysisUseCase(analysis),
+            analyzeTrackUseCase = AnalyzeTrackUseCase(analysis),
+            saveManualKeyUseCase = SaveManualKeyUseCase(analysis),
+            addManualChordUseCase = AddManualChordUseCase(analysis),
+            selectStudioInstrumentUseCase = SelectStudioInstrumentUseCase(analysis)
         )
     }
 
@@ -341,6 +388,38 @@ private class FakeAudioEffectsPort : AudioEffectsPort {
     override fun release() {
         _state.value = AudioEffectsState()
     }
+
+    fun emit(state: AudioEffectsState) {
+        _state.value = state
+    }
+}
+
+private class FakeMusicAnalysisPort : MusicAnalysisPort {
+    private val _state = MutableStateFlow(MusicAnalysisState())
+    override val state: StateFlow<MusicAnalysisState> = _state
+
+    override suspend fun loadTrack(track: Track?) {
+        _state.value = MusicAnalysisState(trackId = track?.id)
+    }
+
+    override suspend fun analyzeTrack(track: Track) {
+        _state.value = MusicAnalysisState(trackId = track.id)
+    }
+
+    override suspend fun saveManualKey(track: Track, keyEstimate: KeyEstimate) {
+        _state.value = _state.value.copy(trackId = track.id, keyEstimate = keyEstimate)
+    }
+
+    override suspend fun addManualChord(track: Track, chordEvent: ChordEvent) {
+        _state.value = _state.value.copy(
+            trackId = track.id,
+            chordEvents = _state.value.chordEvents + chordEvent
+        )
+    }
+
+    override fun selectInstrument(instrument: StudioInstrument) {
+        _state.value = _state.value.copy(selectedInstrument = instrument)
+    }
 }
 
 private class FakeUserPreferencesPort : UserPreferencesPort {
@@ -409,4 +488,7 @@ private class FakeUserPreferencesPort : UserPreferencesPort {
     fun emit(preferences: UserPreferences) {
         preferencesFlow.value = preferences
     }
+
+    val currentPreferences: UserPreferences
+        get() = preferencesFlow.value
 }

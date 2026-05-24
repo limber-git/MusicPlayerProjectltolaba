@@ -14,5 +14,5 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "HexaMusicPlayer"
+rootProject.name = "studioMusicTolaba"
 include(":app")

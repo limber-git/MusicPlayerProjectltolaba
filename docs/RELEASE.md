@@ -1,39 +1,54 @@
-# Guía de Lanzamiento (Release)
+# Guia de lanzamiento
 
-Este documento detalla los pasos necesarios para generar y validar una versión de producción de HexaMusicPlayer.
+Pasos para generar y validar una version de studioMusicTolaba.
 
-## 1. Configuración de Versión
+## Version
 
-Antes de compilar, asegúrate de actualizar los siguientes valores en `app/build.gradle.kts` o mediante propiedades de Gradle:
+Configurar antes del build:
 
-- `APP_VERSION_CODE`: Un entero incremental.
-- `APP_VERSION_NAME`: El nombre semántico de la versión (ej. `1.0.0`).
+- `APP_VERSION_CODE`: entero incremental.
+- `APP_VERSION_NAME`: version visible, por ejemplo `1.0.0`.
 
-## 2. Firma de la Aplicación
+Se pueden definir como propiedades Gradle o variables de entorno.
 
-Para compilaciones de producción, es necesario configurar las claves de firma mediante variables de entorno o secretos en CI/CD:
+## Firma
 
-- `RELEASE_STORE_FILE`: Ruta al archivo keystore.
-- `RELEASE_STORE_PASSWORD`: Contraseña del almacén de claves.
-- `RELEASE_KEY_ALIAS`: Alias de la clave.
-- `RELEASE_KEY_PASSWORD`: Contraseña de la clave.
+Para builds de produccion, configurar:
 
-## 3. Control de Calidad
+- `RELEASE_STORE_FILE`: ruta al keystore.
+- `RELEASE_STORE_PASSWORD`: password del keystore.
+- `RELEASE_KEY_ALIAS`: alias de la clave.
+- `RELEASE_KEY_PASSWORD`: password de la clave.
 
-Ejecuta la suite completa de verificaciones antes de generar el artefacto:
+En GitHub Actions estos valores deben ir como secrets. El keystore puede guardarse como base64 en `RELEASE_STORE_FILE_BASE64`, siguiendo el workflow actual.
+
+## Calidad
+
+Ejecutar antes de publicar:
 
 ```bash
 ./gradlew lint
 ./gradlew test
 ./gradlew assembleProdRelease
+./gradlew bundleProdRelease
 ```
 
-## 4. Validación en Dispositivo
+## Validacion manual
 
-Una vez generado el APK en `app/build/outputs/apk/prod/release/`, se debe verificar manualmente:
+Revisar en un telefono real:
 
-1. **Biblioteca:** Correcto escaneo de pistas locales.
-2. **Reproducción:** Funcionamiento estable en primer y segundo plano.
-3. **Controles:** Validación de la notificación multimedia y controles de pantalla de bloqueo.
-4. **Audio Studio:** Confirmar que el ecualizador y los efectos de audio se aplican correctamente al motor.
-5. **Persistencia:** Validar que los favoritos y ajustes se mantienen tras reiniciar la aplicación.
+1. Biblioteca local y permisos.
+2. Reproduccion en foreground, background y pantalla bloqueada.
+3. Notificacion multimedia y controles.
+4. Seek bar, cola `Up Next`, shuffle, repeat y favoritos.
+5. Modo Studio: speed, pitch, EQ y efectos.
+6. Cambio de idioma y tema.
+7. Persistencia tras cerrar y abrir la app.
+
+## Artefactos
+
+- APK debug: `app/build/outputs/apk/dev/debug/`
+- APK release: `app/build/outputs/apk/prod/release/`
+- AAB release para Play: `app/build/outputs/bundle/prodRelease/`
+
+Para Google Play, priorizar el `.aab`.

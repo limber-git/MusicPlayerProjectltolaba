@@ -16,10 +16,15 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.FavoriteBorder
@@ -75,6 +80,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil.compose.AsyncImage
 import com.limbe.hexamusicplayer.R
 import com.limbe.hexamusicplayer.domain.model.RepeatMode
+import com.limbe.hexamusicplayer.ui.components.rememberArtworkImageRequest
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -150,9 +156,10 @@ fun PlayerScreen(
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(paddingValues)
-                    .padding(horizontal = 32.dp),
+                    .verticalScroll(rememberScrollState())
+                    .padding(horizontal = 24.dp, vertical = 12.dp),
                 horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.SpaceAround
+                verticalArrangement = Arrangement.spacedBy(20.dp)
             ) {
                 Card(
                     modifier = Modifier
@@ -186,7 +193,12 @@ fun PlayerScreen(
                     colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
                 ) {
                     AsyncImage(
-                        model = uiState.currentTrack?.artworkUri ?: uiState.currentTrack?.contentUri,
+                        model = rememberArtworkImageRequest(
+                            track = uiState.currentTrack,
+                            width = 640.dp,
+                            height = 640.dp,
+                            cacheKeySuffix = "player"
+                        ),
                         contentDescription = null,
                         modifier = Modifier.fillMaxSize(),
                         contentScale = ContentScale.Crop,
@@ -269,16 +281,19 @@ fun PlayerScreen(
                 ) {
                     Slider(
                         value = sliderProgress,
+                        valueRange = 0f..1f,
                         onValueChange = { ratio ->
                             isScrubbing = true
-                            sliderProgress = ratio
+                            sliderProgress = ratio.coerceIn(0f, 1f)
                         },
                         onValueChangeFinished = {
                             if (durationMs > 0L) {
-                                viewModel.seekTo((durationMs * sliderProgress).toLong())
+                                viewModel.seekTo((durationMs.toFloat() * sliderProgress).toLong())
                             }
                             isScrubbing = false
                         },
+                        enabled = durationMs > 0L,
+                        modifier = Modifier.fillMaxWidth(),
                         colors = SliderDefaults.colors(
                             thumbColor = MaterialTheme.colorScheme.onBackground,
                             activeTrackColor = MaterialTheme.colorScheme.onBackground,
@@ -455,11 +470,16 @@ fun PlayerScreen(
                             color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.28f),
                             modifier = Modifier.fillMaxWidth()
                         ) {
-                            Column(
-                                modifier = Modifier.padding(12.dp),
+                            LazyColumn(
+                                modifier = Modifier
+                                    .padding(12.dp)
+                                    .heightIn(max = 320.dp),
                                 verticalArrangement = Arrangement.spacedBy(4.dp)
                             ) {
-                                upcomingTracks.take(5).forEachIndexed { queueOffset, track ->
+                                itemsIndexed(
+                                    items = upcomingTracks,
+                                    key = { _, track -> track.id }
+                                ) { queueOffset, track ->
                                     QueueRow(
                                         track = track,
                                         onClick = { viewModel.playTrack(track, uiState.queue) },
@@ -473,7 +493,7 @@ fun PlayerScreen(
                                         } else {
                                             null
                                         },
-                                        onMoveDown = if (queueOffset < upcomingTracks.take(5).lastIndex) {
+                                        onMoveDown = if (queueOffset < upcomingTracks.lastIndex) {
                                             {
                                                 viewModel.moveQueueItem(
                                                     currentQueueIndex + 1 + queueOffset,
@@ -509,7 +529,12 @@ fun PlayerScreen(
 private fun AtmosphericBackdrop(uiState: PlayerUiState) {
     Box(modifier = Modifier.fillMaxSize()) {
         AsyncImage(
-            model = uiState.currentTrack?.artworkUri ?: uiState.currentTrack?.contentUri,
+            model = rememberArtworkImageRequest(
+                track = uiState.currentTrack,
+                width = 96.dp,
+                height = 96.dp,
+                cacheKeySuffix = "backdrop"
+            ),
             contentDescription = null,
             modifier = Modifier
                 .fillMaxSize()
@@ -558,7 +583,12 @@ private fun QueueRow(
             verticalAlignment = Alignment.CenterVertically
         ) {
             AsyncImage(
-                model = track.artworkUri ?: track.contentUri,
+                model = rememberArtworkImageRequest(
+                    track = track,
+                    width = 44.dp,
+                    height = 44.dp,
+                    cacheKeySuffix = "queue"
+                ),
                 contentDescription = null,
                 modifier = Modifier
                     .size(44.dp)

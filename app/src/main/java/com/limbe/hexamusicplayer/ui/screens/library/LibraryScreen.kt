@@ -82,7 +82,7 @@ fun LibraryScreen(
     }
 
     LaunchedEffect(hasPermission) {
-        if (hasPermission && uiState.tracks.isEmpty() && !uiState.isLoading) {
+        if (hasPermission && !uiState.hasLoadedOnce && !uiState.isLoading) {
             viewModel.refreshTracks()
         }
     }

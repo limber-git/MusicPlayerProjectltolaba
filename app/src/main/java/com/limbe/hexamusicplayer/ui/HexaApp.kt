@@ -1,12 +1,21 @@
 package com.limbe.hexamusicplayer.ui
 
+import android.Manifest
+import android.content.pm.PackageManager
+import android.os.Build
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
+import androidx.core.content.ContextCompat
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
@@ -26,10 +35,29 @@ fun HexaApp(
     val context = LocalContext.current
 
     val playerUiState by playerViewModel.uiState.collectAsStateWithLifecycle()
+    var hasAskedNotificationPermission by remember { mutableStateOf(false) }
+    val notificationPermissionLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestPermission()
+    ) {
+        if (playerUiState.isPlaying) {
+            PlaybackMediaSessionService.start(context.applicationContext)
+        }
+    }
 
     LaunchedEffect(playerUiState.isPlaying, playerUiState.currentTrack != null) {
         if (playerUiState.isPlaying) {
-            PlaybackMediaSessionService.start(context.applicationContext)
+            val shouldRequestNotifications = Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
+                ContextCompat.checkSelfPermission(
+                    context,
+                    Manifest.permission.POST_NOTIFICATIONS
+                ) != PackageManager.PERMISSION_GRANTED
+
+            if (shouldRequestNotifications && !hasAskedNotificationPermission) {
+                hasAskedNotificationPermission = true
+                notificationPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+            } else {
+                PlaybackMediaSessionService.start(context.applicationContext)
+            }
         } else if (playerUiState.currentTrack == null) {
             PlaybackMediaSessionService.stop(context.applicationContext)
         }

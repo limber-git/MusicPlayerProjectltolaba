@@ -37,12 +37,12 @@ val hasReleaseSigning = !releaseStoreFilePath.isNullOrBlank()
 
 android {
     namespace = "com.limbe.hexamusicplayer"
-    compileSdk = 34
+    compileSdk = 35
 
     defaultConfig {
-        applicationId = "com.limbe.hexamusicplayer"
+        applicationId = "com.tolaba.studiomusic"
         minSdk = 26
-        targetSdk = 34
+        targetSdk = 35
         versionCode = appVersionCode
         versionName = appVersionName
 
