@@ -1,5 +1,13 @@
 package com.limbe.hexamusicplayer.ui.screens.studio
 
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.SizeTransform
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideOutHorizontally
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
@@ -38,18 +46,18 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.ScrollableTabRow
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Tab
-import androidx.compose.material3.TabRow
 import androidx.compose.material3.TabRowDefaults
 import androidx.compose.material3.TabRowDefaults.tabIndicatorOffset
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -65,19 +73,32 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.limbe.hexamusicplayer.R
 import com.limbe.hexamusicplayer.domain.model.KeyMode
 import com.limbe.hexamusicplayer.domain.model.MusicAnalysisStatus
+import com.limbe.hexamusicplayer.domain.model.MusicAnalysisState
 import com.limbe.hexamusicplayer.domain.model.StudioInstrument
+import com.limbe.hexamusicplayer.domain.model.Track
 import com.limbe.hexamusicplayer.ui.components.LabeledSlider
 import com.limbe.hexamusicplayer.ui.components.StudioFader
-import com.limbe.hexamusicplayer.ui.screens.player.PlayerUiState
 import com.limbe.hexamusicplayer.ui.screens.player.PlayerViewModel
 import java.util.Locale
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.map
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun StudioScreen(
     viewModel: PlayerViewModel
 ) {
-    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val headerState by remember(viewModel) {
+        viewModel.uiState
+            .map { state ->
+                StudioHeaderState(
+                    currentTrack = state.currentTrack,
+                    speed = state.speed,
+                    audioEffectsEnabled = state.audioEffectsEnabled
+                )
+            }
+            .distinctUntilChanged()
+    }.collectAsStateWithLifecycle(initialValue = StudioHeaderState())
     var selectedTab by remember { mutableIntStateOf(1) }
 
     Box(
@@ -100,7 +121,7 @@ fun StudioScreen(
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(horizontal = 20.dp)
+                        .padding(horizontal = 16.dp)
                 ) {
                     CenterAlignedTopAppBar(
                         colors = TopAppBarDefaults.centerAlignedTopAppBarColors(containerColor = Color.Transparent),
@@ -113,27 +134,31 @@ fun StudioScreen(
                         }
                     )
 
-                    StudioHeroCard(uiState = uiState)
+                    StudioNowPlayingStrip(
+                        headerState = headerState,
+                        modifier = Modifier.padding(top = 6.dp)
+                    )
 
                     Surface(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(top = 12.dp),
-                        shape = RoundedCornerShape(24.dp),
-                        color = MaterialTheme.colorScheme.surface.copy(alpha = 0.84f),
-                        tonalElevation = 10.dp,
+                            .padding(top = 10.dp),
+                        shape = RoundedCornerShape(22.dp),
+                        color = MaterialTheme.colorScheme.surface.copy(alpha = 0.82f),
+                        tonalElevation = 8.dp,
                         shadowElevation = 0.dp
                     ) {
-                        TabRow(
+                        ScrollableTabRow(
                             selectedTabIndex = selectedTab,
                             containerColor = Color.Transparent,
                             contentColor = MaterialTheme.colorScheme.primary,
+                            edgePadding = 8.dp,
                             indicator = { tabPositions ->
                                 if (selectedTab < tabPositions.size) {
                                     TabRowDefaults.SecondaryIndicator(
                                         modifier = Modifier
                                             .tabIndicatorOffset(tabPositions[selectedTab])
-                                            .padding(horizontal = 16.dp),
+                                            .padding(horizontal = 12.dp),
                                         height = 3.dp,
                                         color = MaterialTheme.colorScheme.primary
                                     )
@@ -181,12 +206,22 @@ fun StudioScreen(
                     .fillMaxSize()
                     .padding(paddingValues)
             ) {
-                when (selectedTab) {
-                    0 -> EngineTab(uiState, viewModel)
-                    1 -> EqualizerTab(uiState, viewModel)
-                    2 -> EffectsTab(uiState, viewModel)
-                    3 -> AnalysisTab(uiState, viewModel)
-                    4 -> LyricsTab(uiState)
+                AnimatedContent(
+                    targetState = selectedTab,
+                    transitionSpec = {
+                        (slideInHorizontally(animationSpec = tween(240)) { it / 6 } + fadeIn(animationSpec = tween(220)))
+                            .togetherWith(slideOutHorizontally(animationSpec = tween(220)) { -it / 8 } + fadeOut(animationSpec = tween(180)))
+                            .using(SizeTransform(clip = false))
+                    },
+                    label = "studio_tab_content"
+                ) { tab: Int ->
+                    when (tab) {
+                        0 -> EngineTab(viewModel)
+                        1 -> EqualizerTab(viewModel)
+                        2 -> EffectsTab(viewModel)
+                        3 -> AnalysisTab(viewModel)
+                        4 -> LyricsTab(viewModel)
+                    }
                 }
             }
         }
@@ -217,97 +252,121 @@ private fun StudioTab(
 }
 
 @Composable
-private fun StudioHeroCard(uiState: PlayerUiState) {
+private fun StudioNowPlayingStrip(
+    headerState: StudioHeaderState,
+    modifier: Modifier = Modifier
+) {
     Surface(
-        modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(30.dp),
-        color = MaterialTheme.colorScheme.surface.copy(alpha = 0.88f),
-        tonalElevation = 12.dp,
+        modifier = modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(24.dp),
+        color = MaterialTheme.colorScheme.surface.copy(alpha = 0.9f),
+        tonalElevation = 10.dp,
         shadowElevation = 0.dp
     ) {
-        Box(
+        Row(
             modifier = Modifier
                 .fillMaxWidth()
                 .background(
-                    brush = Brush.linearGradient(
+                    brush = Brush.horizontalGradient(
                         colors = listOf(
-                            MaterialTheme.colorScheme.primary.copy(alpha = 0.16f),
-                            MaterialTheme.colorScheme.secondary.copy(alpha = 0.12f),
-                            MaterialTheme.colorScheme.surface.copy(alpha = 0.98f)
+                            MaterialTheme.colorScheme.primary.copy(alpha = 0.14f),
+                            MaterialTheme.colorScheme.secondary.copy(alpha = 0.08f),
+                            MaterialTheme.colorScheme.surface.copy(alpha = 0.96f)
                         )
                     )
                 )
-                .padding(22.dp)
+                .padding(horizontal = 18.dp, vertical = 14.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(14.dp)
         ) {
-            Column(verticalArrangement = Arrangement.spacedBy(18.dp)) {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.Top
-                ) {
-                    Column(
-                        modifier = Modifier.weight(1f),
-                        verticalArrangement = Arrangement.spacedBy(6.dp)
-                    ) {
-                        StudioPill(text = stringResource(R.string.studio_hero_session_label))
-                        Text(
-                            text = uiState.currentTrack?.title ?: stringResource(R.string.studio_title),
-                            style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold),
-                            color = MaterialTheme.colorScheme.onSurface
-                        )
-                        Text(
-                            text = uiState.currentTrack?.artist ?: stringResource(R.string.studio_hero_fallback_body),
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
-                    Box(
-                        modifier = Modifier
-                            .size(52.dp)
-                            .clip(CircleShape)
-                            .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.12f)),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.GraphicEq,
-                            contentDescription = null,
-                            tint = MaterialTheme.colorScheme.primary,
-                            modifier = Modifier.size(24.dp)
-                        )
-                    }
-                }
+            Box(
+                modifier = Modifier
+                    .size(46.dp)
+                    .clip(CircleShape)
+                    .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.12f)),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    imageVector = Icons.Default.GraphicEq,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.size(22.dp)
+                )
+            }
 
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(12.dp)
-                ) {
-                    MetricCard(
-                        modifier = Modifier.weight(1f),
-                        label = stringResource(R.string.studio_speed_label),
-                        value = String.format(Locale.US, "%.2fx", uiState.speed)
-                    )
-                    MetricCard(
-                        modifier = Modifier.weight(1f),
-                        label = stringResource(R.string.studio_pitch_label),
-                        value = String.format(Locale.US, "%.2fx", uiState.pitch)
-                    )
-                    MetricCard(
-                        modifier = Modifier.weight(1f),
-                        label = stringResource(R.string.studio_metric_fx_label),
-                        value = if (uiState.audioEffectsEnabled) {
-                            stringResource(R.string.studio_metric_fx_on)
-                        } else {
-                            stringResource(R.string.studio_metric_fx_safe)
-                        }
-                    )
-                }
+            Column(
+                modifier = Modifier.weight(1f),
+                verticalArrangement = Arrangement.spacedBy(4.dp)
+            ) {
+                Text(
+                    text = headerState.currentTrack?.title ?: stringResource(R.string.studio_title),
+                    style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
+                    color = MaterialTheme.colorScheme.onSurface,
+                    maxLines = 1
+                )
+                Text(
+                    text = headerState.currentTrack?.artist ?: stringResource(R.string.studio_hero_fallback_body),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    maxLines = 1
+                )
+            }
+
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                MetricPill(
+                    label = stringResource(R.string.studio_speed_label),
+                    value = String.format(Locale.US, "%.2fx", headerState.speed)
+                )
+                MetricPill(
+                    label = stringResource(R.string.studio_metric_fx_label),
+                    value = if (headerState.audioEffectsEnabled) {
+                        stringResource(R.string.studio_metric_fx_on)
+                    } else {
+                        stringResource(R.string.studio_metric_fx_safe)
+                    }
+                )
             }
         }
     }
 }
 
 @Composable
-private fun EngineTab(uiState: PlayerUiState, viewModel: PlayerViewModel) {
+private fun MetricPill(
+    label: String,
+    value: String
+) {
+    Surface(
+        shape = RoundedCornerShape(18.dp),
+        color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.45f)
+    ) {
+        Column(
+            modifier = Modifier.padding(horizontal = 10.dp, vertical = 8.dp),
+            verticalArrangement = Arrangement.spacedBy(2.dp)
+        ) {
+            Text(
+                text = label,
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+            Text(
+                text = value,
+                style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.Bold),
+                color = MaterialTheme.colorScheme.onSurface
+            )
+        }
+    }
+}
+
+@Composable
+private fun EngineTab(viewModel: PlayerViewModel) {
+    val uiState by remember(viewModel) {
+        viewModel.uiState
+            .map { state -> EngineStudioState(speed = state.speed, pitch = state.pitch) }
+            .distinctUntilChanged()
+    }.collectAsStateWithLifecycle(initialValue = EngineStudioState())
+
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -348,7 +407,19 @@ private fun EngineTab(uiState: PlayerUiState, viewModel: PlayerViewModel) {
 }
 
 @Composable
-private fun EqualizerTab(uiState: PlayerUiState, viewModel: PlayerViewModel) {
+private fun EqualizerTab(viewModel: PlayerViewModel) {
+    val uiState by remember(viewModel) {
+        viewModel.uiState
+            .map { state ->
+                EqualizerStudioState(
+                    audioEffectsEnabled = state.audioEffectsEnabled,
+                    effectsAvailable = state.effectsAvailable,
+                    eqBands = state.eqBands
+                )
+            }
+            .distinctUntilChanged()
+    }.collectAsStateWithLifecycle(initialValue = EqualizerStudioState())
+
     if (!uiState.audioEffectsEnabled) {
         DisabledEffectsCard(onEnable = { viewModel.setAudioEffectsEnabled(true) })
         return
@@ -434,7 +505,10 @@ private fun EqualizerTab(uiState: PlayerUiState, viewModel: PlayerViewModel) {
                     horizontalArrangement = Arrangement.spacedBy(10.dp),
                     verticalAlignment = Alignment.Bottom
                 ) {
-                    items(uiState.eqBands) { band ->
+                    items(
+                        items = uiState.eqBands,
+                        key = { band -> band.index }
+                    ) { band ->
                         val freqKhz = band.centerFreqHz / 1000f
                         val label = if (freqKhz >= 1f) {
                             String.format(Locale.US, "%.1fk", freqKhz)
@@ -464,7 +538,21 @@ private fun EqualizerTab(uiState: PlayerUiState, viewModel: PlayerViewModel) {
 }
 
 @Composable
-private fun EffectsTab(uiState: PlayerUiState, viewModel: PlayerViewModel) {
+private fun EffectsTab(viewModel: PlayerViewModel) {
+    val uiState by remember(viewModel) {
+        viewModel.uiState
+            .map { state ->
+                EffectsStudioState(
+                    audioEffectsEnabled = state.audioEffectsEnabled,
+                    effectsAvailable = state.effectsAvailable,
+                    bassStrength = state.bassStrength,
+                    virtualizerStrength = state.virtualizerStrength,
+                    loudnessGainMb = state.loudnessGainMb
+                )
+            }
+            .distinctUntilChanged()
+    }.collectAsStateWithLifecycle(initialValue = EffectsStudioState())
+
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -514,17 +602,32 @@ private fun EffectsTab(uiState: PlayerUiState, viewModel: PlayerViewModel) {
 }
 
 @Composable
-private fun AnalysisTab(uiState: PlayerUiState, viewModel: PlayerViewModel) {
+private fun AnalysisTab(viewModel: PlayerViewModel) {
+    val uiState by remember(viewModel) {
+        viewModel.uiState
+            .map { state ->
+                AnalysisStudioState(
+                    currentTrack = state.currentTrack,
+                    musicAnalysis = state.musicAnalysis
+                )
+            }
+            .distinctUntilChanged()
+    }.collectAsStateWithLifecycle(initialValue = AnalysisStudioState())
+    val currentPositionMs by viewModel.positionMs.collectAsStateWithLifecycle(initialValue = 0L)
     var tonicInput by remember(uiState.currentTrack?.id) { mutableStateOf("") }
     var chordInput by remember(uiState.currentTrack?.id) { mutableStateOf("") }
     var selectedMode by remember(uiState.currentTrack?.id) { mutableStateOf(KeyMode.MAJOR) }
     val analysis = uiState.musicAnalysis
-    val selectedInstrumentView = analysis.instrumentViews.firstOrNull {
-        it.instrument == analysis.selectedInstrument
+    val selectedInstrumentView = remember(analysis.instrumentViews, analysis.selectedInstrument) {
+        analysis.instrumentViews.firstOrNull { it.instrument == analysis.selectedInstrument }
     }
-    val activeChord = analysis.chordEvents
-        .filter { it.startMs <= uiState.currentPositionMs }
-        .maxByOrNull { it.startMs }
+    val activeChord = remember(analysis.chordEvents, currentPositionMs) {
+        analysis.chordEvents
+            .asReversed()
+            .firstOrNull { it.startMs <= currentPositionMs }
+    }
+    val recentChords = remember(analysis.chordEvents) { analysis.chordEvents.takeLast(12) }
+    val studioInstruments = remember { StudioInstrument.values().toList() }
 
     Column(
         modifier = Modifier
@@ -616,7 +719,7 @@ private fun AnalysisTab(uiState: PlayerUiState, viewModel: PlayerViewModel) {
                 title = activeChord?.chordName ?: stringResource(R.string.studio_chords_pending),
                 body = stringResource(
                     R.string.studio_chord_current_position,
-                    formatTimestamp(uiState.currentPositionMs)
+                    formatTimestamp(currentPositionMs)
                 )
             )
             OutlinedTextField(
@@ -644,7 +747,7 @@ private fun AnalysisTab(uiState: PlayerUiState, viewModel: PlayerViewModel) {
                     stringResource(R.string.studio_chord_timeline_body)
                 }
             )
-            analysis.chordEvents.takeLast(12).forEach { chord ->
+            recentChords.forEach { chord ->
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween,
@@ -670,7 +773,10 @@ private fun AnalysisTab(uiState: PlayerUiState, viewModel: PlayerViewModel) {
                 body = selectedInstrumentView?.body ?: stringResource(R.string.studio_instrument_body)
             )
             LazyRow(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                items(StudioInstrument.values().toList()) { instrument ->
+                items(
+                    items = studioInstruments,
+                    key = { instrument -> instrument.name }
+                ) { instrument ->
                     OutlinedButton(onClick = { viewModel.selectStudioInstrument(instrument) }) {
                         Text(instrument.displayName)
                     }
@@ -681,7 +787,14 @@ private fun AnalysisTab(uiState: PlayerUiState, viewModel: PlayerViewModel) {
 }
 
 @Composable
-private fun LyricsTab(uiState: PlayerUiState) {
+private fun LyricsTab(viewModel: PlayerViewModel) {
+    val uiState by remember(viewModel) {
+        viewModel.uiState
+            .map { state -> LyricsStudioState(currentTrack = state.currentTrack) }
+            .distinctUntilChanged()
+    }.collectAsStateWithLifecycle(initialValue = LyricsStudioState())
+    val currentTrack = uiState.currentTrack
+
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -696,8 +809,8 @@ private fun LyricsTab(uiState: PlayerUiState) {
             SectionHeading(
                 overline = stringResource(R.string.studio_section_lyrics_overline),
                 title = stringResource(R.string.studio_lyrics_title),
-                body = if (uiState.currentTrack != null) {
-                    stringResource(R.string.studio_lyrics_body_active, uiState.currentTrack.title)
+                body = if (currentTrack != null) {
+                    stringResource(R.string.studio_lyrics_body_active, currentTrack.title)
                 } else {
                     stringResource(R.string.studio_lyrics_body_idle)
                 }
@@ -705,6 +818,41 @@ private fun LyricsTab(uiState: PlayerUiState) {
         }
     }
 }
+
+private data class StudioHeaderState(
+    val currentTrack: Track? = null,
+    val speed: Float = 1f,
+    val audioEffectsEnabled: Boolean = true
+)
+
+private data class EngineStudioState(
+    val speed: Float = 1f,
+    val pitch: Float = 1f
+)
+
+private data class EqualizerStudioState(
+    val audioEffectsEnabled: Boolean = true,
+    val effectsAvailable: Boolean = false,
+    val eqBands: List<com.limbe.hexamusicplayer.domain.model.EqBand> = emptyList()
+)
+
+private data class EffectsStudioState(
+    val audioEffectsEnabled: Boolean = true,
+    val effectsAvailable: Boolean = false,
+    val bassStrength: Int = 0,
+    val virtualizerStrength: Int = 0,
+    val loudnessGainMb: Int = 0
+)
+
+private data class AnalysisStudioState(
+    val currentTrack: Track? = null,
+    val currentPositionMs: Long = 0L,
+    val musicAnalysis: MusicAnalysisState = MusicAnalysisState()
+)
+
+private data class LyricsStudioState(
+    val currentTrack: Track? = null
+)
 
 private fun formatTimestamp(positionMs: Long): String {
     val totalSeconds = (positionMs / 1000).coerceAtLeast(0)
@@ -1000,35 +1148,6 @@ private fun StudioPill(text: String) {
             style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold, letterSpacing = 1.5.sp),
             color = MaterialTheme.colorScheme.primary
         )
-    }
-}
-
-@Composable
-private fun MetricCard(
-    modifier: Modifier = Modifier,
-    label: String,
-    value: String
-) {
-    Surface(
-        modifier = modifier,
-        shape = RoundedCornerShape(20.dp),
-        color = MaterialTheme.colorScheme.surface.copy(alpha = 0.78f)
-    ) {
-        Column(
-            modifier = Modifier.padding(horizontal = 14.dp, vertical = 12.dp),
-            verticalArrangement = Arrangement.spacedBy(4.dp)
-        ) {
-            Text(
-                text = label,
-                style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Medium),
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-            Text(
-                text = value,
-                style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
-                color = MaterialTheme.colorScheme.onSurface
-            )
-        }
     }
 }
 

@@ -1,6 +1,8 @@
 package com.limbe.hexamusicplayer.ui
 
 import androidx.compose.animation.AnimatedContentTransitionScope
+import androidx.compose.animation.core.FastOutLinearInEasing
+import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -35,19 +37,31 @@ fun AppNavGraph(
         modifier = modifier,
         enterTransition = {
             fadeIn(animationSpec = tween(300)) +
-                slideIntoContainer(AnimatedContentTransitionScope.SlideDirection.Left, tween(300))
+                slideIntoContainer(
+                    AnimatedContentTransitionScope.SlideDirection.Left,
+                    animationSpec = tween(300, easing = FastOutSlowInEasing)
+                )
         },
         exitTransition = {
             fadeOut(animationSpec = tween(300)) +
-                slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.Left, tween(300))
+                slideOutOfContainer(
+                    AnimatedContentTransitionScope.SlideDirection.Left,
+                    animationSpec = tween(300, easing = FastOutLinearInEasing)
+                )
         },
         popEnterTransition = {
             fadeIn(animationSpec = tween(300)) +
-                slideIntoContainer(AnimatedContentTransitionScope.SlideDirection.Right, tween(300))
+                slideIntoContainer(
+                    AnimatedContentTransitionScope.SlideDirection.Right,
+                    animationSpec = tween(300, easing = FastOutSlowInEasing)
+                )
         },
         popExitTransition = {
             fadeOut(animationSpec = tween(300)) +
-                slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.Right, tween(300))
+                slideOutOfContainer(
+                    AnimatedContentTransitionScope.SlideDirection.Right,
+                    animationSpec = tween(300, easing = FastOutLinearInEasing)
+                )
         }
     ) {
         composable(AppRoute.HOME) {
@@ -93,20 +107,52 @@ fun AppNavGraph(
                 onTrackAddToQueue = playerViewModel::addToQueue
             )
         }
-        composable(AppRoute.STUDIO) {
+        composable(
+            route = AppRoute.STUDIO,
+            enterTransition = {
+                slideIntoContainer(
+                    AnimatedContentTransitionScope.SlideDirection.Up,
+                    animationSpec = tween(400, easing = FastOutSlowInEasing)
+                )
+            },
+            exitTransition = {
+                slideOutOfContainer(
+                    AnimatedContentTransitionScope.SlideDirection.Down,
+                    animationSpec = tween(400, easing = FastOutLinearInEasing)
+                )
+            },
+            popEnterTransition = {
+                fadeIn(animationSpec = tween(300))
+            },
+            popExitTransition = {
+                slideOutOfContainer(
+                    AnimatedContentTransitionScope.SlideDirection.Down,
+                    animationSpec = tween(400, easing = FastOutLinearInEasing)
+                )
+            }
+        ) {
             StudioScreen(viewModel = playerViewModel)
         }
         composable(
             route = AppRoute.PLAYER,
             enterTransition = {
-                slideIntoContainer(AnimatedContentTransitionScope.SlideDirection.Up, tween(400))
+                slideIntoContainer(
+                    AnimatedContentTransitionScope.SlideDirection.Up,
+                    animationSpec = tween(400, easing = FastOutSlowInEasing)
+                )
             },
             exitTransition = {
-                slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.Down, tween(400))
+                slideOutOfContainer(
+                    AnimatedContentTransitionScope.SlideDirection.Down,
+                    animationSpec = tween(400, easing = FastOutLinearInEasing)
+                )
             },
             popEnterTransition = { fadeIn(animationSpec = tween(300)) },
             popExitTransition = {
-                slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.Down, tween(400))
+                slideOutOfContainer(
+                    AnimatedContentTransitionScope.SlideDirection.Down,
+                    animationSpec = tween(400, easing = FastOutLinearInEasing)
+                )
             }
         ) {
             PlayerScreen(
@@ -115,7 +161,30 @@ fun AppNavGraph(
                 onOpenStudio = { navController.navigate(AppRoute.STUDIO) }
             )
         }
-        composable(AppRoute.SETTINGS) {
+        composable(
+            route = AppRoute.SETTINGS,
+            enterTransition = {
+                slideIntoContainer(
+                    AnimatedContentTransitionScope.SlideDirection.Left,
+                    animationSpec = tween(350, easing = FastOutSlowInEasing)
+                ) + fadeIn(animationSpec = tween(350))
+            },
+            exitTransition = {
+                slideOutOfContainer(
+                    AnimatedContentTransitionScope.SlideDirection.Right,
+                    animationSpec = tween(350, easing = FastOutLinearInEasing)
+                ) + fadeOut(animationSpec = tween(350))
+            },
+            popEnterTransition = {
+                fadeIn(animationSpec = tween(300))
+            },
+            popExitTransition = {
+                slideOutOfContainer(
+                    AnimatedContentTransitionScope.SlideDirection.Right,
+                    animationSpec = tween(350, easing = FastOutLinearInEasing)
+                ) + fadeOut(animationSpec = tween(350))
+            }
+        ) {
             SettingsScreen(
                 playerViewModel = playerViewModel,
                 onBack = { navController.popBackStack() }

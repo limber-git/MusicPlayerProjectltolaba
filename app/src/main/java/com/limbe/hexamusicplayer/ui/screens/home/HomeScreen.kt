@@ -67,7 +67,7 @@ import com.limbe.hexamusicplayer.ui.screens.player.PlayerUiState
 import com.limbe.hexamusicplayer.ui.util.hasAudioPermission
 import com.limbe.hexamusicplayer.ui.util.requiredAudioPermission
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, androidx.compose.foundation.ExperimentalFoundationApi::class)
 @Composable
 fun HomeScreen(
     libraryViewModel: LibraryViewModel,
@@ -131,6 +131,9 @@ fun HomeScreen(
         val spotlightAlbums = remember(uiState.tracks) { uiState.tracks.groupBy { it.albumId ?: it.album }.values.map { it.first() }.take(8) }
         val spotlightArtists = remember(uiState.tracks) { uiState.tracks.groupBy { it.artist }.values.map { it.first() }.take(6) }
 
+        val playNextLabel = stringResource(R.string.action_play_next)
+        val addToQueueLabel = stringResource(R.string.action_add_to_queue)
+
         LazyColumn(
             modifier = Modifier
                 .fillMaxSize()
@@ -138,7 +141,7 @@ fun HomeScreen(
             contentPadding = PaddingValues(horizontal = 16.dp, vertical = 12.dp),
             verticalArrangement = Arrangement.spacedBy(18.dp)
         ) {
-            item {
+            item(contentType = "hero") {
                 HeroCard(
                     playerUiState = playerUiState,
                     favoriteCount = uiState.favoriteTracks.size,
@@ -146,7 +149,7 @@ fun HomeScreen(
                     onOpenStudio = onOpenStudio
                 )
             }
-            item {
+            item(contentType = "shortcuts") {
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(12.dp)
@@ -168,40 +171,66 @@ fun HomeScreen(
                 }
             }
             if (uiState.recentTracks.isNotEmpty()) {
-                item {
+                item(contentType = "section_title") {
                     SectionTitle(title = stringResource(R.string.home_recent_title))
                 }
-                items(uiState.recentTracks.take(4), key = { "home-recent-${it.id}" }) { track ->
+                items(
+                    items = uiState.recentTracks.take(4),
+                    key = { "home-recent-${it.id}" },
+                    contentType = { "track" }
+                ) { track ->
+                    val menuActions = remember(track, onTrackPlayNext, onTrackAddToQueue) {
+                        listOf(
+                            TrackMenuAction(label = playNextLabel, onClick = { onTrackPlayNext(track) }),
+                            TrackMenuAction(label = addToQueueLabel, onClick = { onTrackAddToQueue(track) })
+                        )
+                    }
                     TrackRow(
                         track = track,
                         isCurrent = playerUiState.currentTrack?.id == track.id,
                         isPlaying = playerUiState.isPlaying,
                         onClick = { onTrackClick(track, uiState.recentTracks) },
-                        menuActions = homeTrackMenuActions(track, onTrackPlayNext, onTrackAddToQueue)
+                        menuActions = menuActions,
+                        modifier = Modifier.animateItemPlacement()
                     )
                 }
             }
             if (uiState.favoriteTracks.isNotEmpty()) {
-                item {
+                item(contentType = "section_title") {
                     SectionTitle(title = stringResource(R.string.home_favorites_title))
                 }
-                items(uiState.favoriteTracks.take(4), key = { "home-fav-${it.id}" }) { track ->
+                items(
+                    items = uiState.favoriteTracks.take(4),
+                    key = { "home-fav-${it.id}" },
+                    contentType = { "track" }
+                ) { track ->
+                    val menuActions = remember(track, onTrackPlayNext, onTrackAddToQueue) {
+                        listOf(
+                            TrackMenuAction(label = playNextLabel, onClick = { onTrackPlayNext(track) }),
+                            TrackMenuAction(label = addToQueueLabel, onClick = { onTrackAddToQueue(track) })
+                        )
+                    }
                     TrackRow(
                         track = track,
                         isCurrent = playerUiState.currentTrack?.id == track.id,
                         isPlaying = playerUiState.isPlaying,
                         onClick = { onTrackClick(track, uiState.favoriteTracks) },
-                        menuActions = homeTrackMenuActions(track, onTrackPlayNext, onTrackAddToQueue)
+                        menuActions = menuActions,
+                        modifier = Modifier.animateItemPlacement()
                     )
                 }
             }
             if (spotlightAlbums.isNotEmpty()) {
-                item {
+                item(contentType = "section_title") {
                     SectionTitle(title = stringResource(R.string.home_albums_title))
                 }
-                item {
+                item(contentType = "album_row") {
                     LazyRow(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                        items(spotlightAlbums, key = { "album-${it.id}" }) { track ->
+                        items(
+                            items = spotlightAlbums,
+                            key = { "album-${it.id}" },
+                            contentType = { "album_card" }
+                        ) { track ->
                             MediaSpotlightCard(
                                 title = track.album,
                                 subtitle = track.artist,
@@ -218,12 +247,16 @@ fun HomeScreen(
                 }
             }
             if (spotlightArtists.isNotEmpty()) {
-                item {
+                item(contentType = "section_title") {
                     SectionTitle(title = stringResource(R.string.home_artists_title))
                 }
-                item {
+                item(contentType = "artist_row") {
                     LazyRow(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                        items(spotlightArtists, key = { "artist-${it.artist}" }) { track ->
+                        items(
+                            items = spotlightArtists,
+                            key = { "artist-${it.artist}" },
+                            contentType = { "artist_card" }
+                        ) { track ->
                             MediaSpotlightCard(
                                 title = track.artist,
                                 subtitle = track.album,
@@ -237,29 +270,11 @@ fun HomeScreen(
                     }
                 }
             }
-            item {
+            item(contentType = "spacer") {
                 Spacer(modifier = Modifier.height(100.dp))
             }
         }
     }
-}
-
-@Composable
-private fun homeTrackMenuActions(
-    track: Track,
-    onTrackPlayNext: (Track) -> Unit,
-    onTrackAddToQueue: (Track) -> Unit
-): List<TrackMenuAction> {
-    return listOf(
-        TrackMenuAction(
-            label = stringResource(R.string.action_play_next),
-            onClick = { onTrackPlayNext(track) }
-        ),
-        TrackMenuAction(
-            label = stringResource(R.string.action_add_to_queue),
-            onClick = { onTrackAddToQueue(track) }
-        )
-    )
 }
 
 @Composable

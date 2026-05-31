@@ -106,6 +106,9 @@ class PlayerViewModel(
     private val _uiState = MutableStateFlow(PlayerUiState())
     val uiState: StateFlow<PlayerUiState> = _uiState.asStateFlow()
 
+    private val _positionMs = MutableStateFlow(0L)
+    val positionMs: StateFlow<Long> = _positionMs.asStateFlow()
+
     private var lastAttachedSessionId: Int? = null
     private var lastKnownPlayerSessionId: Int? = null
     private var lastRecordedRecentTrackId: Long? = null
@@ -222,6 +225,7 @@ class PlayerViewModel(
     }
 
     fun setSpeed(speed: Float) {
+        if (_uiState.value.speed == speed) return
         setPlaybackSpeedUseCase(speed)
         saveSpeedJob = debouncePreferenceSave(saveSpeedJob) {
             savePlaybackSpeedUseCase(speed)
@@ -229,6 +233,7 @@ class PlayerViewModel(
     }
 
     fun setPitch(pitch: Float) {
+        if (_uiState.value.pitch == pitch) return
         setPlaybackPitchUseCase(pitch)
         savePitchJob = debouncePreferenceSave(savePitchJob) {
             savePlaybackPitchUseCase(pitch)
@@ -237,6 +242,7 @@ class PlayerViewModel(
 
     fun setEqBandLevel(index: Int, level: Int) {
         if (!currentPreferences.audioEffectsEnabled) return
+        if (_uiState.value.eqBands.firstOrNull { it.index == index }?.level == level) return
         setEqBandLevelUseCase(index, level)
         scheduleEqBandSave(index, level)
     }
@@ -285,7 +291,7 @@ class PlayerViewModel(
     fun addManualChordAtCurrentPosition(chordName: String) {
         val track = _uiState.value.currentTrack ?: return
         val normalizedChord = chordName.trim().ifBlank { return }
-        val positionMs = _uiState.value.currentPositionMs
+        val positionMs = _positionMs.value
 
         viewModelScope.launch {
             addManualChordUseCase(
@@ -313,6 +319,7 @@ class PlayerViewModel(
 
     fun setBassStrength(strength: Int) {
         if (!currentPreferences.audioEffectsEnabled) return
+        if (_uiState.value.bassStrength == strength) return
         setBassStrengthUseCase(strength)
         saveBassJob = debouncePreferenceSave(saveBassJob) {
             saveBassStrengthUseCase(strength)
@@ -321,6 +328,7 @@ class PlayerViewModel(
 
     fun setVirtualizerStrength(strength: Int) {
         if (!currentPreferences.audioEffectsEnabled) return
+        if (_uiState.value.virtualizerStrength == strength) return
         setVirtualizerStrengthUseCase(strength)
         saveVirtualizerJob = debouncePreferenceSave(saveVirtualizerJob) {
             saveVirtualizerStrengthUseCase(strength)
@@ -329,6 +337,7 @@ class PlayerViewModel(
 
     fun setLoudnessGain(gainMb: Int) {
         if (!currentPreferences.audioEffectsEnabled) return
+        if (_uiState.value.loudnessGainMb == gainMb) return
         setLoudnessGainUseCase(gainMb)
         saveLoudnessJob = debouncePreferenceSave(saveLoudnessJob) {
             saveLoudnessGainUseCase(gainMb)
@@ -362,6 +371,7 @@ class PlayerViewModel(
     private fun observePlayerState() {
         viewModelScope.launch {
             observePlayerStateUseCase().collect { playerState ->
+                _positionMs.value = playerState.positionMs
                 _uiState.update { it.withPlayerState(playerState, currentPreferences) }
 
                 playerState.currentTrack?.id?.let(::recordRecentTrack)

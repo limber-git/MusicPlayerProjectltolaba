@@ -29,7 +29,6 @@ internal fun PlayerUiState.withPlayerState(
         currentTrack = playerState.currentTrack,
         queue = playerState.queue,
         isPlaying = playerState.isPlaying,
-        currentPositionMs = playerState.positionMs,
         durationMs = playerState.durationMs,
         speed = playerState.speed,
         pitch = playerState.pitch,

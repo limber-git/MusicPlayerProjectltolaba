@@ -1,5 +1,8 @@
-﻿package com.limbe.hexamusicplayer.domain.model
+package com.limbe.hexamusicplayer.domain.model
 
+import androidx.compose.runtime.Immutable
+
+@Immutable
 data class Track(
     val id: Long,
     val title: String,

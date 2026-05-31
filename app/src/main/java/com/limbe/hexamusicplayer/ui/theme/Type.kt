@@ -1,4 +1,4 @@
-﻿package com.limbe.hexamusicplayer.ui.theme
+package com.limbe.hexamusicplayer.ui.theme
 
 import androidx.compose.material3.Typography
 import androidx.compose.ui.text.TextStyle
@@ -27,6 +27,13 @@ val HexaTypography = Typography(
         lineHeight = 46.sp,
         letterSpacing = (-1.2).sp
     ),
+    displayMedium = TextStyle(
+        fontFamily = DisplayFamily,
+        fontWeight = FontWeight.Bold,
+        fontSize = 36.sp,
+        lineHeight = 42.sp,
+        letterSpacing = (-1.0).sp
+    ),
     displaySmall = TextStyle(
         fontFamily = DisplayFamily,
         fontWeight = FontWeight.Bold,
@@ -34,11 +41,23 @@ val HexaTypography = Typography(
         lineHeight = 36.sp,
         letterSpacing = (-0.8).sp
     ),
+    headlineLarge = TextStyle(
+        fontFamily = DisplayFamily,
+        fontWeight = FontWeight.SemiBold,
+        fontSize = 28.sp,
+        lineHeight = 34.sp
+    ),
     headlineMedium = TextStyle(
         fontFamily = DisplayFamily,
         fontWeight = FontWeight.SemiBold,
         fontSize = 24.sp,
         lineHeight = 30.sp
+    ),
+    headlineSmall = TextStyle(
+        fontFamily = DisplayFamily,
+        fontWeight = FontWeight.Medium,
+        fontSize = 20.sp,
+        lineHeight = 26.sp
     ),
     titleLarge = TextStyle(
         fontFamily = BodyFamily,
@@ -52,6 +71,12 @@ val HexaTypography = Typography(
         fontSize = 17.sp,
         lineHeight = 23.sp
     ),
+    titleSmall = TextStyle(
+        fontFamily = BodyFamily,
+        fontWeight = FontWeight.SemiBold,
+        fontSize = 15.sp,
+        lineHeight = 20.sp
+    ),
     bodyLarge = TextStyle(
         fontFamily = BodyFamily,
         fontWeight = FontWeight.Normal,
@@ -64,10 +89,28 @@ val HexaTypography = Typography(
         fontSize = 14.sp,
         lineHeight = 21.sp
     ),
+    bodySmall = TextStyle(
+        fontFamily = BodyFamily,
+        fontWeight = FontWeight.Normal,
+        fontSize = 12.sp,
+        lineHeight = 16.sp
+    ),
     labelLarge = TextStyle(
         fontFamily = BodyFamily,
         fontWeight = FontWeight.Medium,
         fontSize = 13.sp,
         lineHeight = 18.sp
+    ),
+    labelMedium = TextStyle(
+        fontFamily = BodyFamily,
+        fontWeight = FontWeight.Medium,
+        fontSize = 12.sp,
+        lineHeight = 16.sp
+    ),
+    labelSmall = TextStyle(
+        fontFamily = BodyFamily,
+        fontWeight = FontWeight.Medium,
+        fontSize = 11.sp,
+        lineHeight = 15.sp
     )
 )

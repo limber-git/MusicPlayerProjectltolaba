@@ -1,7 +1,9 @@
 package com.limbe.hexamusicplayer.ui.screens.library
 
+import androidx.compose.runtime.Stable
 import com.limbe.hexamusicplayer.domain.model.Track
 
+@Stable
 data class LibraryUiState(
     val tracks: List<Track> = emptyList(),
     val filteredTracks: List<Track> = emptyList(),

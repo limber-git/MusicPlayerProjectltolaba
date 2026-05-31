@@ -66,6 +66,7 @@ fun HexaApp(
     AppChromeScaffold(
         currentRoute = currentRoute,
         playerUiState = playerUiState,
+        positionFlow = playerViewModel.positionMs,
         onPlayPause = playerViewModel::togglePlayback,
         onOpenPlayer = { navController.navigate(AppRoute.PLAYER) },
         onNavigate = { route ->

@@ -1,5 +1,6 @@
 package com.limbe.hexamusicplayer.ui.screens.player
 
+import androidx.compose.runtime.Stable
 import com.limbe.hexamusicplayer.domain.model.AppLanguage
 import com.limbe.hexamusicplayer.domain.model.DarkModeMode
 import com.limbe.hexamusicplayer.domain.model.EqBand
@@ -7,11 +8,11 @@ import com.limbe.hexamusicplayer.domain.model.MusicAnalysisState
 import com.limbe.hexamusicplayer.domain.model.RepeatMode
 import com.limbe.hexamusicplayer.domain.model.Track
 
+@Stable
 data class PlayerUiState(
     val currentTrack: Track? = null,
     val queue: List<Track> = emptyList(),
     val isPlaying: Boolean = false,
-    val currentPositionMs: Long = 0,
     val durationMs: Long = 0,
     val speed: Float = 1.0f,
     val pitch: Float = 1.0f,

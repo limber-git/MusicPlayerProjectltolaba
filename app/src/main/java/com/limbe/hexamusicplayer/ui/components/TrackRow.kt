@@ -1,5 +1,7 @@
 package com.limbe.hexamusicplayer.ui.components
 
+import androidx.compose.animation.Crossfade
+import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.animateFloat
@@ -20,6 +22,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.Stable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -34,6 +37,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import com.limbe.hexamusicplayer.domain.model.Track
+import com.limbe.hexamusicplayer.ui.util.formatDuration
 
 @Composable
 fun TrackRow(
@@ -46,12 +50,18 @@ fun TrackRow(
 ) {
     var showMenu by remember(track.id) { mutableStateOf(false) }
 
+    val backgroundColor by animateColorAsState(
+        targetValue = if (isCurrent) MaterialTheme.colorScheme.primary.copy(alpha = 0.12f) else Color.Transparent,
+        animationSpec = tween(durationMillis = 350),
+        label = "TrackRowBackground"
+    )
+
     Row(
         modifier = modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(12.dp))
             .clickable(onClick = onClick)
-            .background(if (isCurrent) MaterialTheme.colorScheme.primary.copy(alpha = 0.1f) else Color.Transparent)
+            .background(backgroundColor)
             .padding(horizontal = 12.dp, vertical = 8.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(12.dp)
@@ -94,14 +104,25 @@ fun TrackRow(
             )
         }
 
-        if (isCurrent) {
-            PlayingBarsIndicator(isPlaying = isPlaying)
-        } else {
-            Text(
-                text = formatDuration(track.durationMs),
-                style = MaterialTheme.typography.labelSmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
-            )
+        Box(
+            modifier = Modifier.width(36.dp),
+            contentAlignment = Alignment.CenterEnd
+        ) {
+            Crossfade(
+                targetState = isCurrent,
+                label = "TrackRowStatusAnimation"
+            ) { current ->
+                if (current) {
+                    PlayingBarsIndicator(isPlaying = isPlaying)
+                } else {
+                    val formattedDuration = remember(track.durationMs) { formatDuration(track.durationMs) }
+                    Text(
+                        text = formattedDuration,
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
+                    )
+                }
+            }
         }
 
         if (menuActions.isNotEmpty()) {
@@ -132,6 +153,7 @@ fun TrackRow(
     }
 }
 
+@Stable
 data class TrackMenuAction(
     val label: String,
     val onClick: () -> Unit
@@ -139,6 +161,15 @@ data class TrackMenuAction(
 
 @Composable
 private fun PlayingBarsIndicator(isPlaying: Boolean) {
+    if (isPlaying) {
+        AnimatedPlayingBars()
+    } else {
+        StaticPlayingBars()
+    }
+}
+
+@Composable
+private fun AnimatedPlayingBars() {
     val transition = rememberInfiniteTransition(label = "eq-bars")
     val factor by transition.animateFloat(
         initialValue = 0.2f,
@@ -156,12 +187,7 @@ private fun PlayingBarsIndicator(isPlaying: Boolean) {
         modifier = Modifier.height(14.dp)
     ) {
         repeat(3) { index ->
-            val animatedHeight = if (isPlaying) {
-                (4 + ((index + 1) * factor * 8)).dp
-            } else {
-                4.dp
-            }
-
+            val animatedHeight = (4 + ((index + 1) * factor * 8)).dp
             Box(
                 modifier = Modifier
                     .size(width = 3.dp, height = animatedHeight)
@@ -172,9 +198,20 @@ private fun PlayingBarsIndicator(isPlaying: Boolean) {
     }
 }
 
-private fun formatDuration(durationMs: Long): String {
-    val totalSeconds = (durationMs / 1000L).coerceAtLeast(0L)
-    val minutes = totalSeconds / 60L
-    val seconds = totalSeconds % 60L
-    return "%d:%02d".format(minutes, seconds)
+@Composable
+private fun StaticPlayingBars() {
+    Row(
+        horizontalArrangement = Arrangement.spacedBy(2.dp),
+        verticalAlignment = Alignment.Bottom,
+        modifier = Modifier.height(14.dp)
+    ) {
+        repeat(3) {
+            Box(
+                modifier = Modifier
+                    .size(width = 3.dp, height = 4.dp)
+                    .clip(RoundedCornerShape(2.dp))
+                    .background(MaterialTheme.colorScheme.primary)
+            )
+        }
+    }
 }

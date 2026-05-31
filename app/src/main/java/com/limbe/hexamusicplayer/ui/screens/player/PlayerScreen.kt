@@ -6,7 +6,9 @@ import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.shrinkVertically
+import androidx.compose.animation.Crossfade
 import androidx.compose.foundation.background
+import androidx.compose.foundation.basicMarquee
 import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -81,8 +83,10 @@ import coil.compose.AsyncImage
 import com.limbe.hexamusicplayer.R
 import com.limbe.hexamusicplayer.domain.model.RepeatMode
 import com.limbe.hexamusicplayer.ui.components.rememberArtworkImageRequest
+import com.limbe.hexamusicplayer.ui.util.formatDuration
+import kotlinx.coroutines.flow.StateFlow
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, androidx.compose.foundation.ExperimentalFoundationApi::class)
 @Composable
 fun PlayerScreen(
     viewModel: PlayerViewModel,
@@ -92,32 +96,20 @@ fun PlayerScreen(
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val haptic = LocalHapticFeedback.current
     val durationMs = uiState.durationMs.coerceAtLeast(0L)
-    val playbackProgress = if (durationMs > 0L) {
-        (uiState.currentPositionMs.toFloat() / durationMs.toFloat()).coerceIn(0f, 1f)
-    } else {
-        0f
-    }
-    var sliderProgress by remember(uiState.currentTrack?.id) {
-        mutableFloatStateOf(playbackProgress)
-    }
-    var isScrubbing by remember {
-        mutableStateOf(false)
-    }
     var showQueue by remember {
         mutableStateOf(false)
     }
 
-    LaunchedEffect(playbackProgress, isScrubbing, uiState.currentTrack?.id) {
-        if (!isScrubbing) {
-            sliderProgress = playbackProgress
-        }
+    val currentQueueIndex = remember(uiState.queue, uiState.currentTrack?.id) {
+        uiState.queue.indexOfFirst { it.id == uiState.currentTrack?.id }
     }
 
-    val currentQueueIndex = uiState.queue.indexOfFirst { it.id == uiState.currentTrack?.id }
-    val upcomingTracks = if (currentQueueIndex >= 0) {
-        uiState.queue.drop(currentQueueIndex + 1)
-    } else {
-        emptyList()
+    val upcomingTracks = remember(uiState.queue, currentQueueIndex) {
+        if (currentQueueIndex >= 0) {
+            uiState.queue.drop(currentQueueIndex + 1)
+        } else {
+            emptyList()
+        }
     }
 
     Box(modifier = Modifier.fillMaxSize()) {
@@ -192,18 +184,24 @@ fun PlayerScreen(
                     elevation = CardDefaults.cardElevation(defaultElevation = 24.dp),
                     colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
                 ) {
-                    AsyncImage(
-                        model = rememberArtworkImageRequest(
-                            track = uiState.currentTrack,
-                            width = 640.dp,
-                            height = 640.dp,
-                            cacheKeySuffix = "player"
-                        ),
-                        contentDescription = null,
-                        modifier = Modifier.fillMaxSize(),
-                        contentScale = ContentScale.Crop,
-                        error = androidx.compose.ui.graphics.painter.ColorPainter(MaterialTheme.colorScheme.primary)
-                    )
+                    Crossfade(
+                        targetState = uiState.currentTrack,
+                        label = "PlayerAlbumArtCrossfade",
+                        modifier = Modifier.fillMaxSize()
+                    ) { track ->
+                        AsyncImage(
+                            model = rememberArtworkImageRequest(
+                                track = track,
+                                width = 640.dp,
+                                height = 640.dp,
+                                cacheKeySuffix = "player"
+                            ),
+                            contentDescription = null,
+                            modifier = Modifier.fillMaxSize(),
+                            contentScale = ContentScale.Crop,
+                            error = androidx.compose.ui.graphics.painter.ColorPainter(MaterialTheme.colorScheme.primary)
+                        )
+                    }
                 }
 
                 Row(
@@ -221,7 +219,7 @@ fun PlayerScreen(
                             ),
                             color = MaterialTheme.colorScheme.onBackground,
                             maxLines = 1,
-                            overflow = TextOverflow.Ellipsis
+                            modifier = Modifier.basicMarquee()
                         )
                         Text(
                             text = uiState.currentTrack?.artist ?: stringResource(R.string.player_idle_subtitle),
@@ -279,43 +277,11 @@ fun PlayerScreen(
                     modifier = Modifier.fillMaxWidth(),
                     verticalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    Slider(
-                        value = sliderProgress,
-                        valueRange = 0f..1f,
-                        onValueChange = { ratio ->
-                            isScrubbing = true
-                            sliderProgress = ratio.coerceIn(0f, 1f)
-                        },
-                        onValueChangeFinished = {
-                            if (durationMs > 0L) {
-                                viewModel.seekTo((durationMs.toFloat() * sliderProgress).toLong())
-                            }
-                            isScrubbing = false
-                        },
-                        enabled = durationMs > 0L,
-                        modifier = Modifier.fillMaxWidth(),
-                        colors = SliderDefaults.colors(
-                            thumbColor = MaterialTheme.colorScheme.onBackground,
-                            activeTrackColor = MaterialTheme.colorScheme.onBackground,
-                            inactiveTrackColor = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.2f)
-                        )
+                    SeekBarSection(
+                        positionFlow = viewModel.positionMs,
+                        durationMs = durationMs,
+                        onSeek = viewModel::seekTo
                     )
-
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween
-                    ) {
-                        Text(
-                            text = formatDuration(uiState.currentPositionMs),
-                            style = MaterialTheme.typography.labelMedium,
-                            color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.6f)
-                        )
-                        Text(
-                            text = formatDuration(durationMs),
-                            style = MaterialTheme.typography.labelMedium,
-                            color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.6f)
-                        )
-                    }
                 }
 
                 Row(
@@ -528,20 +494,26 @@ fun PlayerScreen(
 @Composable
 private fun AtmosphericBackdrop(uiState: PlayerUiState) {
     Box(modifier = Modifier.fillMaxSize()) {
-        AsyncImage(
-            model = rememberArtworkImageRequest(
-                track = uiState.currentTrack,
-                width = 96.dp,
-                height = 96.dp,
-                cacheKeySuffix = "backdrop"
-            ),
-            contentDescription = null,
-            modifier = Modifier
-                .fillMaxSize()
-                .blur(60.dp),
-            contentScale = ContentScale.Crop,
-            alpha = 0.3f
-        )
+        Crossfade(
+            targetState = uiState.currentTrack,
+            label = "PlayerBackdropCrossfade",
+            modifier = Modifier.fillMaxSize()
+        ) { track ->
+            AsyncImage(
+                model = rememberArtworkImageRequest(
+                    track = track,
+                    width = 96.dp,
+                    height = 96.dp,
+                    cacheKeySuffix = "backdrop"
+                ),
+                contentDescription = null,
+                modifier = Modifier
+                    .fillMaxSize()
+                    .blur(60.dp),
+                contentScale = ContentScale.Crop,
+                alpha = 0.32f
+            )
+        }
         Box(
             modifier = Modifier
                 .fillMaxSize()
@@ -667,9 +639,82 @@ private fun QueueRow(
     }
 }
 
-private fun formatDuration(durationMs: Long): String {
-    val totalSeconds = (durationMs / 1000L).coerceAtLeast(0L)
-    val minutes = totalSeconds / 60L
-    val seconds = totalSeconds % 60L
-    return "%d:%02d".format(minutes, seconds)
+@Composable
+private fun SeekBarSection(
+    positionFlow: StateFlow<Long>,
+    durationMs: Long,
+    onSeek: (Long) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val currentPositionMs by positionFlow.collectAsStateWithLifecycle(initialValue = 0L)
+    val playbackProgress = remember(currentPositionMs, durationMs) {
+        if (durationMs > 0L) {
+            (currentPositionMs.toFloat() / durationMs.toFloat()).coerceIn(0f, 1f)
+        } else {
+            0f
+        }
+    }
+    
+    var sliderProgress by remember(durationMs) {
+        mutableFloatStateOf(playbackProgress)
+    }
+    var isScrubbing by remember {
+        mutableStateOf(false)
+    }
+    
+    LaunchedEffect(playbackProgress, isScrubbing) {
+        if (!isScrubbing) {
+            sliderProgress = playbackProgress
+        }
+    }
+    
+    Column(
+        modifier = modifier.fillMaxWidth(),
+        verticalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+        Slider(
+            value = sliderProgress,
+            valueRange = 0f..1f,
+            onValueChange = { ratio ->
+                isScrubbing = true
+                sliderProgress = ratio.coerceIn(0f, 1f)
+            },
+            onValueChangeFinished = {
+                if (durationMs > 0L) {
+                    onSeek((durationMs.toFloat() * sliderProgress).toLong())
+                }
+                isScrubbing = false
+            },
+            enabled = durationMs > 0L,
+            modifier = Modifier.fillMaxWidth(),
+            colors = SliderDefaults.colors(
+                thumbColor = MaterialTheme.colorScheme.primary,
+                activeTrackColor = MaterialTheme.colorScheme.primary,
+                inactiveTrackColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.2f)
+            )
+        )
+
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            val formattedPosition = remember(isScrubbing, sliderProgress, currentPositionMs, durationMs) {
+                val pos = if (isScrubbing) (durationMs.toFloat() * sliderProgress).toLong() else currentPositionMs
+                formatDuration(pos)
+            }
+            Text(
+                text = formattedPosition,
+                style = MaterialTheme.typography.labelMedium,
+                color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.6f)
+            )
+            val formattedDuration = remember(durationMs) {
+                formatDuration(durationMs)
+            }
+            Text(
+                text = formattedDuration,
+                style = MaterialTheme.typography.labelMedium,
+                color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.6f)
+            )
+        }
+    }
 }

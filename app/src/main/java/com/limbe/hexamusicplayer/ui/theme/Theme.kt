@@ -28,7 +28,22 @@ private val DarkScheme = darkColorScheme(
     onSurface = TextPrimaryDark,
     surfaceVariant = DarkElevatedSurface,
     onSurfaceVariant = TextSecondaryDark,
-    outline = DarkBorder
+    outline = DarkBorder,
+    
+    // Error colors
+    error = ErrorCoral,
+    onError = OnErrorDark,
+    errorContainer = ErrorContainerDark,
+    onErrorContainer = OnErrorContainerDark,
+    
+    // Surface containers (Material 3 elevation)
+    surfaceDim = DarkSurfaceDim,
+    surfaceBright = DarkSurfaceBright,
+    surfaceContainerLowest = DarkSurfaceContainerLowest,
+    surfaceContainerLow = DarkSurfaceContainerLow,
+    surfaceContainer = DarkSurfaceContainer,
+    surfaceContainerHigh = DarkSurfaceContainerHigh,
+    surfaceContainerHighest = DarkSurfaceContainerHighest
 )
 
 private val LightScheme = lightColorScheme(
@@ -46,7 +61,22 @@ private val LightScheme = lightColorScheme(
     onSurface = TextPrimaryLight,
     surfaceVariant = LightElevatedSurface,
     onSurfaceVariant = TextSecondaryLight,
-    outline = LightBorder
+    outline = LightBorder,
+    
+    // Error colors
+    error = ErrorLight,
+    onError = OnErrorLight,
+    errorContainer = ErrorContainerLight,
+    onErrorContainer = OnErrorContainerLight,
+    
+    // Surface containers (Material 3 elevation)
+    surfaceDim = LightSurfaceDim,
+    surfaceBright = LightSurfaceBright,
+    surfaceContainerLowest = LightSurfaceContainerLowest,
+    surfaceContainerLow = LightSurfaceContainerLow,
+    surfaceContainer = LightSurfaceContainer,
+    surfaceContainerHigh = LightSurfaceContainerHigh,
+    surfaceContainerHighest = LightSurfaceContainerHighest
 )
 
 @Composable
@@ -77,6 +107,7 @@ fun HexaMusicTheme(
     MaterialTheme(
         colorScheme = colorScheme,
         typography = HexaTypography,
+        shapes = HexaShapes,
         content = content
     )
 }

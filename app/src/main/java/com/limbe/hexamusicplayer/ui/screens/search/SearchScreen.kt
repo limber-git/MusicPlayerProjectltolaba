@@ -14,6 +14,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ManageSearch
 import androidx.compose.material.icons.filled.Search
@@ -22,6 +23,7 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
@@ -50,7 +52,7 @@ import com.limbe.hexamusicplayer.ui.screens.player.PlayerUiState
 import com.limbe.hexamusicplayer.ui.util.hasAudioPermission
 import com.limbe.hexamusicplayer.ui.util.requiredAudioPermission
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, androidx.compose.foundation.ExperimentalFoundationApi::class)
 @Composable
 fun SearchScreen(
     libraryViewModel: LibraryViewModel,
@@ -79,6 +81,9 @@ fun SearchScreen(
 
     val albums = remember(uiState.filteredTracks) { uiState.filteredTracks.map { it.album }.distinct().take(5) }
     val artists = remember(uiState.filteredTracks) { uiState.filteredTracks.map { it.artist }.distinct().take(5) }
+
+    val playNextLabel = stringResource(R.string.action_play_next)
+    val addToQueueLabel = stringResource(R.string.action_add_to_queue)
 
     Scaffold(
         containerColor = MaterialTheme.colorScheme.background,
@@ -109,7 +114,7 @@ fun SearchScreen(
             contentPadding = PaddingValues(horizontal = 16.dp, vertical = 12.dp),
             verticalArrangement = Arrangement.spacedBy(14.dp)
         ) {
-            item {
+            item(contentType = "search_field") {
                 OutlinedTextField(
                     value = uiState.searchQuery,
                     onValueChange = libraryViewModel::onSearchQueryChange,
@@ -121,17 +126,24 @@ fun SearchScreen(
                             contentDescription = stringResource(R.string.search_title)
                         )
                     },
-                    singleLine = true
+                    singleLine = true,
+                    shape = RoundedCornerShape(28.dp),
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = MaterialTheme.colorScheme.primary,
+                        unfocusedBorderColor = MaterialTheme.colorScheme.outline.copy(alpha = 0.3f),
+                        focusedContainerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.2f),
+                        unfocusedContainerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.1f)
+                    )
                 )
             }
 
             if (uiState.searchQuery.isBlank()) {
-                item {
+                item(contentType = "empty_state") {
                     EmptySearchState(text = stringResource(R.string.search_empty_prompt))
                 }
             } else {
                 if (artists.isNotEmpty()) {
-                    item {
+                    item(contentType = "summary_card") {
                         ResultSummaryCard(
                             title = stringResource(R.string.search_artists_title),
                             values = artists
@@ -139,7 +151,7 @@ fun SearchScreen(
                     }
                 }
                 if (albums.isNotEmpty()) {
-                    item {
+                    item(contentType = "summary_card") {
                         ResultSummaryCard(
                             title = stringResource(R.string.search_albums_title),
                             values = albums
@@ -147,51 +159,44 @@ fun SearchScreen(
                     }
                 }
                 if (uiState.filteredTracks.isEmpty()) {
-                    item {
+                    item(contentType = "empty_state") {
                         EmptySearchState(text = stringResource(R.string.search_no_results, uiState.searchQuery))
                     }
                 } else {
-                    item {
+                    item(contentType = "section_title") {
                         Text(
                             text = stringResource(R.string.search_tracks_title, uiState.filteredTracks.size),
                             style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold)
                         )
                     }
-                    items(uiState.filteredTracks, key = { "search-${it.id}" }) { track ->
+                    items(
+                        items = uiState.filteredTracks,
+                        key = { "search-${it.id}" },
+                        contentType = { "track" }
+                    ) { track ->
+                        val menuActions = remember(track, onTrackPlayNext, onTrackAddToQueue) {
+                            listOf(
+                                TrackMenuAction(label = playNextLabel, onClick = { onTrackPlayNext(track) }),
+                                TrackMenuAction(label = addToQueueLabel, onClick = { onTrackAddToQueue(track) })
+                            )
+                        }
                         TrackRow(
                             track = track,
                             isCurrent = playerUiState.currentTrack?.id == track.id,
                             isPlaying = playerUiState.isPlaying,
                             onClick = { onTrackClick(track, uiState.filteredTracks) },
-                            menuActions = searchTrackMenuActions(track, onTrackPlayNext, onTrackAddToQueue)
+                            menuActions = menuActions,
+                            modifier = Modifier.animateItemPlacement()
                         )
                     }
                 }
             }
 
-            item {
+            item(contentType = "spacer") {
                 Spacer(modifier = Modifier.height(100.dp))
             }
         }
     }
-}
-
-@Composable
-private fun searchTrackMenuActions(
-    track: Track,
-    onTrackPlayNext: (Track) -> Unit,
-    onTrackAddToQueue: (Track) -> Unit
-): List<TrackMenuAction> {
-    return listOf(
-        TrackMenuAction(
-            label = stringResource(R.string.action_play_next),
-            onClick = { onTrackPlayNext(track) }
-        ),
-        TrackMenuAction(
-            label = stringResource(R.string.action_add_to_queue),
-            onClick = { onTrackAddToQueue(track) }
-        )
-    )
 }
 
 @Composable
