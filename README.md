@@ -23,7 +23,7 @@ Reproductor de musica nativo para Android hecho con Kotlin, Jetpack Compose y Me
 
 - JDK 17 o superior.
 - Android Studio Ladybug o superior recomendado.
-- Android SDK con API 35 para builds compatibles con requisitos actuales de Google Play.
+- Android SDK con API 36.
 
 ## Comandos
 

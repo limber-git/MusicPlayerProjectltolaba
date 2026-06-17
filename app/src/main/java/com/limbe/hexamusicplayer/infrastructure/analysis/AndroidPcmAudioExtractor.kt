@@ -5,7 +5,7 @@ import android.media.AudioFormat
 import android.media.MediaCodec
 import android.media.MediaExtractor
 import android.media.MediaFormat
-import android.net.Uri
+import androidx.core.net.toUri
 import com.limbe.hexamusicplayer.domain.model.Track
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
@@ -19,7 +19,7 @@ class AndroidPcmAudioExtractor(
         var codec: MediaCodec? = null
 
         try {
-            extractor.setDataSource(context, Uri.parse(track.contentUri), null)
+            extractor.setDataSource(context, track.contentUri.toUri(), null)
             val trackIndex = findAudioTrack(extractor)
             if (trackIndex < 0) {
                 error("No audio track found")

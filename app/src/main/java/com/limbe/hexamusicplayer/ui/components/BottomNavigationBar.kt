@@ -1,10 +1,10 @@
 package com.limbe.hexamusicplayer.ui.components
 
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ManageSearch
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Folder
 import androidx.compose.material.icons.filled.LibraryMusic
-import androidx.compose.material.icons.filled.ManageSearch
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationBar
@@ -30,13 +30,13 @@ fun HexaBottomNavigationBar(
         selectedTextColor = MaterialTheme.colorScheme.primary,
         unselectedIconColor = MaterialTheme.colorScheme.onSurfaceVariant,
         unselectedTextColor = MaterialTheme.colorScheme.onSurfaceVariant,
-        indicatorColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.14f)
+        indicatorColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.10f)
     )
 
     NavigationBar(
-        containerColor = MaterialTheme.colorScheme.surfaceColorAtElevation(6.dp),
+        containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
         contentColor = MaterialTheme.colorScheme.onSurface,
-        tonalElevation = 6.dp
+        tonalElevation = 0.dp
     ) {
         NavigationBarItem(
             selected = currentRoute == AppRoute.HOME,
@@ -62,7 +62,7 @@ fun HexaBottomNavigationBar(
         NavigationBarItem(
             selected = currentRoute == AppRoute.SEARCH,
             onClick = { onNavigate(AppRoute.SEARCH) },
-            icon = { Icon(Icons.Default.ManageSearch, contentDescription = null) },
+            icon = { Icon(Icons.AutoMirrored.Filled.ManageSearch, contentDescription = null) },
             label = { Text(stringResource(R.string.nav_search)) },
             colors = navItemColors
         )

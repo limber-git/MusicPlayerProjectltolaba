@@ -23,6 +23,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalHapticFeedback
@@ -58,10 +59,11 @@ fun MiniPlayer(
         if (track != null) {
             Box(
                 modifier = Modifier
-                    .height(68.dp)
-                    .clip(RoundedCornerShape(22.dp))
-                    .background(MaterialTheme.colorScheme.surfaceColorAtElevation(4.dp))
-                    .border(0.5.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.1f), RoundedCornerShape(22.dp))
+                    .height(64.dp)
+                    .shadow(elevation = 8.dp, shape = RoundedCornerShape(20.dp), clip = false)
+                    .clip(RoundedCornerShape(20.dp))
+                    .background(MaterialTheme.colorScheme.surfaceContainerHigh)
+                    .border(0.5.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.06f), RoundedCornerShape(20.dp))
                     .clickable(onClick = onClick)
             ) {
                 Row(
@@ -81,7 +83,7 @@ fun MiniPlayer(
                         contentDescription = null,
                         modifier = Modifier
                             .size(48.dp)
-                            .clip(RoundedCornerShape(12.dp))
+                            .clip(RoundedCornerShape(14.dp))
                             .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.1f)),
                         contentScale = androidx.compose.ui.layout.ContentScale.Crop,
                         error = androidx.compose.ui.graphics.painter.ColorPainter(MaterialTheme.colorScheme.primary.copy(alpha = 0.2f))
@@ -90,7 +92,7 @@ fun MiniPlayer(
                     Column(modifier = Modifier.weight(1f)) {
                         Text(
                             text = track.title,
-                            style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Bold),
+                            style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.SemiBold),
                             maxLines = 1,
                             overflow = TextOverflow.Ellipsis,
                             color = MaterialTheme.colorScheme.onSurface
@@ -154,11 +156,12 @@ private fun MiniPlayerProgressBar(
     Box(
         modifier = modifier
             .fillMaxWidth(progress)
-            .height(3.dp)
+            .height(2.5.dp)
+            .clip(RoundedCornerShape(bottomStart = 20.dp, bottomEnd = 20.dp))
             .background(
                 Brush.horizontalGradient(
                     colors = listOf(
-                        MaterialTheme.colorScheme.primary.copy(alpha = 0.5f),
+                        MaterialTheme.colorScheme.primary.copy(alpha = 0.6f),
                         MaterialTheme.colorScheme.primary
                     )
                 )

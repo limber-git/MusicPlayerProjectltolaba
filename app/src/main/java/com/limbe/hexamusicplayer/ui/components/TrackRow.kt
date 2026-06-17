@@ -45,8 +45,8 @@ fun TrackRow(
     isCurrent: Boolean,
     isPlaying: Boolean,
     onClick: () -> Unit,
-    menuActions: List<TrackMenuAction> = emptyList(),
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    menuActions: List<TrackMenuAction> = emptyList()
 ) {
     var showMenu by remember(track.id) { mutableStateOf(false) }
 
@@ -76,7 +76,7 @@ fun TrackRow(
             contentDescription = null,
             modifier = Modifier
                 .size(48.dp)
-                .clip(RoundedCornerShape(8.dp))
+                .clip(RoundedCornerShape(10.dp))
                 .background(MaterialTheme.colorScheme.surfaceVariant),
             contentScale = androidx.compose.ui.layout.ContentScale.Crop,
             error = androidx.compose.ui.graphics.painter.ColorPainter(
@@ -118,8 +118,8 @@ fun TrackRow(
                     val formattedDuration = remember(track.durationMs) { formatDuration(track.durationMs) }
                     Text(
                         text = formattedDuration,
-                        style = MaterialTheme.typography.labelSmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
+                        style = MaterialTheme.typography.labelSmall.copy(letterSpacing = 0.4.sp),
+                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
                     )
                 }
             }
@@ -171,27 +171,34 @@ private fun PlayingBarsIndicator(isPlaying: Boolean) {
 @Composable
 private fun AnimatedPlayingBars() {
     val transition = rememberInfiniteTransition(label = "eq-bars")
-    val factor by transition.animateFloat(
-        initialValue = 0.2f,
-        targetValue = 1f,
-        animationSpec = infiniteRepeatable(
-            animation = tween(durationMillis = 500, easing = LinearEasing),
-            repeatMode = RepeatMode.Reverse
-        ),
-        label = "bars-factor"
-    )
+    val barDelays = remember { listOf(0, 120, 60, 180) }
+    val barHeights = barDelays.mapIndexed { index, delay ->
+        transition.animateFloat(
+            initialValue = 0.15f,
+            targetValue = 1f,
+            animationSpec = infiniteRepeatable(
+                animation = tween(
+                    durationMillis = 500 + (index * 80),
+                    delayMillis = delay,
+                    easing = androidx.compose.animation.core.FastOutSlowInEasing
+                ),
+                repeatMode = RepeatMode.Reverse
+            ),
+            label = "bar-$index"
+        )
+    }
 
     Row(
-        horizontalArrangement = Arrangement.spacedBy(2.dp),
+        horizontalArrangement = Arrangement.spacedBy(1.5.dp),
         verticalAlignment = Alignment.Bottom,
-        modifier = Modifier.height(14.dp)
+        modifier = Modifier.height(16.dp)
     ) {
-        repeat(3) { index ->
-            val animatedHeight = (4 + ((index + 1) * factor * 8)).dp
+        barHeights.forEachIndexed { index, animState ->
+            val animatedHeight = (3 + (animState.value * 13)).dp
             Box(
                 modifier = Modifier
-                    .size(width = 3.dp, height = animatedHeight)
-                    .clip(RoundedCornerShape(2.dp))
+                    .size(width = 2.5.dp, height = animatedHeight)
+                    .clip(RoundedCornerShape(1.5.dp))
                     .background(MaterialTheme.colorScheme.primary)
             )
         }
@@ -201,16 +208,16 @@ private fun AnimatedPlayingBars() {
 @Composable
 private fun StaticPlayingBars() {
     Row(
-        horizontalArrangement = Arrangement.spacedBy(2.dp),
+        horizontalArrangement = Arrangement.spacedBy(1.5.dp),
         verticalAlignment = Alignment.Bottom,
-        modifier = Modifier.height(14.dp)
+        modifier = Modifier.height(16.dp)
     ) {
-        repeat(3) {
+        repeat(4) {
             Box(
                 modifier = Modifier
-                    .size(width = 3.dp, height = 4.dp)
-                    .clip(RoundedCornerShape(2.dp))
-                    .background(MaterialTheme.colorScheme.primary)
+                    .size(width = 2.5.dp, height = 3.dp)
+                    .clip(RoundedCornerShape(1.5.dp))
+                    .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.6f))
             )
         }
     }

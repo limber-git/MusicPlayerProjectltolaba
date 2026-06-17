@@ -50,6 +50,7 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -102,7 +103,7 @@ fun HomeScreen(
         containerColor = MaterialTheme.colorScheme.background,
         topBar = {
             CenterAlignedTopAppBar(
-                colors = TopAppBarDefaults.centerAlignedTopAppBarColors(containerColor = Color.Transparent),
+                colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.Transparent),
                 title = {
                     Text(
                         text = stringResource(R.string.home_title),
@@ -191,7 +192,7 @@ fun HomeScreen(
                         isPlaying = playerUiState.isPlaying,
                         onClick = { onTrackClick(track, uiState.recentTracks) },
                         menuActions = menuActions,
-                        modifier = Modifier.animateItemPlacement()
+                        modifier = Modifier.animateItem()
                     )
                 }
             }
@@ -216,7 +217,7 @@ fun HomeScreen(
                         isPlaying = playerUiState.isPlaying,
                         onClick = { onTrackClick(track, uiState.favoriteTracks) },
                         menuActions = menuActions,
-                        modifier = Modifier.animateItemPlacement()
+                        modifier = Modifier.animateItem()
                     )
                 }
             }
@@ -295,16 +296,17 @@ private fun HeroCard(
         Box(
             modifier = Modifier
                 .fillMaxWidth()
+                .clip(RoundedCornerShape(24.dp))
                 .background(
                     Brush.linearGradient(
                         colors = listOf(
-                            MaterialTheme.colorScheme.primary.copy(alpha = 0.95f),
-                            MaterialTheme.colorScheme.tertiary.copy(alpha = 0.8f),
-                            MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.9f)
+                            MaterialTheme.colorScheme.primary,
+                            MaterialTheme.colorScheme.tertiary.copy(alpha = 0.85f),
+                            MaterialTheme.colorScheme.primary.copy(alpha = 0.7f)
                         )
                     )
                 )
-                .padding(20.dp)
+                .padding(22.dp)
         ) {
             Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
                 Text(
@@ -318,7 +320,11 @@ private fun HeroCard(
                     color = MaterialTheme.colorScheme.onPrimary
                 )
                 Text(
-                    text = currentTrack?.artist ?: stringResource(R.string.home_hero_body, favoriteCount),
+                    text = currentTrack?.artist ?: pluralStringResource(
+                        R.plurals.home_hero_body,
+                        favoriteCount,
+                        favoriteCount
+                    ),
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.86f)
                 )
@@ -365,7 +371,8 @@ private fun ShortcutCard(
         modifier = modifier
             .clip(RoundedCornerShape(22.dp))
             .clickable(onClick = onClick),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.45f))
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerLow),
+        border = androidx.compose.foundation.BorderStroke(0.5.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.08f))
     ) {
         Column(
             modifier = Modifier.padding(18.dp),
@@ -404,32 +411,51 @@ private fun MediaSpotlightCard(
             .width(148.dp)
             .clickable(onClick = onClick)
     ) {
-        AsyncImage(
-            model = rememberArtworkImageRequest(
-                data = artworkUri,
-                width = 148.dp,
-                height = 148.dp,
-                cacheKey = "spotlight-$artworkUri"
-            ),
-            contentDescription = null,
+        Box(
             modifier = Modifier
                 .fillMaxWidth()
                 .height(148.dp)
-                .clip(RoundedCornerShape(20.dp))
-                .background(MaterialTheme.colorScheme.surfaceVariant),
-            contentScale = ContentScale.Crop,
-            error = androidx.compose.ui.graphics.painter.ColorPainter(MaterialTheme.colorScheme.surfaceVariant)
-        )
+                .clip(RoundedCornerShape(18.dp))
+        ) {
+            AsyncImage(
+                model = rememberArtworkImageRequest(
+                    data = artworkUri,
+                    width = 148.dp,
+                    height = 148.dp,
+                    cacheKey = "spotlight-$artworkUri"
+                ),
+                contentDescription = null,
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(MaterialTheme.colorScheme.surfaceVariant),
+                contentScale = ContentScale.Crop,
+                error = androidx.compose.ui.graphics.painter.ColorPainter(MaterialTheme.colorScheme.surfaceVariant)
+            )
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(48.dp)
+                    .align(Alignment.BottomCenter)
+                    .background(
+                        Brush.verticalGradient(
+                            colors = listOf(
+                                Color.Transparent,
+                                Color.Black.copy(alpha = 0.3f)
+                            )
+                        )
+                    )
+            )
+        }
         Spacer(modifier = Modifier.height(10.dp))
         Text(
             text = title,
-            style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Bold),
+            style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Bold),
             maxLines = 1,
             overflow = TextOverflow.Ellipsis
         )
         Text(
             text = subtitle,
-            style = MaterialTheme.typography.bodySmall,
+            style = MaterialTheme.typography.labelMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis
@@ -439,11 +465,22 @@ private fun MediaSpotlightCard(
 
 @Composable
 private fun SectionTitle(title: String) {
-    Text(
-        text = title,
-        style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
         modifier = Modifier.padding(top = 6.dp)
-    )
+    ) {
+        Box(
+            modifier = Modifier
+                .size(4.dp)
+                .clip(androidx.compose.foundation.shape.CircleShape)
+                .background(MaterialTheme.colorScheme.primary)
+        )
+        Text(
+            text = title,
+            style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold)
+        )
+    }
 }
 
 @Composable

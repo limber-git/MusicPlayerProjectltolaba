@@ -27,7 +27,7 @@ class LibraryViewModelTest {
     val mainDispatcherRule = MainDispatcherRule()
 
     @Test
-    fun `refresh tracks loads local songs on success`() = runTest {
+    fun `refresh tracks loads local songs on success`() = runTest(mainDispatcherRule.testDispatcher) {
         val fakeRepository = FakeLocalMusicRepository(
             tracks = listOf(
                 Track(
@@ -47,7 +47,8 @@ class LibraryViewModelTest {
         val viewModel = LibraryViewModel(
             GetLocalTracksUseCase(fakeRepository),
             ObserveUserPreferencesUseCase(preferences),
-            BuildVisibleLibraryUseCase()
+            BuildVisibleLibraryUseCase(),
+            mainDispatcherRule.testDispatcher
         )
 
         viewModel.refreshTracks()
@@ -60,7 +61,7 @@ class LibraryViewModelTest {
     }
 
     @Test
-    fun `refresh tracks exposes error on failure`() = runTest {
+    fun `refresh tracks exposes error on failure`() = runTest(mainDispatcherRule.testDispatcher) {
         val fakeRepository = FakeLocalMusicRepository(
             error = IllegalStateException("Storage unavailable")
         )
@@ -69,7 +70,8 @@ class LibraryViewModelTest {
         val viewModel = LibraryViewModel(
             GetLocalTracksUseCase(fakeRepository),
             ObserveUserPreferencesUseCase(preferences),
-            BuildVisibleLibraryUseCase()
+            BuildVisibleLibraryUseCase(),
+            mainDispatcherRule.testDispatcher
         )
 
         viewModel.refreshTracks()
@@ -81,7 +83,7 @@ class LibraryViewModelTest {
     }
 
     @Test
-    fun `manual folder preference filters visible library`() = runTest {
+    fun `manual folder preference filters visible library`() = runTest(mainDispatcherRule.testDispatcher) {
         val fakeRepository = FakeLocalMusicRepository(
             tracks = listOf(
                 Track(
@@ -112,7 +114,8 @@ class LibraryViewModelTest {
         val viewModel = LibraryViewModel(
             GetLocalTracksUseCase(fakeRepository),
             ObserveUserPreferencesUseCase(preferences),
-            BuildVisibleLibraryUseCase()
+            BuildVisibleLibraryUseCase(),
+            mainDispatcherRule.testDispatcher
         )
 
         viewModel.refreshTracks()

@@ -2,6 +2,7 @@ package com.limbe.hexamusicplayer.infrastructure.analysis
 
 import android.content.Context
 import android.net.Uri
+import androidx.core.content.edit
 import com.limbe.hexamusicplayer.domain.model.AnalysisSource
 import com.limbe.hexamusicplayer.domain.model.ChordEvent
 import com.limbe.hexamusicplayer.domain.model.DetectedNote
@@ -23,9 +24,9 @@ class SharedPreferencesMusicAnalysisCache(context: Context) : MusicAnalysisCache
     }
 
     override suspend fun save(track: Track, analysis: MusicAnalysisState) {
-        preferences.edit()
-            .putString(keyFor(track), encode(analysis.copy(trackId = track.id)))
-            .apply()
+        preferences.edit {
+            putString(keyFor(track), encode(analysis.copy(trackId = track.id)))
+        }
     }
 
     private fun keyFor(track: Track): String = "track_${track.id}"

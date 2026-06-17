@@ -4,6 +4,8 @@ import android.content.Intent
 import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.ui.res.pluralStringResource
+import androidx.core.net.toUri
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -14,7 +16,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.FolderOpen
 import androidx.compose.material.icons.filled.History
@@ -109,7 +111,7 @@ fun SettingsScreen(
         containerColor = MaterialTheme.colorScheme.background,
         topBar = {
             CenterAlignedTopAppBar(
-                colors = TopAppBarDefaults.centerAlignedTopAppBarColors(containerColor = Color.Transparent),
+                colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.Transparent),
                 title = {
                     Text(
                         text = stringResource(R.string.settings_title),
@@ -119,7 +121,7 @@ fun SettingsScreen(
                 navigationIcon = {
                     IconButton(onClick = onBack) {
                         Icon(
-                            imageVector = Icons.Default.ArrowBack,
+                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                             contentDescription = stringResource(R.string.action_back)
                         )
                     }
@@ -212,7 +214,7 @@ fun SettingsScreen(
                             uiState.manualLibraryFolderUri?.let { rawUri ->
                                 runCatching {
                                     context.contentResolver.releasePersistableUriPermission(
-                                        Uri.parse(rawUri),
+                                        rawUri.toUri(),
                                         Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION
                                     )
                                 }
@@ -225,14 +227,22 @@ fun SettingsScreen(
             item {
                 SettingsInfoItem(
                     title = stringResource(R.string.settings_favorites_title),
-                    subtitle = stringResource(R.string.settings_favorites_subtitle, uiState.favoriteCount),
+                    subtitle = pluralStringResource(
+                        R.plurals.settings_favorites_subtitle,
+                        uiState.favoriteCount,
+                        uiState.favoriteCount
+                    ),
                     icon = Icons.Default.Favorite
                 )
             }
             item {
                 SettingsInfoItem(
                     title = stringResource(R.string.settings_recent_title),
-                    subtitle = stringResource(R.string.settings_recent_subtitle, uiState.recentTrackIds.size),
+                    subtitle = pluralStringResource(
+                        R.plurals.settings_recent_subtitle,
+                        uiState.recentTrackIds.size,
+                        uiState.recentTrackIds.size
+                    ),
                     icon = Icons.Default.History
                 )
             }
@@ -406,12 +416,19 @@ private fun SettingsItemContent(
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(16.dp)
     ) {
-        Icon(
-            imageVector = icon,
-            contentDescription = null,
-            tint = MaterialTheme.colorScheme.onSurfaceVariant,
-            modifier = Modifier.size(24.dp)
-        )
+        Surface(
+            shape = androidx.compose.foundation.shape.CircleShape,
+            color = MaterialTheme.colorScheme.primary.copy(alpha = 0.1f)
+        ) {
+            Icon(
+                imageVector = icon,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.primary,
+                modifier = Modifier
+                    .padding(10.dp)
+                    .size(24.dp)
+            )
+        }
         Column(modifier = Modifier.weight(1f)) {
             Text(text = title, style = MaterialTheme.typography.bodyLarge)
             Text(

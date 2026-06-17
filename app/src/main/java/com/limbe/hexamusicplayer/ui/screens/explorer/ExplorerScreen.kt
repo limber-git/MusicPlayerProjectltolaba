@@ -30,10 +30,8 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SecondaryTabRow
 import androidx.compose.material3.Tab
-import androidx.compose.material3.TabRow
-import androidx.compose.material3.TabRowDefaults
-import androidx.compose.material3.TabRowDefaults.tabIndicatorOffset
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
@@ -49,6 +47,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -96,7 +95,7 @@ fun ExplorerScreen(
         topBar = {
             Column {
                 CenterAlignedTopAppBar(
-                    colors = TopAppBarDefaults.centerAlignedTopAppBarColors(containerColor = Color.Transparent),
+                    colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.Transparent),
                     title = {
                         Text(
                             text = stringResource(R.string.explorer_title),
@@ -105,16 +104,10 @@ fun ExplorerScreen(
                         )
                     }
                 )
-                TabRow(
+                SecondaryTabRow(
                     selectedTabIndex = selectedTab,
                     containerColor = Color.Transparent,
-                    contentColor = MaterialTheme.colorScheme.primary,
-                    indicator = { tabPositions ->
-                        TabRowDefaults.SecondaryIndicator(
-                            modifier = Modifier.tabIndicatorOffset(tabPositions[selectedTab]),
-                            color = MaterialTheme.colorScheme.primary
-                        )
-                    }
+                    contentColor = MaterialTheme.colorScheme.primary
                 ) {
                     Tab(
                         selected = selectedTab == 0,
@@ -252,7 +245,11 @@ private fun AlbumCard(
     CollectionCard(
         title = album.title,
         subtitle = album.artist,
-        metadata = stringResource(R.string.explorer_track_count, album.tracks.size),
+        metadata = pluralStringResource(
+            R.plurals.explorer_track_count,
+            album.tracks.size,
+            album.tracks.size
+        ),
         artworkUri = album.artworkUri,
         onClick = onClick
     )
@@ -265,8 +262,16 @@ private fun ArtistCard(
 ) {
     CollectionCard(
         title = artist.name,
-        subtitle = stringResource(R.string.explorer_artist_album_count, artist.albumCount),
-        metadata = stringResource(R.string.explorer_track_count, artist.tracks.size),
+        subtitle = pluralStringResource(
+            R.plurals.explorer_artist_album_count,
+            artist.albumCount,
+            artist.albumCount
+        ),
+        metadata = pluralStringResource(
+            R.plurals.explorer_track_count,
+            artist.tracks.size,
+            artist.tracks.size
+        ),
         artworkUri = artist.artworkUri,
         onClick = onClick
     )
@@ -285,23 +290,42 @@ private fun CollectionCard(
             .fillMaxWidth()
             .clickable(onClick = onClick)
     ) {
-        AsyncImage(
-            model = rememberArtworkImageRequest(
-                data = artworkUri,
-                width = 180.dp,
-                height = 180.dp,
-                cacheKey = "collection-$artworkUri"
-            ),
-            contentDescription = null,
+        Box(
             modifier = Modifier
                 .fillMaxWidth()
                 .aspectRatio(1f)
-                .clip(RoundedCornerShape(16.dp))
-                .background(MaterialTheme.colorScheme.surfaceVariant),
-            contentScale = ContentScale.Crop,
-            error = androidx.compose.ui.graphics.painter.ColorPainter(MaterialTheme.colorScheme.surfaceVariant)
-        )
-        Spacer(modifier = Modifier.height(8.dp))
+                .clip(RoundedCornerShape(18.dp))
+        ) {
+            AsyncImage(
+                model = rememberArtworkImageRequest(
+                    data = artworkUri,
+                    width = 180.dp,
+                    height = 180.dp,
+                    cacheKey = "collection-$artworkUri"
+                ),
+                contentDescription = null,
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(MaterialTheme.colorScheme.surfaceVariant),
+                contentScale = ContentScale.Crop,
+                error = androidx.compose.ui.graphics.painter.ColorPainter(MaterialTheme.colorScheme.surfaceVariant)
+            )
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(56.dp)
+                    .align(Alignment.BottomCenter)
+                    .background(
+                        androidx.compose.ui.graphics.Brush.verticalGradient(
+                            colors = listOf(
+                                Color.Transparent,
+                                Color.Black.copy(alpha = 0.25f)
+                            )
+                        )
+                    )
+            )
+        }
+        Spacer(modifier = Modifier.height(10.dp))
         Text(
             text = title,
             style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Bold),
@@ -318,8 +342,8 @@ private fun CollectionCard(
         )
         Text(
             text = metadata,
-            style = MaterialTheme.typography.labelSmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
+            style = MaterialTheme.typography.labelSmall.copy(letterSpacing = 0.3.sp),
+            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
         )
     }
 }

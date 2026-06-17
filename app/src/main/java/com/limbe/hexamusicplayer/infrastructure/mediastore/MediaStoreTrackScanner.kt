@@ -2,9 +2,9 @@ package com.limbe.hexamusicplayer.infrastructure.mediastore
 
 import android.content.ContentUris
 import android.content.Context
-import android.net.Uri
 import android.os.Build
 import android.provider.MediaStore
+import androidx.core.net.toUri
 import com.limbe.hexamusicplayer.domain.model.Track
 
 class MediaStoreTrackScanner(
@@ -78,7 +78,7 @@ class MediaStoreTrackScanner(
         if (albumId <= 0L) return null
 
         return ContentUris.withAppendedId(
-            Uri.parse("content://media/external/audio/albumart"),
+            "content://media/external/audio/albumart".toUri(),
             albumId
         ).toString()
     }

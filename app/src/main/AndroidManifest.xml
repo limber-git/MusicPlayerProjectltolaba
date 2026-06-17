@@ -1,5 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
 
     <uses-permission android:name="android.permission.READ_MEDIA_AUDIO" />
     <uses-permission
@@ -17,7 +18,8 @@
         android:roundIcon="@drawable/ic_app_icon"
         android:localeConfig="@xml/locales_config"
         android:supportsRtl="true"
-        android:theme="@style/Theme.HexaMusicPlayer">
+        android:theme="@style/Theme.HexaMusicPlayer"
+        tools:targetApi="tiramisu">
         <activity
             android:name=".ui.MainActivity"
             android:exported="true">

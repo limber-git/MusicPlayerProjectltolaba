@@ -9,6 +9,7 @@ import androidx.compose.animation.shrinkVertically
 import androidx.compose.animation.Crossfade
 import androidx.compose.foundation.background
 import androidx.compose.foundation.basicMarquee
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -28,12 +29,12 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.QueueMusic
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.FavoriteBorder
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material.icons.filled.MoreVert
-import androidx.compose.material.icons.filled.QueueMusic
 import androidx.compose.material.icons.filled.Repeat
 import androidx.compose.material.icons.filled.RepeatOne
 import androidx.compose.material.icons.filled.Shuffle
@@ -70,9 +71,11 @@ import androidx.compose.ui.draw.blur
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
@@ -181,8 +184,9 @@ fun PlayerScreen(
                             }
                         }
                         .clip(RoundedCornerShape(32.dp)),
-                    elevation = CardDefaults.cardElevation(defaultElevation = 24.dp),
-                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
+                    elevation = CardDefaults.cardElevation(defaultElevation = 16.dp),
+                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant),
+                    border = androidx.compose.foundation.BorderStroke(0.5.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.08f))
                 ) {
                     Crossfade(
                         targetState = uiState.currentTrack,
@@ -245,15 +249,28 @@ fun PlayerScreen(
                             viewModel.toggleFavorite()
                         }
                     ) {
+                        val favoriteScale by androidx.compose.animation.core.animateFloatAsState(
+                            targetValue = if (uiState.isFavorite) 1.0f else 0.85f,
+                            animationSpec = androidx.compose.animation.core.spring(
+                                dampingRatio = 0.4f,
+                                stiffness = 400f
+                            ),
+                            label = "favoriteScale"
+                        )
                         Icon(
                             imageVector = if (uiState.isFavorite) Icons.Default.Favorite else Icons.Default.FavoriteBorder,
                             contentDescription = stringResource(R.string.action_favorite),
                             tint = if (uiState.isFavorite) {
-                                MaterialTheme.colorScheme.primary
+                                MaterialTheme.colorScheme.tertiary
                             } else {
-                                MaterialTheme.colorScheme.onBackground
+                                MaterialTheme.colorScheme.onBackground.copy(alpha = 0.6f)
                             },
-                            modifier = Modifier.size(28.dp)
+                            modifier = Modifier
+                                .size(26.dp)
+                                .graphicsLayer {
+                                    scaleX = favoriteScale
+                                    scaleY = favoriteScale
+                                }
                         )
                     }
                 }
@@ -321,21 +338,33 @@ fun PlayerScreen(
                         )
                     }
 
-                    Surface(
-                        onClick = {
-                            haptic.performHapticFeedback(androidx.compose.ui.hapticfeedback.HapticFeedbackType.LongPress)
-                            viewModel.togglePlayback()
-                        },
-                        shape = CircleShape,
-                        color = MaterialTheme.colorScheme.onBackground,
-                        modifier = Modifier.size(80.dp)
+                    Box(
+                        modifier = Modifier
+                            .size(72.dp)
+                            .clip(CircleShape)
+                            .background(
+                                Brush.linearGradient(
+                                    colors = listOf(
+                                        MaterialTheme.colorScheme.primary,
+                                        MaterialTheme.colorScheme.tertiary
+                                    )
+                                )
+                            )
+                            .clickable {
+                                haptic.performHapticFeedback(androidx.compose.ui.hapticfeedback.HapticFeedbackType.LongPress)
+                                viewModel.togglePlayback()
+                            },
+                        contentAlignment = Alignment.Center
                     ) {
-                        Box(contentAlignment = Alignment.Center) {
+                        Crossfade(
+                            targetState = uiState.isPlaying,
+                            label = "PlayPauseCrossfade"
+                        ) { playing ->
                             Icon(
-                                imageVector = if (uiState.isPlaying) Icons.Rounded.Pause else Icons.Rounded.PlayArrow,
+                                imageVector = if (playing) Icons.Rounded.Pause else Icons.Rounded.PlayArrow,
                                 contentDescription = stringResource(R.string.action_play_pause),
-                                tint = MaterialTheme.colorScheme.background,
-                                modifier = Modifier.size(42.dp)
+                                tint = Color.White,
+                                modifier = Modifier.size(38.dp)
                             )
                         }
                     }
@@ -401,7 +430,7 @@ fun PlayerScreen(
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
                                 Icon(
-                                    imageVector = Icons.Default.QueueMusic,
+                                    imageVector = Icons.AutoMirrored.Filled.QueueMusic,
                                     contentDescription = null,
                                     tint = MaterialTheme.colorScheme.onBackground
                                 )
@@ -412,7 +441,11 @@ fun PlayerScreen(
                                         color = MaterialTheme.colorScheme.onBackground
                                     )
                                     Text(
-                                        text = stringResource(R.string.player_queue_subtitle, upcomingTracks.size),
+                                        text = pluralStringResource(
+                                            R.plurals.player_queue_subtitle,
+                                            upcomingTracks.size,
+                                            upcomingTracks.size
+                                        ),
                                         style = MaterialTheme.typography.bodySmall,
                                         color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.7f)
                                     )
@@ -433,7 +466,8 @@ fun PlayerScreen(
                     ) {
                         Surface(
                             shape = RoundedCornerShape(20.dp),
-                            color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.28f),
+                            color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
+                            border = androidx.compose.foundation.BorderStroke(0.5.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.1f)),
                             modifier = Modifier.fillMaxWidth()
                         ) {
                             LazyColumn(
@@ -509,9 +543,9 @@ private fun AtmosphericBackdrop(uiState: PlayerUiState) {
                 contentDescription = null,
                 modifier = Modifier
                     .fillMaxSize()
-                    .blur(60.dp),
+                    .blur(80.dp),
                 contentScale = ContentScale.Crop,
-                alpha = 0.32f
+                alpha = 0.38f
             )
         }
         Box(
@@ -520,8 +554,9 @@ private fun AtmosphericBackdrop(uiState: PlayerUiState) {
                 .background(
                     Brush.verticalGradient(
                         colors = listOf(
-                            Color.Black.copy(alpha = 0.4f),
-                            Color.Transparent,
+                            MaterialTheme.colorScheme.background.copy(alpha = 0.5f),
+                            MaterialTheme.colorScheme.background.copy(alpha = 0.2f),
+                            MaterialTheme.colorScheme.background.copy(alpha = 0.6f),
                             MaterialTheme.colorScheme.background
                         ),
                         startY = 0f,
@@ -639,6 +674,7 @@ private fun QueueRow(
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun SeekBarSection(
     positionFlow: StateFlow<Long>,
@@ -690,8 +726,16 @@ private fun SeekBarSection(
             colors = SliderDefaults.colors(
                 thumbColor = MaterialTheme.colorScheme.primary,
                 activeTrackColor = MaterialTheme.colorScheme.primary,
-                inactiveTrackColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.2f)
-            )
+                inactiveTrackColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.12f)
+            ),
+            thumb = {
+                Box(
+                    modifier = Modifier
+                        .size(14.dp)
+                        .clip(CircleShape)
+                        .background(MaterialTheme.colorScheme.primary)
+                )
+            }
         )
 
         Row(

@@ -6,9 +6,6 @@
     <string name="nav_library">Biblioteca</string>
     <string name="nav_explore">Explorar</string>
     <string name="nav_search">Buscar</string>
-    <string name="nav_albums">Colecci&#243;n</string>
-    <string name="nav_studio">Studio</string>
-    <string name="nav_now_playing">Sonando</string>
 
     <string name="action_open_settings">Abrir configuraci&#243;n</string>
     <string name="action_open_studio">Abrir modo estudio</string>
@@ -30,7 +27,10 @@
 
     <string name="home_title">Inicio</string>
     <string name="home_hero_title">Tu biblioteca lista para sonar</string>
-    <string name="home_hero_body">%1$d favoritas listas para volver al escenario.</string>
+    <plurals name="home_hero_body">
+        <item quantity="one">%1$d favorita lista para volver al escenario.</item>
+        <item quantity="other">%1$d favoritas listas para volver al escenario.</item>
+    </plurals>
     <string name="home_hero_active_label">Reproducci&#243;n activa</string>
     <string name="home_hero_idle_label">Listo para ensayar</string>
     <string name="home_hero_cta_player">Abrir player</string>
@@ -45,7 +45,7 @@
     <string name="home_artists_title">Artistas de tu biblioteca</string>
 
     <string name="library_title">Biblioteca</string>
-    <string name="library_search_placeholder">Buscar canciones, artistas o &#225;lbumes...</string>
+    <string name="library_search_placeholder">Buscar canciones, artistas o &#225;lbumes&#8230;</string>
     <string name="library_empty">No se encontraron canciones.</string>
     <string name="library_no_results">No hay resultados para "%1$s"</string>
     <string name="library_active_folder">Mostrando biblioteca filtrada por carpeta: %1$s</string>
@@ -68,7 +68,10 @@
     <string name="player_idle_title">No se est&#225; reproduciendo nada</string>
     <string name="player_idle_subtitle">Selecciona una canci&#243;n</string>
     <string name="player_queue_title">Siguientes</string>
-    <string name="player_queue_subtitle">%1$d pistas despu&#233;s de la actual</string>
+    <plurals name="player_queue_subtitle">
+        <item quantity="one">%1$d pista despu&#233;s de la actual</item>
+        <item quantity="other">%1$d pistas despu&#233;s de la actual</item>
+    </plurals>
     <string name="player_gesture_hint">Desliza la car&#225;tula a izquierda o derecha para cambiar de pista, o hacia arriba para entrar al modo estudio.</string>
     <string name="notification_channel_playback_name">Reproducci&#243;n</string>
     <string name="notification_channel_playback_description">Controles y estado de la reproducci&#243;n en segundo plano.</string>
@@ -83,8 +86,14 @@
     <string name="explorer_empty_body">Concede permisos y agrega m&#250;sica local para explorar tu colecci&#243;n por &#225;lbum.</string>
     <string name="explorer_empty_artists_title">No hay artistas disponibles</string>
     <string name="explorer_empty_artists_body">Agrega canciones locales para explorar tu m&#250;sica por artista.</string>
-    <string name="explorer_track_count">%1$d pistas</string>
-    <string name="explorer_artist_album_count">%1$d &#225;lbumes</string>
+    <plurals name="explorer_track_count">
+        <item quantity="one">%1$d pista</item>
+        <item quantity="other">%1$d pistas</item>
+    </plurals>
+    <plurals name="explorer_artist_album_count">
+        <item quantity="one">%1$d &#225;lbum</item>
+        <item quantity="other">%1$d &#225;lbumes</item>
+    </plurals>
 
     <string name="settings_title">Configuraci&#243;n</string>
     <string name="settings_section_appearance">Apariencia</string>
@@ -96,9 +105,15 @@
     <string name="settings_language_title">Idioma</string>
     <string name="settings_language_dialog_title">Elegir idioma</string>
     <string name="settings_favorites_title">Favoritos guardados</string>
-    <string name="settings_favorites_subtitle">%1$d canciones marcadas como favoritas</string>
+    <plurals name="settings_favorites_subtitle">
+        <item quantity="one">%1$d canci&#243;n marcada como favorita</item>
+        <item quantity="other">%1$d canciones marcadas como favoritas</item>
+    </plurals>
     <string name="settings_recent_title">Historial reciente</string>
-    <string name="settings_recent_subtitle">%1$d pistas reproducidas recientemente</string>
+    <plurals name="settings_recent_subtitle">
+        <item quantity="one">%1$d pista reproducida recientemente</item>
+        <item quantity="other">%1$d pistas reproducidas recientemente</item>
+    </plurals>
     <string name="settings_version_title">Versi&#243;n</string>
     <string name="settings_audio_engine_title">Motor de audio</string>
     <string name="settings_audio_engine_status_active">Efectos activos y sesi&#243;n multimedia estable</string>
@@ -155,8 +170,8 @@
     <string name="studio_lyrics_title">Panel de letras</string>
     <string name="studio_lyrics_body_idle">Inicia una canci&#243;n para preparar una vista de letras y anotaciones de ensayo.</string>
     <string name="studio_lyrics_body_active">A&#250;n no hay letras cargadas para %1$s. La siguiente iteraci&#243;n puede leer letras locales o sincronizadas.</string>
-    <string name="studio_hero_session_label">SESION PRO</string>
     <string name="studio_hero_fallback_body">Ajuste fino de speed, pitch y cadena de efectos.</string>
+    <string name="studio_metric_speed_label">Velocidad</string>
     <string name="studio_metric_fx_label">FX</string>
     <string name="studio_metric_fx_on">ACTIVO</string>
     <string name="studio_metric_fx_safe">SEGURO</string>
@@ -185,7 +200,7 @@
     <string name="studio_analysis_idle">Sin pista activa. El an&#225;lisis se carga cuando empieza una canci&#243;n.</string>
     <string name="studio_analysis_ready">Listo para datos manuales. La detecci&#243;n autom&#225;tica queda preparada para la fase DSP.</string>
     <string name="studio_analysis_run">Analizar pista</string>
-    <string name="studio_analysis_running">Analizando...</string>
+    <string name="studio_analysis_running">Analizando&#8230;</string>
     <string name="studio_analysis_manual">Usando datos manuales guardados para esta pista.</string>
     <string name="studio_analysis_estimated">Usando estimaciones autom&#225;ticas pendientes de confirmaci&#243;n.</string>
     <string name="studio_analysis_confirmed">Mapa musical confirmado para esta pista.</string>
@@ -206,5 +221,4 @@
     <string name="studio_chord_timeline_body">Eventos guardados y sincronizados con la posici&#243;n de reproducci&#243;n.</string>
     <string name="studio_instrument_body">Vista lista para generar gu&#237;as por instrumento desde el mapa arm&#243;nico.</string>
     <string name="widget_playback_subtitle">Controles rapidos de reproduccion</string>
-    <string name="widget_playback_description">Widget de reproduccion de studioMusicTolaba</string>
 </resources>

@@ -76,7 +76,7 @@ class PlayerViewModelTest {
     val mainDispatcherRule = MainDispatcherRule()
 
     @Test
-    fun `player session attachment propagates to effects`() = runTest {
+    fun `player session attachment propagates to effects`() = runTest(mainDispatcherRule.testDispatcher) {
         val fakePlayer = FakeViewModelPlayerPort()
         val fakeEffects = FakeAudioEffectsPort()
         val fakePreferences = FakeUserPreferencesPort()
@@ -99,7 +99,7 @@ class PlayerViewModelTest {
     }
 
     @Test
-    fun `preferences update dark mode favorites and recents in ui state`() = runTest {
+    fun `preferences update dark mode favorites and recents in ui state`() = runTest(mainDispatcherRule.testDispatcher) {
         val fakePlayer = FakeViewModelPlayerPort()
         val fakeEffects = FakeAudioEffectsPort()
         val fakePreferences = FakeUserPreferencesPort()
@@ -124,7 +124,7 @@ class PlayerViewModelTest {
     }
 
     @Test
-    fun `disabling audio effects releases effects state`() = runTest {
+    fun `disabling audio effects releases effects state`() = runTest(mainDispatcherRule.testDispatcher) {
         val fakePlayer = FakeViewModelPlayerPort()
         val fakeEffects = FakeAudioEffectsPort()
         val fakePreferences = FakeUserPreferencesPort()
@@ -142,7 +142,7 @@ class PlayerViewModelTest {
     }
 
     @Test
-    fun `play next inserts track after current one in queue`() = runTest {
+    fun `play next inserts track after current one in queue`() = runTest(mainDispatcherRule.testDispatcher) {
         val fakePlayer = FakeViewModelPlayerPort()
         val fakeEffects = FakeAudioEffectsPort()
         val fakePreferences = FakeUserPreferencesPort()
@@ -167,7 +167,7 @@ class PlayerViewModelTest {
     }
 
     @Test
-    fun `moving queue item updates visible queue order`() = runTest {
+    fun `moving queue item updates visible queue order`() = runTest(mainDispatcherRule.testDispatcher) {
         val fakePlayer = FakeViewModelPlayerPort()
         val fakeEffects = FakeAudioEffectsPort()
         val fakePreferences = FakeUserPreferencesPort()
@@ -192,7 +192,7 @@ class PlayerViewModelTest {
     }
 
     @Test
-    fun `rapid eq changes save latest level without crashing`() = runTest {
+    fun `rapid eq changes save latest level without crashing`() = runTest(mainDispatcherRule.testDispatcher) {
         val fakePlayer = FakeViewModelPlayerPort()
         val fakeEffects = FakeAudioEffectsPort()
         val fakePreferences = FakeUserPreferencesPort()

@@ -1,12 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/widget_root"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="#101C2E"
     android:gravity="center_vertical"
     android:orientation="horizontal"
-    android:padding="14dp">
+    android:padding="14dp"
+    tools:ignore="Overdraw">
 
     <ImageView
         android:id="@+id/widget_icon"
@@ -52,7 +55,7 @@
         android:background="@android:color/transparent"
         android:contentDescription="@string/action_previous"
         android:src="@android:drawable/ic_media_previous"
-        android:tint="#FFFFFF" />
+        app:tint="#FFFFFF" />
 
     <ImageButton
         android:id="@+id/widget_play_pause_button"
@@ -61,7 +64,7 @@
         android:background="@android:color/transparent"
         android:contentDescription="@string/action_play_pause"
         android:src="@android:drawable/ic_media_play"
-        android:tint="#22D3A6" />
+        app:tint="#22D3A6" />
 
     <ImageButton
         android:id="@+id/widget_next_button"
@@ -70,5 +73,5 @@
         android:background="@android:color/transparent"
         android:contentDescription="@string/action_next"
         android:src="@android:drawable/ic_media_next"
-        android:tint="#FFFFFF" />
+        app:tint="#FFFFFF" />
 </LinearLayout>

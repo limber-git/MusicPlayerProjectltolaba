@@ -7,6 +7,7 @@ import com.limbe.hexamusicplayer.domain.model.UserPreferences
 import com.limbe.hexamusicplayer.domain.usecase.BuildVisibleLibraryUseCase
 import com.limbe.hexamusicplayer.domain.usecase.GetLocalTracksUseCase
 import com.limbe.hexamusicplayer.domain.usecase.ObserveUserPreferencesUseCase
+import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
@@ -20,7 +21,8 @@ import kotlinx.coroutines.withContext
 class LibraryViewModel(
     private val getLocalTracksUseCase: GetLocalTracksUseCase,
     private val observeUserPreferencesUseCase: ObserveUserPreferencesUseCase,
-    private val buildVisibleLibraryUseCase: BuildVisibleLibraryUseCase
+    private val buildVisibleLibraryUseCase: BuildVisibleLibraryUseCase,
+    private val libraryDispatcher: CoroutineDispatcher = Dispatchers.Default
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(LibraryUiState())
@@ -46,7 +48,12 @@ class LibraryViewModel(
             runCatching { getLocalTracksUseCase() }
                 .onSuccess { tracks ->
                     allTracks = tracks
-                    publishTrackState(isLoading = false, hasLoadedOnce = true, errorMessage = null)
+                    publishTrackState(
+                        isLoading = false,
+                        hasLoadedOnce = true,
+                        errorMessage = null,
+                        replaceErrorMessage = true
+                    )
                 }
                 .onFailure { throwable ->
                     _uiState.update {
@@ -70,10 +77,11 @@ class LibraryViewModel(
     }
 
     private fun publishTrackState(
-        isLoading: Boolean = _uiState.value.isLoading,
-        hasLoadedOnce: Boolean = _uiState.value.hasLoadedOnce,
+        isLoading: Boolean? = null,
+        hasLoadedOnce: Boolean? = null,
         debounceMs: Long = 0L,
-        errorMessage: String? = _uiState.value.errorMessage
+        errorMessage: String? = null,
+        replaceErrorMessage: Boolean = false
     ) {
         publishJob?.cancel()
         publishJob = viewModelScope.launch {
@@ -81,7 +89,7 @@ class LibraryViewModel(
                 delay(debounceMs)
             }
             val state = _uiState.value
-            val visibleLibrary = withContext(Dispatchers.Default) {
+            val visibleLibrary = withContext(libraryDispatcher) {
                 buildVisibleLibraryUseCase(
                     allTracks = allTracks,
                     preferences = currentPreferences,
@@ -95,9 +103,9 @@ class LibraryViewModel(
                     favoriteTracks = visibleLibrary.favoriteTracks,
                     recentTracks = visibleLibrary.recentTracks,
                     activeLibraryFolderLabel = visibleLibrary.activeFolderLabel,
-                    isLoading = isLoading,
-                    hasLoadedOnce = hasLoadedOnce,
-                    errorMessage = errorMessage
+                    isLoading = isLoading ?: it.isLoading,
+                    hasLoadedOnce = hasLoadedOnce ?: it.hasLoadedOnce,
+                    errorMessage = if (replaceErrorMessage) errorMessage else it.errorMessage
                 )
             }
         }

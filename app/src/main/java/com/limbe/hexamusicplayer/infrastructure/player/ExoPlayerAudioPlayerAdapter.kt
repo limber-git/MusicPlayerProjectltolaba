@@ -1,8 +1,8 @@
 package com.limbe.hexamusicplayer.infrastructure.player
 
-import android.net.Uri
 import android.os.Handler
 import android.os.Looper
+import androidx.core.net.toUri
 import androidx.media3.common.C
 import androidx.media3.common.MediaItem
 import androidx.media3.common.MediaMetadata
@@ -104,14 +104,14 @@ class ExoPlayerAudioPlayerAdapter(
 
         val mediaItems = currentQueue.map { t ->
             MediaItem.Builder()
-                .setUri(Uri.parse(t.contentUri))
+                .setUri(t.contentUri.toUri())
                 .setMediaId(t.id.toString())
                 .setMediaMetadata(
                     MediaMetadata.Builder()
                         .setTitle(t.title)
                         .setArtist(t.artist)
                         .setAlbumTitle(t.album)
-                        .setArtworkUri(t.artworkUri?.let(Uri::parse))
+                        .setArtworkUri(t.artworkUri?.toUri())
                         .build()
                 )
                 .build()
@@ -285,14 +285,14 @@ class ExoPlayerAudioPlayerAdapter(
 
     private fun Track.toMediaItem(): MediaItem {
         return MediaItem.Builder()
-            .setUri(Uri.parse(contentUri))
+            .setUri(contentUri.toUri())
             .setMediaId(id.toString())
             .setMediaMetadata(
                 MediaMetadata.Builder()
                     .setTitle(title)
                     .setArtist(artist)
                     .setAlbumTitle(album)
-                    .setArtworkUri(artworkUri?.let(Uri::parse))
+                .setArtworkUri(artworkUri?.toUri())
                     .build()
             )
             .build()

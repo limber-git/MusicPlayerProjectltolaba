@@ -6,8 +6,8 @@ Este documento reune los puntos que debemos cerrar antes de publicar la app en G
 
 - `applicationId`: `com.tolaba.studiomusic`.
 - `minSdk`: 26.
-- `targetSdk`: 35.
-- `compileSdk`: 35.
+- `targetSdk`: 36.
+- `compileSdk`: 36.
 - Firma release: pendiente de keystore definitivo y secretos de CI.
 - Formato recomendado para Play: generar `AAB` con `./gradlew bundleProdRelease`.
 

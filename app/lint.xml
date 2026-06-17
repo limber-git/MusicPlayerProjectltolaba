@@ -3,4 +3,6 @@
         <option name="opt-in" value="androidx.media3.common.util.UnstableApi" />
     </issue>
     <issue id="ObsoleteLintCustomCheck" severity="ignore" />
+    <!-- Android 17 is still beta; compile against API 37 without opting into target behavior. -->
+    <issue id="OldTargetApi" severity="ignore" />
 </lint>

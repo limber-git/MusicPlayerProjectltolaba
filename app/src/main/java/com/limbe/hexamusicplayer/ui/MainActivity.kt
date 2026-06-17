@@ -7,6 +7,7 @@ import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatDelegate
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.core.os.LocaleListCompat
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -30,10 +31,14 @@ class MainActivity : ComponentActivity() {
             val factory = MusicPlayerViewModelFactory(container)
             val libraryViewModel: LibraryViewModel = viewModel(factory = factory)
             val playerViewModel: PlayerViewModel = viewModel(factory = factory)
-            val appShellState by playerViewModel.uiState
-                .map { it.darkModeMode to it.appLanguage }
-                .distinctUntilChanged()
-                .collectAsStateWithLifecycle(DarkModeMode.SYSTEM to AppLanguage.SYSTEM)
+            val appShellFlow = remember(playerViewModel) {
+                playerViewModel.uiState
+                    .map { it.darkModeMode to it.appLanguage }
+                    .distinctUntilChanged()
+            }
+            val appShellState by appShellFlow.collectAsStateWithLifecycle(
+                DarkModeMode.SYSTEM to AppLanguage.SYSTEM
+            )
 
             LaunchedEffect(appShellState.second) {
                 AppCompatDelegate.setApplicationLocales(

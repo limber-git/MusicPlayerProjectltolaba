@@ -11,6 +11,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 
+@Suppress("DEPRECATION")
 class AndroidAudioEffectsAdapter : AudioEffectsPort {
 
     private val _state = MutableStateFlow(AudioEffectsState())
@@ -118,7 +119,7 @@ class AndroidAudioEffectsAdapter : AudioEffectsPort {
                     val bandShort = band.toShort()
                     EqBand(
                         index = band,
-                        centerFreqHz = (eq.getCenterFreq(bandShort) / 1000).toInt(),
+                        centerFreqHz = eq.getCenterFreq(bandShort) / 1000,
                         level = eq.getBandLevel(bandShort).toInt(),
                         minLevel = minLevel,
                         maxLevel = maxLevel

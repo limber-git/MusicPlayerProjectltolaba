@@ -6,9 +6,6 @@
     <string name="nav_library">Library</string>
     <string name="nav_explore">Explore</string>
     <string name="nav_search">Search</string>
-    <string name="nav_albums">Collection</string>
-    <string name="nav_studio">Studio</string>
-    <string name="nav_now_playing">Now Playing</string>
 
     <string name="action_open_settings">Open settings</string>
     <string name="action_open_studio">Open studio mode</string>
@@ -30,7 +27,10 @@
 
     <string name="home_title">Home</string>
     <string name="home_hero_title">Your library is ready to play</string>
-    <string name="home_hero_body">%1$d favorites ready to return to the stage.</string>
+    <plurals name="home_hero_body">
+        <item quantity="one">%1$d favorite ready to return to the stage.</item>
+        <item quantity="other">%1$d favorites ready to return to the stage.</item>
+    </plurals>
     <string name="home_hero_active_label">Playback active</string>
     <string name="home_hero_idle_label">Ready to practice</string>
     <string name="home_hero_cta_player">Open player</string>
@@ -45,7 +45,7 @@
     <string name="home_artists_title">Artists in your library</string>
 
     <string name="library_title">Library</string>
-    <string name="library_search_placeholder">Search songs, artists or albums...</string>
+    <string name="library_search_placeholder">Search songs, artists or albums&#8230;</string>
     <string name="library_empty">No songs were found.</string>
     <string name="library_no_results">No results for "%1$s"</string>
     <string name="library_active_folder">Showing library filtered by folder: %1$s</string>
@@ -68,7 +68,10 @@
     <string name="player_idle_title">Nothing is playing</string>
     <string name="player_idle_subtitle">Pick a song</string>
     <string name="player_queue_title">Up Next</string>
-    <string name="player_queue_subtitle">%1$d tracks after the current one</string>
+    <plurals name="player_queue_subtitle">
+        <item quantity="one">%1$d track after the current one</item>
+        <item quantity="other">%1$d tracks after the current one</item>
+    </plurals>
     <string name="player_gesture_hint">Swipe the artwork left or right to change tracks, or upward to enter studio mode.</string>
     <string name="notification_channel_playback_name">Playback</string>
     <string name="notification_channel_playback_description">Playback controls and background session status.</string>
@@ -83,8 +86,14 @@
     <string name="explorer_empty_body">Grant permission and add local music to explore your collection by album.</string>
     <string name="explorer_empty_artists_title">No artists available</string>
     <string name="explorer_empty_artists_body">Add local songs to explore your music by artist.</string>
-    <string name="explorer_track_count">%1$d tracks</string>
-    <string name="explorer_artist_album_count">%1$d albums</string>
+    <plurals name="explorer_track_count">
+        <item quantity="one">%1$d track</item>
+        <item quantity="other">%1$d tracks</item>
+    </plurals>
+    <plurals name="explorer_artist_album_count">
+        <item quantity="one">%1$d album</item>
+        <item quantity="other">%1$d albums</item>
+    </plurals>
 
     <string name="settings_title">Settings</string>
     <string name="settings_section_appearance">Appearance</string>
@@ -96,9 +105,15 @@
     <string name="settings_language_title">Language</string>
     <string name="settings_language_dialog_title">Choose language</string>
     <string name="settings_favorites_title">Saved favorites</string>
-    <string name="settings_favorites_subtitle">%1$d songs marked as favorite</string>
+    <plurals name="settings_favorites_subtitle">
+        <item quantity="one">%1$d song marked as favorite</item>
+        <item quantity="other">%1$d songs marked as favorite</item>
+    </plurals>
     <string name="settings_recent_title">Recent history</string>
-    <string name="settings_recent_subtitle">%1$d tracks played recently</string>
+    <plurals name="settings_recent_subtitle">
+        <item quantity="one">%1$d track played recently</item>
+        <item quantity="other">%1$d tracks played recently</item>
+    </plurals>
     <string name="settings_version_title">Version</string>
     <string name="settings_audio_engine_title">Audio engine</string>
     <string name="settings_audio_engine_status_active">Effects active and media session stable</string>
@@ -155,8 +170,8 @@
     <string name="studio_lyrics_title">Lyrics panel</string>
     <string name="studio_lyrics_body_idle">Start a song to prepare a lyrics and rehearsal notes view.</string>
     <string name="studio_lyrics_body_active">No lyrics are loaded yet for %1$s. The next iteration can read local or synchronized lyrics.</string>
-    <string name="studio_hero_session_label">PRO SESSION</string>
     <string name="studio_hero_fallback_body">Fine control of speed, pitch and the effects chain.</string>
+    <string name="studio_metric_speed_label">Speed</string>
     <string name="studio_metric_fx_label">FX</string>
     <string name="studio_metric_fx_on">ON</string>
     <string name="studio_metric_fx_safe">SAFE</string>
@@ -185,7 +200,7 @@
     <string name="studio_analysis_idle">No active track. Analysis loads when a song starts.</string>
     <string name="studio_analysis_ready">Ready for manual data. Automatic detection is prepared for the DSP phase.</string>
     <string name="studio_analysis_run">Analyze track</string>
-    <string name="studio_analysis_running">Analyzing...</string>
+    <string name="studio_analysis_running">Analyzing&#8230;</string>
     <string name="studio_analysis_manual">Using manual data saved for this track.</string>
     <string name="studio_analysis_estimated">Using automatic estimates pending confirmation.</string>
     <string name="studio_analysis_confirmed">Music map confirmed for this track.</string>
@@ -206,5 +221,4 @@
     <string name="studio_chord_timeline_body">Saved events synchronized with playback position.</string>
     <string name="studio_instrument_body">View ready to generate instrument guides from the harmonic map.</string>
     <string name="widget_playback_subtitle">Quick playback controls</string>
-    <string name="widget_playback_description">studioMusicTolaba playback widget</string>
 </resources>

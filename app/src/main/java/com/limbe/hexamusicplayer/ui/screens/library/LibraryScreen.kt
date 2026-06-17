@@ -93,7 +93,7 @@ fun LibraryScreen(
         topBar = {
             Column(modifier = Modifier.background(MaterialTheme.colorScheme.background)) {
                 CenterAlignedTopAppBar(
-                    colors = TopAppBarDefaults.centerAlignedTopAppBarColors(containerColor = Color.Transparent),
+                    colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.Transparent),
                     title = {
                         Text(
                             text = stringResource(R.string.library_title),

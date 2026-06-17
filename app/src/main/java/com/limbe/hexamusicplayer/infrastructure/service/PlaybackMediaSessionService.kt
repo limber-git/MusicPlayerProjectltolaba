@@ -7,6 +7,7 @@ import android.app.PendingIntent
 import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
+import android.content.pm.ServiceInfo
 import android.os.Build
 import androidx.core.app.NotificationCompat
 import androidx.core.app.ServiceCompat
@@ -100,11 +101,16 @@ class PlaybackMediaSessionService : MediaSessionService() {
             return
         }
         val notification = buildNotification()
+        val foregroundServiceType = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            ServiceInfo.FOREGROUND_SERVICE_TYPE_MEDIA_PLAYBACK
+        } else {
+            0
+        }
         ServiceCompat.startForeground(
             this,
             NOTIFICATION_ID,
             notification,
-            android.content.pm.ServiceInfo.FOREGROUND_SERVICE_TYPE_MEDIA_PLAYBACK
+            foregroundServiceType
         )
         isInForeground = true
     }
@@ -124,8 +130,6 @@ class PlaybackMediaSessionService : MediaSessionService() {
     }
 
     private fun ensureNotificationChannel() {
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) return
-
         val channel = NotificationChannel(
             CHANNEL_ID,
             getString(R.string.notification_channel_playback_name),

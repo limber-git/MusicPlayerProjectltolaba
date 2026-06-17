@@ -46,11 +46,9 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.ScrollableTabRow
+import androidx.compose.material3.SecondaryScrollableTabRow
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Tab
-import androidx.compose.material3.TabRowDefaults
-import androidx.compose.material3.TabRowDefaults.tabIndicatorOffset
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
@@ -67,6 +65,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -124,7 +123,7 @@ fun StudioScreen(
                         .padding(horizontal = 16.dp)
                 ) {
                     CenterAlignedTopAppBar(
-                        colors = TopAppBarDefaults.centerAlignedTopAppBarColors(containerColor = Color.Transparent),
+                        colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.Transparent),
                         title = {
                             Text(
                                 text = stringResource(R.string.studio_title),
@@ -148,22 +147,11 @@ fun StudioScreen(
                         tonalElevation = 8.dp,
                         shadowElevation = 0.dp
                     ) {
-                        ScrollableTabRow(
+                        SecondaryScrollableTabRow(
                             selectedTabIndex = selectedTab,
                             containerColor = Color.Transparent,
                             contentColor = MaterialTheme.colorScheme.primary,
                             edgePadding = 8.dp,
-                            indicator = { tabPositions ->
-                                if (selectedTab < tabPositions.size) {
-                                    TabRowDefaults.SecondaryIndicator(
-                                        modifier = Modifier
-                                            .tabIndicatorOffset(tabPositions[selectedTab])
-                                            .padding(horizontal = 12.dp),
-                                        height = 3.dp,
-                                        color = MaterialTheme.colorScheme.primary
-                                    )
-                                }
-                            },
                             divider = {}
                         ) {
                             StudioTab(
@@ -263,7 +251,7 @@ private fun StudioNowPlayingStrip(
         tonalElevation = 10.dp,
         shadowElevation = 0.dp
     ) {
-        Row(
+        Column(
             modifier = Modifier
                 .fillMaxWidth()
                 .background(
@@ -275,49 +263,57 @@ private fun StudioNowPlayingStrip(
                         )
                     )
                 )
-                .padding(horizontal = 18.dp, vertical = 14.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(14.dp)
+                .padding(horizontal = 16.dp, vertical = 16.dp),
+            verticalArrangement = Arrangement.spacedBy(14.dp)
         ) {
-            Box(
-                modifier = Modifier
-                    .size(46.dp)
-                    .clip(CircleShape)
-                    .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.12f)),
-                contentAlignment = Alignment.Center
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(14.dp)
             ) {
-                Icon(
-                    imageVector = Icons.Default.GraphicEq,
-                    contentDescription = null,
-                    tint = MaterialTheme.colorScheme.primary,
-                    modifier = Modifier.size(22.dp)
-                )
-            }
+                Box(
+                    modifier = Modifier
+                        .size(46.dp)
+                        .clip(CircleShape)
+                        .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.12f)),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.GraphicEq,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.size(22.dp)
+                    )
+                }
 
-            Column(
-                modifier = Modifier.weight(1f),
-                verticalArrangement = Arrangement.spacedBy(4.dp)
-            ) {
-                Text(
-                    text = headerState.currentTrack?.title ?: stringResource(R.string.studio_title),
-                    style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
-                    color = MaterialTheme.colorScheme.onSurface,
-                    maxLines = 1
-                )
-                Text(
-                    text = headerState.currentTrack?.artist ?: stringResource(R.string.studio_hero_fallback_body),
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    maxLines = 1
-                )
+                Column(
+                    modifier = Modifier.weight(1f),
+                    verticalArrangement = Arrangement.spacedBy(4.dp)
+                ) {
+                    Text(
+                        text = headerState.currentTrack?.title ?: stringResource(R.string.studio_title),
+                        style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
+                        color = MaterialTheme.colorScheme.onSurface,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                    Text(
+                        text = headerState.currentTrack?.artist ?: stringResource(R.string.studio_hero_fallback_body),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                }
             }
 
             Row(
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(10.dp)
             ) {
                 MetricPill(
-                    label = stringResource(R.string.studio_speed_label),
-                    value = String.format(Locale.US, "%.2fx", headerState.speed)
+                    label = stringResource(R.string.studio_metric_speed_label),
+                    value = String.format(Locale.US, "%.2fx", headerState.speed),
+                    modifier = Modifier.weight(1.5f)
                 )
                 MetricPill(
                     label = stringResource(R.string.studio_metric_fx_label),
@@ -325,7 +321,8 @@ private fun StudioNowPlayingStrip(
                         stringResource(R.string.studio_metric_fx_on)
                     } else {
                         stringResource(R.string.studio_metric_fx_safe)
-                    }
+                    },
+                    modifier = Modifier.weight(1f)
                 )
             }
         }
@@ -335,15 +332,17 @@ private fun StudioNowPlayingStrip(
 @Composable
 private fun MetricPill(
     label: String,
-    value: String
+    value: String,
+    modifier: Modifier = Modifier
 ) {
     Surface(
+        modifier = modifier,
         shape = RoundedCornerShape(18.dp),
         color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.45f)
     ) {
         Column(
-            modifier = Modifier.padding(horizontal = 10.dp, vertical = 8.dp),
-            verticalArrangement = Arrangement.spacedBy(2.dp)
+            modifier = Modifier.padding(horizontal = 14.dp, vertical = 10.dp),
+            verticalArrangement = Arrangement.spacedBy(3.dp)
         ) {
             Text(
                 text = label,
