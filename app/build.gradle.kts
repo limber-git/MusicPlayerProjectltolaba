@@ -152,3 +152,9 @@ dependencies {
     debugImplementation("androidx.compose.ui:ui-tooling")
     debugImplementation("androidx.compose.ui:ui-test-manifest")
 }
+
+tasks.register("testClasses") {
+    description = "Dummy task to satisfy IDEs requesting testClasses"
+    group = "verification"
+    dependsOn(tasks.matching { it.name.startsWith("compile") && it.name.endsWith("UnitTestSources") })
+}

@@ -1,3 +1,5 @@
+@file:Suppress("DEPRECATION")
+
 package com.limbe.hexamusicplayer.infrastructure.effects
 
 import android.media.audiofx.BassBoost
@@ -11,7 +13,6 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 
-@Suppress("DEPRECATION")
 class AndroidAudioEffectsAdapter : AudioEffectsPort {
 
     private val _state = MutableStateFlow(AudioEffectsState())
